@@ -32,14 +32,7 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
     public List<TableVO> adminTableList() {
         List<DiningTable> list = query().list();
         List<TableVO> tableVOList = list.stream()
-                .map(d -> TableVO.builder()
-                        .tableId(d.getId())
-                        .tableNo(d.getTableNo())
-                        .capacity(d.getCapacity())
-                        .locationDesc(d.getLocationDesc())
-                        .status(d.getStatus())
-                        .currentSessionId(d.getCurrentSessionId())
-                        .build())
+                .map(this::toVO)
                 .collect(Collectors.toList());
         return tableVOList;
     }
@@ -50,7 +43,7 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
                 .tableNo(tableDTO.getTableNo())
                 .capacity(tableDTO.getCapacity())
                 .locationDesc(tableDTO.getLocationDesc())
-                .status(TableStatusEnum.FREE.getCode())
+                .status(TableStatusEnum.FREE)
                 .currentSessionId(null)
                 .build();
         saveOrUpdate(diningTable);
@@ -62,14 +55,7 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
         if (diningTable == null) {
             throw new BusinessException("桌位不存在");
         }
-        return TableVO.builder()
-                .tableId(diningTable.getId())
-                .tableNo(diningTable.getTableNo())
-                .capacity(diningTable.getCapacity())
-                .locationDesc(diningTable.getLocationDesc())
-                .status(diningTable.getStatus())
-                .currentSessionId(diningTable.getCurrentSessionId())
-                .build();
+        return toVO(diningTable);
     }
 
     /**
@@ -81,8 +67,8 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
         if (diningTable == null) {
             throw new BusinessException("桌位不存在");
         }
-        if (diningTable.getStatus() == TableStatusEnum.DISABLED.getCode()
-                || diningTable.getStatus() == TableStatusEnum.FREE.getCode()) {
+        if (diningTable.getStatus() != TableStatusEnum.DISABLED
+                && diningTable.getStatus() != TableStatusEnum.FREE) {
             throw new BusinessException("业务状态的桌位不能更新");
         }
         BeanUtils.copyProperties(tableDTO, diningTable);
@@ -102,8 +88,8 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
         if (diningTable == null) {
             throw new BusinessException("桌位不存在");
         }
-        if (diningTable.getStatus() == TableStatusEnum.DISABLED.getCode()
-                || diningTable.getStatus() == TableStatusEnum.FREE.getCode()) {
+        if (diningTable.getStatus() != TableStatusEnum.DISABLED
+                && diningTable.getStatus() != TableStatusEnum.FREE) {
             throw new BusinessException("业务状态的桌位不能删除");
         }
         removeById(tableId);
@@ -114,16 +100,9 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
      */
     @Override
     public List<TableVO> userFreeTableList() {
-        List<DiningTable> list = query().eq("status", TableStatusEnum.FREE.getCode()).list();
+        List<DiningTable> list = query().eq("status", TableStatusEnum.FREE).list();
         List<TableVO> tableVOList = list.stream()
-                .map(d -> TableVO.builder()
-                        .tableId(d.getId())
-                        .tableNo(d.getTableNo())
-                        .capacity(d.getCapacity())
-                        .locationDesc(d.getLocationDesc())
-                        .status(d.getStatus())
-                        .currentSessionId(d.getCurrentSessionId())
-                        .build())
+                .map(this::toVO)
                 .collect(Collectors.toList());
         return tableVOList;
     }
@@ -138,13 +117,10 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
         if (diningTable == null) {
             throw new BusinessException("桌位不存在");
         }
-        if (diningTable.getStatus() != TableStatusEnum.DISABLED.getCode()) {
+        if (diningTable.getStatus() != TableStatusEnum.DISABLED) {
             throw new BusinessException("非禁用状态的桌位不能启用");
         }
-        if (diningTable.getStatus() == TableStatusEnum.FREE.getCode()){
-            throw new BusinessException("桌位已启用，不能重复启用");
-        }
-        diningTable.setStatus(TableStatusEnum.FREE.getCode());
+        diningTable.setStatus(TableStatusEnum.FREE);
         updateById(diningTable);
     }
 
@@ -157,13 +133,21 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
         if (diningTable == null) {
             throw new BusinessException("桌位不存在");
         }
-        if (diningTable.getStatus() != TableStatusEnum.FREE.getCode()) {
+        if (diningTable.getStatus() != TableStatusEnum.FREE) {
             throw new BusinessException("非空闲状态的桌位不能禁用");
         }
-        if (diningTable.getStatus() == TableStatusEnum.DISABLED.getCode()){
-            throw new BusinessException("桌位已禁用，不能重复禁用");
-        }
-        diningTable.setStatus(TableStatusEnum.DISABLED.getCode());
+        diningTable.setStatus(TableStatusEnum.DISABLED);
         updateById(diningTable);
+    }
+
+    private TableVO toVO(DiningTable diningTable) {
+        return TableVO.builder()
+                .tableId(diningTable.getId())
+                .tableNo(diningTable.getTableNo())
+                .capacity(diningTable.getCapacity())
+                .locationDesc(diningTable.getLocationDesc())
+                .status(diningTable.getStatus().getCode())
+                .currentSessionId(diningTable.getCurrentSessionId())
+                .build();
     }
 }
