@@ -1,12 +1,18 @@
 package com.foodflow.common.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.baomidou.mybatisplus.annotation.IEnum;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import lombok.Getter;
 
 @Getter
-public enum CategoryStatusEnum {
+public enum CategoryStatusEnum implements IEnum<Integer> {
     ENABLED(1, "启用"),
     DISABLED(2, "禁用");
 
+    @EnumValue
+    @JsonValue
     private final Integer code;
     private final String description;
 
@@ -23,5 +29,10 @@ public enum CategoryStatusEnum {
             }
         }
         throw new IllegalArgumentException("Unknown category status code: " + code);
+    }
+
+    @Override
+    public Integer getValue() {
+        return code;
     }
 }
