@@ -1,6 +1,10 @@
 package com.foodflow.interceptor;
 
-import com.foodflow.common.context.LoginUserContext;
+import com.foodflow.common.constant.JwtClaimConstants;
+import com.foodflow.common.context.LoginContext;
+import com.foodflow.common.context.LoginInfo;
+import com.foodflow.common.enums.EmployeeRoleEnum;
+import com.foodflow.common.enums.LoginTypeEnum;
 import com.foodflow.common.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -40,15 +44,51 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
             // 解析并校验 Token；签名错误、过期、格式错误都会抛出异常。
             Claims claims = JwtUtil.parseToken(token);
 
-            // 当前项目登录时会把 userId 写入 Token，后续业务依赖它识别当前用户。
-            Object userId = claims.get("userId");
-            if (userId == null) {
+            // 当前项目登录时会把 userId 或 employeeId 写入 Token，后续业务依赖它识别当前用户或员工。
+            Object userIdClaim = claims.get(JwtClaimConstants.USER_ID);
+            Object employeeIdClaim = claims.get(JwtClaimConstants.EMPLOYEE_ID);
+            Long userId = userIdClaim == null ? null : Long.valueOf(userIdClaim.toString());
+            Long employeeId = employeeIdClaim == null ? null : Long.valueOf(employeeIdClaim.toString());
+            if (userId == null && employeeId == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return false;
             }
 
+            // 校验登录类型是否匹配当前请求路径
+            String path = request.getRequestURI();
+            String loginTypeValue = claims.get(JwtClaimConstants.LOGIN_TYPE, String.class);
+            if (loginTypeValue == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return false;
+            }
+            LoginTypeEnum loginType = LoginTypeEnum.valueOf(loginTypeValue);
+            if (path.startsWith("/api/user/")
+                    && LoginTypeEnum.USER != loginType) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return false;
+            }
+            if (path.startsWith("/api/admin/")
+                    && LoginTypeEnum.EMPLOYEE != loginType) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return false;
+            }
+
+            // 校验店长权限是否匹配当前请求路径
+            String roleValue = claims.get(JwtClaimConstants.ROLE, String.class);
+            EmployeeRoleEnum employeeRole = roleValue == null ? null : EmployeeRoleEnum.valueOf(roleValue);
+            if (isManagerOnlyPath(request) && EmployeeRoleEnum.MANAGER != employeeRole) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return false;
+            }
+
             // 校验通过后，把当前用户 ID 存入请求线程上下文，供后续 Controller/Service 使用。
-            LoginUserContext.setUserId(Long.valueOf(userId.toString()));
+            LoginContext.set(LoginInfo.builder()
+                    .userId(userId)
+                    .employeeId(employeeId)
+                    .loginType(loginType)
+                    .employeeRole(employeeRole)
+                    .build());
+                    
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
             log.info("Invalid JWT token", ex);
@@ -58,8 +98,24 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
+            Exception ex) {
         // 请求处理完成后清理 ThreadLocal，避免 Tomcat 线程复用造成用户信息串用。
-        LoginUserContext.clear();
+        LoginContext.clear();
+    }
+
+    private boolean isManagerOnlyPath(HttpServletRequest request) {
+        String method = request.getMethod();
+        String path = request.getRequestURI();
+
+        if ("POST".equals(method) && "/api/admin/auth/register".equals(path)) {
+            return true;
+        }
+
+        if ("DELETE".equals(method) && path.matches("^/api/admin/tables/\\d+$")) {
+            return true;
+        }
+
+        return path.startsWith("/api/admin/employees");
     }
 }
