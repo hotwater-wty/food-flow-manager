@@ -2,6 +2,9 @@ package com.foodflow.module.user.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.foodflow.common.constant.JwtClaimConstants;
+import com.foodflow.common.enums.LoginTypeEnum;
+import com.foodflow.common.enums.UserStatusEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.utils.JwtUtil;
 import com.foodflow.module.user.dto.UserLoginDTO;
@@ -10,7 +13,7 @@ import com.foodflow.module.user.entity.User;
 import com.foodflow.module.user.mapper.UserMapper;
 import com.foodflow.module.user.service.UserService;
 import com.foodflow.module.user.vo.UserLoginVO;
-import com.foodflow.module.user.vo.UserVO;
+import com.foodflow.module.user.vo.UserRegisterVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,18 +43,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null || !passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword())) {
             throw new BusinessException("手机号或密码错误");
         }
+        if (user.getStatus() != UserStatusEnum.NORMAL) {
+            throw new BusinessException("用户账号不可用");
+        }
 
         // 登录流程 3：把后续鉴权需要的用户信息写入 JWT 载荷。
         Map<String, Object> tokenMap = new HashMap<>();
-        tokenMap.put("userId", user.getId());
-        tokenMap.put("phone", user.getPhone());
-        tokenMap.put("loginType", "USER");
+        tokenMap.put(JwtClaimConstants.USER_ID, user.getId());
+        tokenMap.put(JwtClaimConstants.PHONE, user.getPhone());
+        tokenMap.put(JwtClaimConstants.LOGIN_TYPE, LoginTypeEnum.USER.name());
 
         // 登录流程 4：生成 Token，返回给前端；前端后续请求放入 Authorization 请求头。
         String token = JwtUtil.generateToken(tokenMap);
 
         // 登录流程 5：封装登录响应，注意 userId 和 token 需要手动设置。
-        UserLoginVO userLoginVO = BeanUtil.copyProperties(user, UserLoginVO.class);
+        UserLoginVO userLoginVO = toLoginVO(user);
         userLoginVO.setUserId(user.getId());
         userLoginVO.setToken(token);
 
@@ -59,7 +65,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public UserVO register(UserRegisterDTO userRegisterDTO) {
+    public UserRegisterVO register(UserRegisterDTO userRegisterDTO) {
         String phone = userRegisterDTO.getPhone();
 
         // 注册流程 1：手机号作为账号标识，先检查是否已经注册。
@@ -81,7 +87,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .phone(phone)
                 .password(encodedPassword)
                 .nickname(userRegisterDTO.getNickname())
-                .status(1)
+                .status(UserStatusEnum.NORMAL)
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
                 .build();
@@ -90,9 +96,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         saveOrUpdate(user);
 
         // 注册流程 6：封装注册响应，避免把 password 返回给前端。
-        UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
-        userVO.setUserId(user.getId());
+        return toRegisterVO(user);
+    }
 
-        return userVO;
+    private UserLoginVO toLoginVO(User user) {
+        UserLoginVO userLoginVO = BeanUtil.copyProperties(user, UserLoginVO.class);
+        userLoginVO.setStatus(user.getStatus().getCode());
+        return userLoginVO;
+    }
+
+    private UserRegisterVO toRegisterVO(User user) {
+        UserRegisterVO userRegisterVO = BeanUtil.copyProperties(user, UserRegisterVO.class);
+        userRegisterVO.setUserId(user.getId());
+        userRegisterVO.setStatus(user.getStatus().getCode());
+        return userRegisterVO;
     }
 }

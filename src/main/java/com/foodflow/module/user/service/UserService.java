@@ -5,7 +5,7 @@ import com.foodflow.module.user.dto.UserLoginDTO;
 import com.foodflow.module.user.dto.UserRegisterDTO;
 import com.foodflow.module.user.entity.User;
 import com.foodflow.module.user.vo.UserLoginVO;
-import com.foodflow.module.user.vo.UserVO;
+import com.foodflow.module.user.vo.UserRegisterVO;
 
 public interface UserService extends IService<User> {
 
@@ -21,5 +21,5 @@ public interface UserService extends IService<User> {
      * @param userRegisterDTO 注册DTO
      * @return 用户VO
      */
-    UserVO register(UserRegisterDTO userRegisterDTO);
+    UserRegisterVO register(UserRegisterDTO userRegisterDTO);
 }

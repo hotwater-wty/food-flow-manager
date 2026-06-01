@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class UserVO {
+public class UserRegisterVO {
 
     private Long userId;
 
