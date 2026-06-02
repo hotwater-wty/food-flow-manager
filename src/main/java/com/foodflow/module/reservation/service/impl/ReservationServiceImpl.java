@@ -8,10 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.context.LoginContext;
+import com.foodflow.common.enums.DiningSessionStatusEnum;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.utils.NumberUtils;
+import com.foodflow.module.diningsession.entity.DiningSession;
+import com.foodflow.module.diningsession.service.DiningSessionService;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.reservation.dto.ReservationDTO;
 import com.foodflow.module.reservation.entity.Reservation;
@@ -31,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reservation> implements ReservationService {
     
     private final DiningTableService diningTableService;
+    private final DiningSessionService diningSessionService;
     
     /**
      * 创建预约
@@ -206,9 +210,75 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public DiningSessionVO checkInReservation(Long reservationId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'checkInReservation'");
+        // 审查预约状态
+        Reservation reservation = getById(reservationId);
+        if (reservation == null) {
+            throw new BusinessException("预约不存在");
+        }
+        if (reservation.getStatus() != ReservationStatusEnum.WAITING_CHECK_IN) {
+            throw new BusinessException("预约状态错误，请重试");
+        }
+        if (!reservation.getUserId().equals(LoginContext.getUserId())) {
+            throw new BusinessException("只能操作自己的预约");
+        }
+        // 审查桌位状态
+        DiningTable diningTable = diningTableService.getById(reservation.getTableId());
+        if (diningTable == null) {
+            throw new BusinessException("桌位不存在");
+        }
+        // if (diningTable.getStatus() != TableStatusEnum.RESERVED) {
+        //     throw new BusinessException("桌位状态错误");
+        // }
+        // 扫码桌位必须与预约桌位一致
+        if (!reservation.getTableId().equals(diningTable.getId())) {
+            throw new BusinessException("扫码桌位与预约桌位不一致");
+        }
+        // TODO 需处理并发问题
+
+        // 更新预约状态为已到店
+        reservation.setStatus(ReservationStatusEnum.CHECKED_IN);
+        reservation.setCheckInTime(LocalDateTime.now());
+        reservation.setUpdateTime(LocalDateTime.now());
+        updateById(reservation);
+        
+        // 构建会话
+        DiningSession diningSession = getDiningSession(reservation);
+        diningSessionService.saveOrUpdate(diningSession);
+
+        // 更新桌位状态
+        diningTable.setStatus(TableStatusEnum.WAITING);
+        diningTable.setCurrentSessionId(diningSession.getId());
+        diningTableService.updateById(diningTable);
+        
+        // 构建会话VO
+        DiningSessionVO diningSessionVO = DiningSessionVO.builder()
+                .sessionId(diningSession.getId())
+                .sessionOn(diningSession.getSessionOn())
+                .reservationId(diningSession.getReservationId())
+                .tableId(diningSession.getTableId())
+                .tableOn(diningTable.getTableNo())
+                .sessionStatus(diningSession.getStatus().getCode())
+                .tableStatus(diningTable.getStatus().getCode())
+                .build();
+        return diningSessionVO;
+    }
+
+    private DiningSession getDiningSession(Reservation reservation) {
+        return DiningSession.builder()
+                .sessionOn(NumberUtils.generateSessionOn())
+                .userId(LoginContext.getUserId())
+                .tableId(reservation.getTableId())
+                .reservationId(reservation.getId())
+                .status(DiningSessionStatusEnum.WAITING)
+                .openTime(LocalDateTime.now())
+                .firstOrderTime(null)
+                .closeTime(null)
+                .closeEmployeeId(null)
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .build();
     }
    
 }

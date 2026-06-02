@@ -164,29 +164,17 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
     @Transactional(rollbackFor = Exception.class)
     public DiningSessionVO checkInTable(Long tableId) {
         DiningTable diningTable = getById(tableId);
-        if (diningTable == null) {
-            throw new BusinessException("桌位不存在");
+        if (diningTable == null || diningTable.getStatus() == TableStatusEnum.DISABLED) {
+            throw new BusinessException("桌位不存在或已禁用");
         }
         if (diningTable.getStatus() != TableStatusEnum.FREE) {
-            throw new BusinessException("非空闲状态的桌位不能占座");
+            throw new BusinessException("该桌位已被使用");
         }
 
         // TODO 需处理并发问题
 
         // 构建会话
-        DiningSession diningSession = DiningSession.builder()
-                .sessionOn(NumberUtils.generateSessionOn())
-                .userId(LoginContext.getUserId())
-                .tableId(tableId)
-                .reservationId(null)
-                .status(DiningSessionStatusEnum.WAITING)
-                .openTime(LocalDateTime.now())
-                .firstOrderTime(null)
-                .closeTime(null)
-                .closeEmployeeId(null)
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
-                .build();
+        DiningSession diningSession = getDiningSession(tableId);
         diningSessionService.saveOrUpdate(diningSession);
 
         // 更新桌位状态
@@ -205,5 +193,21 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
                 .tableStatus(diningTable.getStatus().getCode())
                 .build();
         return diningSessionVO;
+    }
+
+    private DiningSession getDiningSession(Long tableId) {
+        return DiningSession.builder()
+                .sessionOn(NumberUtils.generateSessionOn())
+                .userId(LoginContext.getUserId())
+                .tableId(tableId)
+                .reservationId(null)
+                .status(DiningSessionStatusEnum.WAITING)
+                .openTime(LocalDateTime.now())
+                .firstOrderTime(null)
+                .closeTime(null)
+                .closeEmployeeId(null)
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .build();
     }
 }
