@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.foodflow.common.result.Result;
+import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.reservation.dto.ReservationDTO;
 import com.foodflow.module.reservation.service.ReservationService;
 import com.foodflow.module.reservation.vo.ReservationCreateVO;
@@ -72,5 +73,18 @@ public class UserReservationController {
         log.info("用户取消预约: {}", reservationId);
         reservationService.cancelReservation(reservationId);
         return Result.success();
+    }
+
+    /**
+     * 预约用户扫码到店
+     * 
+     * @param reservationId
+     * @return
+     */
+    @PostMapping("/{reservationId}/check-in")
+    public Result<DiningSessionVO> checkInReservation(@PathVariable Long reservationId){
+        log.info("预约用户扫码到店: {}", reservationId);
+        DiningSessionVO diningSessionVO = reservationService.checkInReservation(reservationId);
+        return Result.success(diningSessionVO);
     }
 }

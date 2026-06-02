@@ -11,6 +11,8 @@ import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.utils.NumberUtils;
+import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.reservation.dto.ReservationDTO;
 import com.foodflow.module.reservation.entity.Reservation;
 import com.foodflow.module.reservation.mapper.ReservationMapper;
@@ -146,22 +148,13 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         table.setStatus(TableStatusEnum.FREE);
         diningTableService.updateById(table);
     }
-
-    /**
-     * 生成预约编号
-     */
-    private String generateReservationNo() {
-        // 使用时间戳和随机数生成预约编号
-        // TODO 使用雪花算法等生成正式的预约编号，避免重复
-        return System.currentTimeMillis() + "-" + Math.abs((int) (Math.random() * 1000000));
-    }
     
     /**
      * 转换预约DTO为预约实体
      */
     private Reservation toReservation(ReservationDTO reservationDTO) {
         return Reservation.builder()
-                .reservationNo(generateReservationNo())
+                .reservationNo(NumberUtils.generateReservationNo())
                 .userId(LoginContext.getUserId())
                 .tableId(reservationDTO.getTableId())
                 .peopleCount(reservationDTO.getPeopleCount())
@@ -212,7 +205,10 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         return toVO(reservation);
     }
 
-    
-
-    
+    @Override
+    public DiningSessionVO checkInReservation(Long reservationId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'checkInReservation'");
+    }
+   
 }
