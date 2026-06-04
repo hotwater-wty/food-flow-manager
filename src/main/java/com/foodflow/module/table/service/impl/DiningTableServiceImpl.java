@@ -127,7 +127,7 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
             throw new BusinessException("桌位不存在");
         }
         if (diningTable.getStatus() != TableStatusEnum.DISABLED) {
-            throw new BusinessException("非禁用状态的桌位不能启用");
+            throw new BusinessException("不能重复启用");
         }
         diningTable.setStatus(TableStatusEnum.FREE);
         updateById(diningTable);
@@ -142,8 +142,11 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
         if (diningTable == null) {
             throw new BusinessException("桌位不存在");
         }
+        if (diningTable.getStatus() == TableStatusEnum.DISABLED) {
+            throw new BusinessException("不能重复禁用");
+        }
         if (diningTable.getStatus() != TableStatusEnum.FREE) {
-            throw new BusinessException("非空闲状态的桌位不能禁用");
+            throw new BusinessException("当前桌位处于业务状态，不能禁用");
         }
         diningTable.setStatus(TableStatusEnum.DISABLED);
         updateById(diningTable);
