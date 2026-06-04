@@ -8,9 +8,6 @@ import lombok.Data;
 
 @Data
 public class DishUpdateDTO {
-    @NotNull(message = "菜品id不能为空")
-    private Long dishId;
-
     @NotNull(message = "菜品分类id不能为空")
     private Long categoryId;
 

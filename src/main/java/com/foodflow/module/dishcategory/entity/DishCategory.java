@@ -1,29 +1,34 @@
-package com.foodflow.module.dish.entity;
+package com.foodflow.module.dishcategory.entity;
 
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.foodflow.common.enums.DishStatusEnum;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.foodflow.common.enums.CategoryStatusEnum;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Dish {
+@TableName("dish_category")
+public class DishCategory {
+
     @TableId(type = IdType.AUTO)
     private Long id;
-    private Long categoryId;
+
     private String name;
-    private Integer price;
-    private String image;
-    private String description;
-    private DishStatusEnum status;
+
+    private Integer sort;
+
+    private CategoryStatusEnum status;
+
     private LocalDateTime createTime;
+
     private LocalDateTime updateTime;
 }

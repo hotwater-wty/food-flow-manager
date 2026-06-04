@@ -9,18 +9,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.foodflow.common.result.Result;
 import com.foodflow.module.dish.dto.DishCreateDTO;
-import com.foodflow.module.dish.dto.DishDTO;
 import com.foodflow.module.dish.dto.DishUpdateDTO;
 import com.foodflow.module.dish.service.DishService;
 import com.foodflow.module.dish.vo.DishVO;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Slf4j
 @RestController
@@ -82,9 +82,24 @@ public class AdminDishController {
      * @return 菜品VO
      */
     @PutMapping("/{dishId}")
-    public Result<DishVO> updateDish(@Valid @RequestBody DishUpdateDTO dishUpdateDTO) {
-        log.info("更新菜品: {}", dishUpdateDTO);
-        DishVO dishVO = dishService.updateDish(dishUpdateDTO);
+    public Result<DishVO> updateDish(@PathVariable Long dishId,
+            @Valid @RequestBody DishUpdateDTO dishUpdateDTO) {
+        log.info("更新菜品: {}", dishId);
+        DishVO dishVO = dishService.updateDish(dishId, dishUpdateDTO);
         return Result.success(dishVO);
+    }
+
+    /**
+     * 修改菜品状态
+     *
+     * @param dishId 菜品ID
+     * @param status 菜品状态
+     * @return 无
+     */
+    @PostMapping("/{dishId}/status")
+    public Result<Void> updateDishStatus(@PathVariable Long dishId, @RequestParam Integer status) {
+        log.info("修改菜品状态: {}, {}", dishId, status);
+        dishService.updateDishStatus(dishId, status);
+        return Result.success();
     }
 }

@@ -20,6 +20,10 @@ public interface DishService extends IService<Dish> {
 
     List<DishVO> getDishList();
 
-    DishVO updateDish(@Valid DishUpdateDTO dishUpdateDTO);
-    
+    DishVO updateDish(Long dishId, @Valid DishUpdateDTO dishUpdateDTO);
+
+    void updateDishStatus(Long dishId, Integer status);
+
+    List<DishVO> getEnabledDishList(Long categoryId);
+
 }

@@ -30,11 +30,9 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
      */
     @Override
     public List<TableVO> adminTableList() {
-        List<DiningTable> list = query().list();
-        List<TableVO> tableVOList = list.stream()
+        return query().list().stream()
                 .map(this::toTableVO)
                 .collect(Collectors.toList());
-        return tableVOList;
     }
 
     @Override
