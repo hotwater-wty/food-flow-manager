@@ -3,7 +3,6 @@ package com.foodflow.module.table.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.table.dto.TableDTO;
 import com.foodflow.module.table.entity.DiningTable;
 import com.foodflow.module.table.vo.TableVO;

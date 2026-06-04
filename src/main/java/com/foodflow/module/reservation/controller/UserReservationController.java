@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.foodflow.common.result.Result;
-import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.reservation.dto.ReservationDTO;
 import com.foodflow.module.reservation.service.ReservationService;
 import com.foodflow.module.reservation.vo.ReservationCreateVO;

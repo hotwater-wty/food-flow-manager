@@ -8,14 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.context.LoginContext;
-import com.foodflow.common.enums.DiningSessionStatusEnum;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.utils.NumberUtils;
-import com.foodflow.module.diningsession.entity.DiningSession;
-import com.foodflow.module.diningsession.service.DiningSessionService;
-import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.reservation.dto.ReservationDTO;
 import com.foodflow.module.reservation.entity.Reservation;
 import com.foodflow.module.reservation.mapper.ReservationMapper;
