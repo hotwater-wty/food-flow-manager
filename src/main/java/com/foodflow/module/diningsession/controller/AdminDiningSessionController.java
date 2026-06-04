@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.foodflow.common.result.Result;
 import com.foodflow.module.diningsession.service.DiningSessionService;
+import com.foodflow.module.diningsession.vo.SessionCancelVO;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +21,14 @@ public class AdminDiningSessionController {
     private final DiningSessionService diningSessionService;
 
     /**
-     * 店员取消用餐会话
+     * 店员取消等待中的用餐会话
      * @param sessionId 用餐会话ID
      * @return 成功结果
      */
     @PostMapping("{sessionId}/cancel")
-    public Result<Void> cancelAdminSession(@PathVariable Long sessionId) {
-        diningSessionService.cancelAdminSession(sessionId);
-        return Result.success();
+    public Result<SessionCancelVO> cancelWaitingSession(@PathVariable Long sessionId) {
+        SessionCancelVO sessionCancelVO = diningSessionService.cancelWaitingSession(sessionId);
+        return Result.success(sessionCancelVO);
     }
 
 }

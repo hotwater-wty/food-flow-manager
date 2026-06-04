@@ -75,16 +75,5 @@ public class UserReservationController {
         return Result.success();
     }
 
-    /**
-     * 预约用户扫码到店
-     * 
-     * @param reservationId
-     * @return
-     */
-    @PostMapping("/{reservationId}/check-in")
-    public Result<DiningSessionVO> checkInReservation(@PathVariable Long reservationId){
-        log.info("预约用户扫码到店: {}", reservationId);
-        DiningSessionVO diningSessionVO = reservationService.checkInReservation(reservationId);
-        return Result.success(diningSessionVO);
-    }
+    
 }

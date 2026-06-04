@@ -25,7 +25,5 @@ public interface DiningTableService extends IService<DiningTable> {
     void enableTable(Long tableId);
 
     void disableTable(Long tableId);
-
-    DiningSessionVO checkInTable(Long tableId);
     
 }

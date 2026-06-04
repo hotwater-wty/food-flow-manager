@@ -25,6 +25,4 @@ public interface ReservationService extends IService<Reservation>{
 
     ReservationVO getUserReservationDetail(Long reservationId);
 
-    DiningSessionVO checkInReservation(Long reservationId);
-    
 }

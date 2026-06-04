@@ -31,16 +31,4 @@ public class UserTableController {
         return Result.success(tableList);
     }
 
-    /**
-     * 未预约用户扫码占座
-     * 
-     * @param tableId
-     * @return
-     */
-    @PostMapping("/{tableId}/sessions")
-    public Result<DiningSessionVO> checkInTable(@PathVariable Long tableId){
-        log.info("未预约用户扫码占座: {}", tableId);
-        DiningSessionVO diningSessionVO = diningTableService.checkInTable(tableId);
-        return Result.success(diningSessionVO);
-    }
 }
