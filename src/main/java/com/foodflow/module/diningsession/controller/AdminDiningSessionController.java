@@ -6,11 +6,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.foodflow.common.result.Result;
+import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.service.DiningSessionService;
+import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.diningsession.vo.SessionCancelVO;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @Slf4j
 @RestController
@@ -29,6 +36,25 @@ public class AdminDiningSessionController {
     public Result<SessionCancelVO> cancelWaitingSession(@PathVariable Long sessionId) {
         SessionCancelVO sessionCancelVO = diningSessionService.cancelWaitingSession(sessionId);
         return Result.success(sessionCancelVO);
+    }
+
+    /**
+     * 店员获取所有用餐会话列表
+     * @return 用餐会话列表
+     */
+    @GetMapping
+    public Result<List<DiningSessionVO>> getSessionList(DiningSessionDTO diningSessionDTO) {
+        return Result.success(diningSessionService.getSessionList(diningSessionDTO));
+    }
+    
+    /**
+     * 店员获取用餐会话详情
+     * @param sessionId 用餐会话ID
+     * @return 用餐会话详情
+     */
+    @GetMapping("/{sessionId}")
+    public Result<DiningSessionVO> getSessionDetail(@PathVariable Long sessionId) {
+        return Result.success(diningSessionService.getSessionDetail(sessionId));
     }
 
 }

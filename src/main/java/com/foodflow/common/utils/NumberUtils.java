@@ -8,7 +8,7 @@ public class NumberUtils {
     /**
      * 生成会话编号
      */
-    public static String generateSessionOn() {
+    public static String generateSessionNo() {
         return "Session" + LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
     }

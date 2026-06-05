@@ -20,7 +20,7 @@ public class DiningSession {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String sessionOn;
+    private String sessionNo;
 
     private Long userId;
 

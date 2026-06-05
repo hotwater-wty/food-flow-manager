@@ -1,21 +1,21 @@
 package com.foodflow.module.diningsession.dto;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.foodflow.common.enums.DiningSessionStatusEnum;
 
+import lombok.Data;
+
+/**
+ * 用餐会话DTO，条件查询用参数
+ */
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class DiningSessionDTO {
 
-    @NotNull(message = "预约ID不能为空")
     private Long reservationId;
-
-    @NotNull(message = "餐桌ID不能为空")
     private Long tableId;
+    private Long sessionId;
+    private Integer status;
 
+    public DiningSessionStatusEnum getStatusEnum() {
+        return status == null ? null : DiningSessionStatusEnum.ofCode(status);
+    }
 }

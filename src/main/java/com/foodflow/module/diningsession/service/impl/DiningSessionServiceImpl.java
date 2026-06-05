@@ -7,6 +7,7 @@ import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.utils.NumberUtils;
+import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.mapper.DiningSessionMapper;
 import com.foodflow.module.diningsession.service.DiningSessionService;
@@ -21,6 +22,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -90,7 +96,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
             throw new BusinessException("用餐会话关联的餐桌不存在");
         }
 
-        return toDingSessionVO(table, diningSession);
+        return toDiningSessionVO(diningSession, table);
     }
 
     /**
@@ -143,7 +149,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         diningTableService.updateById(currentTable);
         
         // 构建会话VO
-        return toDingSessionVO(currentTable, diningSession);
+        return toDiningSessionVO(diningSession, currentTable);
     }
 
     /**
@@ -174,17 +180,17 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         diningTableService.updateById(diningTable);
         
         // 构建会话VO
-        return toDingSessionVO(diningTable, diningSession);
+        return toDiningSessionVO(diningSession, diningTable);
     }
 
-    private DiningSessionVO toDingSessionVO(
-        DiningTable diningTable, DiningSession diningSession) {
+    private DiningSessionVO toDiningSessionVO(
+                DiningSession diningSession, DiningTable diningTable) {
         return DiningSessionVO.builder()
                 .sessionId(diningSession.getId())
-                .sessionOn(diningSession.getSessionOn())
+                .sessionNo(diningSession.getSessionNo())
                 .reservationId(diningSession.getReservationId())
                 .tableId(diningSession.getTableId())
-                .tableOn(diningTable.getTableNo())
+                .tableNo(diningTable.getTableNo())
                 .sessionStatus(diningSession.getStatus().getCode())
                 .tableStatus(diningTable.getStatus().getCode())
                 .build();
@@ -192,7 +198,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
 
     private DiningSession getDiningSession(Long tableId) {
         return DiningSession.builder()
-                .sessionOn(NumberUtils.generateSessionOn())
+                .sessionNo(NumberUtils.generateSessionNo())
                 .userId(LoginContext.getUserId())
                 .tableId(tableId)
                 .reservationId(null)
@@ -208,7 +214,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
 
     private DiningSession getDiningSession(Reservation reservation) {
         return DiningSession.builder()
-                .sessionOn(NumberUtils.generateSessionOn())
+                .sessionNo(NumberUtils.generateSessionNo())
                 .userId(LoginContext.getUserId())
                 .tableId(reservation.getTableId())
                 .reservationId(reservation.getId())
@@ -220,5 +226,71 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
                 .build();
+    }
+
+    @Override
+    public List<DiningSessionVO> getSessionList(DiningSessionDTO diningSessionDTO) {
+        DiningSessionStatusEnum status = diningSessionDTO.getStatusEnum();
+        List<DiningSession> sessionList = querySessionList(diningSessionDTO, status);
+        Map<Long, DiningTable> tableMap = getTableMap(sessionList);
+        return sessionList.stream()
+                .map(session -> toDiningSessionVO(session, tableMap))
+                .collect(Collectors.toList());
+    }
+
+    private List<DiningSession> querySessionList(
+                DiningSessionDTO diningSessionDTO, DiningSessionStatusEnum status) {
+        return query()
+                .eq(diningSessionDTO.getReservationId() != null,
+                        "reservation_id", diningSessionDTO.getReservationId())
+                .eq(diningSessionDTO.getTableId() != null,
+                        "table_id", diningSessionDTO.getTableId())
+                .eq(diningSessionDTO.getSessionId() != null,
+                        "id", diningSessionDTO.getSessionId())
+                .eq(status != null, "status", status)
+                .list();
+    }
+
+    private Map<Long, DiningTable> getTableMap(List<DiningSession> sessionList) {
+        if (sessionList.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Long> tableIds = sessionList.stream()
+                .map(DiningSession::getTableId)
+                .distinct()
+                .collect(Collectors.toList());
+        return diningTableService.listByIds(tableIds)
+                .stream()
+                .collect(Collectors.toMap(DiningTable::getId, Function.identity()));
+    }
+
+    private DiningSessionVO toDiningSessionVO(
+                DiningSession session, Map<Long, DiningTable> tableMap) {
+        DiningTable table = tableMap.get(session.getTableId());
+        if (table == null) {
+            throw new BusinessException("用餐会话关联的餐桌不存在");
+        }
+        return DiningSessionVO.builder()
+                .sessionId(session.getId())
+                .sessionNo(session.getSessionNo())
+                .reservationId(session.getReservationId())
+                .tableId(session.getTableId())
+                .tableNo(table.getTableNo())
+                .sessionStatus(session.getStatus().getCode())
+                .tableStatus(table.getStatus().getCode())
+                .build();
+    }
+
+    @Override
+    public DiningSessionVO getSessionDetail(Long sessionId) {
+        DiningSession session = getById(sessionId);
+        if (session == null) {
+            throw new BusinessException("会话不存在");
+        }
+        DiningTable table = diningTableService.getById(session.getTableId());
+        if (table == null) {
+            throw new BusinessException("桌位不存在");
+        }
+        return toDiningSessionVO(session, table);
     }
 }

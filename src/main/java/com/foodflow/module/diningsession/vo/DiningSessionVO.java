@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DiningSessionVO {
     private Long sessionId;
-    private String sessionOn;
+    private String sessionNo;
     private Long reservationId;
     private Long tableId;
-    private String tableOn;
+    private String tableNo;
     private Integer sessionStatus;
     private Integer tableStatus;
 }

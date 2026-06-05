@@ -1,13 +1,14 @@
 package com.foodflow.module.diningsession.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.diningsession.vo.SessionCancelVO;
 
-import org.springframework.stereotype.Service;
+import java.util.List;
 
-@Service
+
 public interface DiningSessionService extends IService<DiningSession> {
 
     DiningSessionVO getCurrentSession();
@@ -17,4 +18,8 @@ public interface DiningSessionService extends IService<DiningSession> {
     DiningSessionVO checkInReservation(Long reservationId, Long tableId);
 
     DiningSessionVO checkInTable(Long tableId);
+
+    List<DiningSessionVO> getSessionList(DiningSessionDTO diningSessionDTO);
+
+    DiningSessionVO getSessionDetail(Long sessionId);
 }
