@@ -2,7 +2,6 @@ package com.foodflow.module.diningorder.vo;
 
 import java.util.List;
 
-import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.module.orderitem.vo.OrderItemCreateVO;
 
 import lombok.Data;
@@ -22,7 +21,7 @@ public class DiningOrderCreateVO {
     private Long tableId;
     private String tableNo;
     private Integer totalAmount;
-    private OrderStatusEnum status;
+    private Integer status;
 
     private List<OrderItemCreateVO> items;
 }
