@@ -22,4 +22,13 @@ public class NumberUtils {
         return "Reservation" + LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
     }
+
+    /**
+     * 生成订单编号
+     */
+    public static String generateOrderNo() {
+        // UUID.randomUUID().toString().replace("-", "")
+        return "Order" + LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
 }
