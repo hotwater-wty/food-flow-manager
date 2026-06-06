@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderItemVO {
-    private Long orderItemId;
-    private Long orderId;
     private Long dishId;
     private String dishName;
     private String dishImage;

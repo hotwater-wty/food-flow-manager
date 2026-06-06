@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
 import com.foodflow.module.diningorder.entity.DiningOrder;
+import com.foodflow.module.diningorder.vo.AdminDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderVO;
 import com.foodflow.module.diningorder.vo.DiningOrderCreateVO;
 import com.foodflow.module.diningorder.vo.UserDiningOrderVO;
@@ -19,5 +20,7 @@ public interface DiningOrderService extends IService<DiningOrder> {
     List<UserDiningOrderVO> getOrderList(@Valid DiningOrderDTO diningOrderDTO);
 
     List<AdminDiningOrderVO> getAdminOrderList(@Valid DiningOrderDTO diningOrderDTO);
+
+    AdminDiningOrderDetailVO getAdminOrderDetail(Long orderId);
     
 }

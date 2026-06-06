@@ -3,11 +3,14 @@ package com.foodflow.module.diningorder.controller;
 import com.foodflow.common.result.Result;
 import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.service.DiningOrderService;
+import com.foodflow.module.diningorder.vo.AdminDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderVO;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,5 +36,17 @@ public class AdminDiningOrderController {
         List<AdminDiningOrderVO> diningOrderVOList = diningOrderService
                 .getAdminOrderList(diningOrderDTO);
         return Result.success(diningOrderVOList);
+    }
+
+    /**
+     * 管理员查看堂食订单详情
+     */
+    @GetMapping("/{orderId}")
+    public Result<AdminDiningOrderDetailVO> getOrderDetail(
+            @PathVariable @NotNull(message = "订单ID不能为空") Long orderId) {
+        log.info("管理员查看堂食订单详情, orderId: {}", orderId);
+        AdminDiningOrderDetailVO diningOrderDetailVO = diningOrderService
+                .getAdminOrderDetail(orderId);
+        return Result.success(diningOrderDetailVO);
     }
 }

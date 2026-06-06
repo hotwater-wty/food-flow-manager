@@ -14,6 +14,7 @@ import com.foodflow.module.diningorder.dto.OrderItemDTO;
 import com.foodflow.module.diningorder.entity.DiningOrder;
 import com.foodflow.module.diningorder.mapper.DiningOrderMapper;
 import com.foodflow.module.diningorder.service.DiningOrderService;
+import com.foodflow.module.diningorder.vo.AdminDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderVO;
 import com.foodflow.module.diningorder.vo.DiningOrderCreateVO;
 import com.foodflow.module.diningorder.vo.UserDiningOrderVO;
@@ -24,11 +25,11 @@ import com.foodflow.module.dish.service.DishService;
 import com.foodflow.module.orderitem.entity.OrderItem;
 import com.foodflow.module.orderitem.service.OrderItemService;
 import com.foodflow.module.orderitem.vo.OrderItemCreateVO;
+import com.foodflow.module.orderitem.vo.OrderItemVO;
 import com.foodflow.module.table.entity.DiningTable;
 import com.foodflow.module.table.service.DiningTableService;
 
 import io.jsonwebtoken.lang.Collections;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,7 +140,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .tableNo(diningTable.getTableNo())
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus().getCode())
-                .items(itemsToVOList(orderItems))
+                .items(itemsToCreateVOList(orderItems))
                 .build();
     }
 
@@ -160,7 +161,10 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
         return totalAmount;
     }
 
-    private List<OrderItemCreateVO> itemsToVOList(List<OrderItem> orderItems) {
+    private List<OrderItemCreateVO> itemsToCreateVOList(List<OrderItem> orderItems) {
+        if (orderItems.isEmpty()) {
+            return Collections.emptyList();
+        }
         return orderItems.stream().map(orderItem -> OrderItemCreateVO.builder()
                 .dishId(orderItem.getDishId())
                 .dishName(orderItem.getDishName())
@@ -233,5 +237,49 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                         .createTime(order.getCreateTime())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public AdminDiningOrderDetailVO getAdminOrderDetail(Long orderId) {
+        DiningOrder order = getById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        DiningTable table = diningTableService.getById(order.getTableId());
+        if (order.getStatus() != OrderStatusEnum.COMPLETED
+                && order.getStatus() != OrderStatusEnum.CANCELED
+                && table == null) {
+            throw new BusinessException("桌位不存在，状态异常");
+        }
+        List<OrderItem> orderItemList = orderItemService.query()
+                .eq("order_id", orderId)
+                .list();
+        return AdminDiningOrderDetailVO.builder()
+                .orderId(order.getId())
+                .orderNo(order.getOrderNo())
+                .sessionId(order.getSessionId())
+                .tableId(order.getTableId())
+                .tableNo(table == null 
+                        ? "已删除桌位" 
+                        : table.getTableNo())
+                .totalAmount(order.getTotalAmount())
+                .status(order.getStatus().getCode())
+                .createTime(order.getCreateTime())
+                .items(itemsToVOList(orderItemList))
+                .build();
+    }
+
+    private List<OrderItemVO> itemsToVOList(List<OrderItem> orderItems) {
+        if (orderItems.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return orderItems.stream().map(orderItem -> OrderItemVO.builder()
+                .dishId(orderItem.getDishId())
+                .dishName(orderItem.getDishName())
+                .dishPrice(orderItem.getDishPrice())
+                .quantity(orderItem.getQuantity())
+                .amount(orderItem.getAmount())
+                .remark(orderItem.getRemark())
+                .build()).toList();
     }
 }
