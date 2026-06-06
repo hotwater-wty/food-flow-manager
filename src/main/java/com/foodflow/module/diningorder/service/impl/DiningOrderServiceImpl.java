@@ -11,12 +11,14 @@ import com.foodflow.common.utils.NumberUtils;
 import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
 import com.foodflow.module.diningorder.dto.OrderItemDTO;
+import com.foodflow.module.diningorder.dto.OrderStatusUpdateDTO;
 import com.foodflow.module.diningorder.entity.DiningOrder;
 import com.foodflow.module.diningorder.mapper.DiningOrderMapper;
 import com.foodflow.module.diningorder.service.DiningOrderService;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderVO;
 import com.foodflow.module.diningorder.vo.DiningOrderCreateVO;
+import com.foodflow.module.diningorder.vo.DiningOrderUpdateVO;
 import com.foodflow.module.diningorder.vo.UserDiningOrderVO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.service.DiningSessionService;
@@ -281,5 +283,57 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .amount(orderItem.getAmount())
                 .remark(orderItem.getRemark())
                 .build()).toList();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public DiningOrderUpdateVO updateAdminOrderStatus(Long orderId, OrderStatusUpdateDTO orderStatusUpdateDTO) {
+        DiningOrder order = getById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+
+        OrderStatusEnum currentStatus = order.getStatus();
+        if (currentStatus == OrderStatusEnum.COMPLETED 
+                || currentStatus == OrderStatusEnum.CANCELED) {
+            throw new BusinessException("订单已完成或已取消，不能更新状态");
+        }
+
+        OrderStatusEnum newStatus = OrderStatusEnum.ofCode(orderStatusUpdateDTO.getStatus());
+        if (newStatus == null) {
+            throw new BusinessException("订单状态不能为空");
+        }
+        if (newStatus == OrderStatusEnum.CANCELED) {
+            throw new BusinessException("暂不支持取消订单");
+        }
+        if (newStatus == currentStatus) {
+            // 幂等返回当前状态
+            return DiningOrderUpdateVO.builder()
+                    .orderId(order.getId())
+                    .orderNo(order.getOrderNo())
+                    .status(order.getStatus().getCode())
+                    .build();
+        }
+        if (newStatus.getCode() != currentStatus.getCode() + 1) {
+            throw new BusinessException("订单状态流转不合法");
+        }
+
+        DiningTable table = diningTableService.getById(order.getTableId());
+        if (table == null) {
+            throw new BusinessException("桌位不存在");
+        }
+        DiningSession session = diningSessionService.getById(order.getSessionId());
+        if (session == null) {
+            throw new BusinessException("会话不存在");
+        }
+        
+        order.setStatus(newStatus);
+        order.setUpdateTime(LocalDateTime.now());
+        updateById(order);
+        return DiningOrderUpdateVO.builder()
+                .orderId(order.getId())
+                .orderNo(order.getOrderNo())
+                .status(order.getStatus().getCode())
+                .build();
     }
 }

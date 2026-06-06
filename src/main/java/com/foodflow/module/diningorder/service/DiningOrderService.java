@@ -5,13 +5,16 @@ import java.util.List;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
+import com.foodflow.module.diningorder.dto.OrderStatusUpdateDTO;
 import com.foodflow.module.diningorder.entity.DiningOrder;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderVO;
 import com.foodflow.module.diningorder.vo.DiningOrderCreateVO;
+import com.foodflow.module.diningorder.vo.DiningOrderUpdateVO;
 import com.foodflow.module.diningorder.vo.UserDiningOrderVO;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 public interface DiningOrderService extends IService<DiningOrder> {
 
@@ -22,5 +25,8 @@ public interface DiningOrderService extends IService<DiningOrder> {
     List<AdminDiningOrderVO> getAdminOrderList(@Valid DiningOrderDTO diningOrderDTO);
 
     AdminDiningOrderDetailVO getAdminOrderDetail(Long orderId);
+
+    DiningOrderUpdateVO updateAdminOrderStatus(Long orderId,
+            OrderStatusUpdateDTO orderStatusUpdateDTO);
     
 }
