@@ -8,12 +8,14 @@ import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.utils.NumberUtils;
+import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
 import com.foodflow.module.diningorder.dto.OrderItemDTO;
 import com.foodflow.module.diningorder.entity.DiningOrder;
 import com.foodflow.module.diningorder.mapper.DiningOrderMapper;
 import com.foodflow.module.diningorder.service.DiningOrderService;
 import com.foodflow.module.diningorder.vo.DiningOrderCreateVO;
+import com.foodflow.module.diningorder.vo.UserDiningOrderVO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.service.DiningSessionService;
 import com.foodflow.module.dish.entity.Dish;
@@ -23,6 +25,8 @@ import com.foodflow.module.orderitem.service.OrderItemService;
 import com.foodflow.module.orderitem.vo.OrderItemCreateVO;
 import com.foodflow.module.table.entity.DiningTable;
 import com.foodflow.module.table.service.DiningTableService;
+
+import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -162,5 +166,37 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .quantity(orderItem.getQuantity())
                 .amount(orderItem.getAmount())
                 .build()).toList();
+    }
+
+    @Override
+    public List<UserDiningOrderVO> getOrderList(DiningOrderDTO diningOrderDTO) {
+        List<DiningOrder> orderList = query()
+                .eq(diningOrderDTO.getTableId() != null, "table_id", diningOrderDTO.getTableId())
+                .eq(diningOrderDTO.getOrderId() != null, "id", diningOrderDTO.getOrderId())
+                .eq(diningOrderDTO.getStatusEnum() != null, "status", diningOrderDTO.getStatusEnum())
+                .eq("user_id", LoginContext.getUserId()).list();
+        if (orderList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> tableIdList = orderList.stream()
+                .map(DiningOrder::getTableId)
+                .collect(Collectors.toList());
+        List<DiningTable> tableList = diningTableService.listByIds(tableIdList);
+        Map<Long, DiningTable> tableMap = tableList.stream()
+                .collect(Collectors.toMap(DiningTable::getId, Function.identity()));
+        return orderList.stream()
+                .map(order -> UserDiningOrderVO.builder()
+                        .orderId(order.getId())
+                        .orderNo(order.getOrderNo())
+                        .tableId(order.getTableId())
+                        .tableNo(tableMap.get(order.getTableId()) == null 
+                                ? "已删除桌位" 
+                                : tableMap.get(order.getTableId()).getTableNo())
+                        .totalAmount(order.getTotalAmount())
+                        .status(order.getStatus().getCode())
+                        .createTime(order.getCreateTime())
+                        .build())
+                .toList();
     }
 }
