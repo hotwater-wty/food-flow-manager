@@ -1,5 +1,8 @@
 package com.foodflow.module.table.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +27,7 @@ import com.foodflow.module.table.vo.TableVO;
 @RestController
 @RequestMapping("/api/admin/tables")
 @RequiredArgsConstructor
+@Tag(name = "管理端-桌位管理", description = "管理端桌位新增、查询、修改、删除与启禁用接口")
 public class AdminTableController {
 
     private final DiningTableService diningTableService;
@@ -35,6 +39,7 @@ public class AdminTableController {
      * @return
      */
     @PostMapping
+    @Operation(summary = "新增桌位", description = "管理端新增餐厅桌位")
     public Result<Void> createTable(@Validated @RequestBody TableDTO tableDTO) {
         log.info("创建桌位: {}", tableDTO);
         diningTableService.createTable(tableDTO);
@@ -47,6 +52,7 @@ public class AdminTableController {
      * @return
      */
     @GetMapping
+    @Operation(summary = "查询桌位列表", description = "管理端查询全部桌位列表")
     public Result<List<TableVO>> getTableList() {
         log.info("获取桌位列表");
         List<TableVO> tableList = diningTableService.adminTableList();
@@ -60,7 +66,9 @@ public class AdminTableController {
      * @return
      */
     @GetMapping("/{tableId}")
-    public Result<TableVO> getTableById(@PathVariable Long tableId) {
+    @Operation(summary = "查询桌位详情", description = "根据桌位ID查询桌位详情")
+    public Result<TableVO> getTableById(
+            @Parameter(description = "桌位ID", example = "1") @PathVariable Long tableId) {
         log.info("获取桌位详情: {}", tableId);
         TableVO tableVO = diningTableService.getTableById(tableId);
         return Result.success(tableVO);
@@ -74,7 +82,9 @@ public class AdminTableController {
      * @return
      */
     @PutMapping("/{tableId}")
-    public Result<Void> updateTable(@PathVariable Long tableId,
+    @Operation(summary = "修改桌位", description = "根据桌位ID修改桌号、容量和位置描述")
+    public Result<Void> updateTable(
+            @Parameter(description = "桌位ID", example = "1") @PathVariable Long tableId,
             @Validated @RequestBody TableDTO tableDTO) {
         log.info("更新桌位: {}", tableId);
         diningTableService.updateTable(tableId, tableDTO);
@@ -88,7 +98,9 @@ public class AdminTableController {
      * @return
      */
     @DeleteMapping("/{tableId}")
-    public Result<Void> deleteTable(@PathVariable Long tableId) {
+    @Operation(summary = "删除桌位", description = "根据桌位ID删除桌位")
+    public Result<Void> deleteTable(
+            @Parameter(description = "桌位ID", example = "1") @PathVariable Long tableId) {
         log.info("删除桌位: {}", tableId);
         diningTableService.deleteTable(tableId);
         return Result.success();
@@ -101,7 +113,9 @@ public class AdminTableController {
      * @return
      */
     @PostMapping("/{tableId}/enable")
-    public Result<Void> enableTable(@PathVariable Long tableId) {
+    @Operation(summary = "启用桌位", description = "启用指定桌位，使其可被用户预约或扫码开台")
+    public Result<Void> enableTable(
+            @Parameter(description = "桌位ID", example = "1") @PathVariable Long tableId) {
         log.info("启用桌位: {}", tableId);
         diningTableService.enableTable(tableId);
         return Result.success();
@@ -114,7 +128,9 @@ public class AdminTableController {
      * @return
      */
     @PostMapping("/{tableId}/disable")
-    public Result<Void> disableTable(@PathVariable Long tableId) {
+    @Operation(summary = "禁用桌位", description = "禁用指定桌位，使其不可被用户预约或扫码开台")
+    public Result<Void> disableTable(
+            @Parameter(description = "桌位ID", example = "1") @PathVariable Long tableId) {
         log.info("禁用桌位: {}", tableId);
         diningTableService.disableTable(tableId);
         return Result.success();
