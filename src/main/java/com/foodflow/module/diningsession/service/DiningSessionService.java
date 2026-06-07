@@ -22,4 +22,6 @@ public interface DiningSessionService extends IService<DiningSession> {
     List<DiningSessionVO> getSessionList(DiningSessionDTO diningSessionDTO);
 
     DiningSessionVO getSessionDetail(Long sessionId);
+
+    DiningSessionVO closeSession(Long sessionId);
 }

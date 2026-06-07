@@ -11,6 +11,7 @@ import com.foodflow.module.diningsession.service.DiningSessionService;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.diningsession.vo.SessionCancelVO;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,6 +56,18 @@ public class AdminDiningSessionController {
     @GetMapping("/{sessionId}")
     public Result<DiningSessionVO> getSessionDetail(@PathVariable Long sessionId) {
         return Result.success(diningSessionService.getSessionDetail(sessionId));
+    }
+
+    /**
+     * 管理员清台释放桌位
+     */
+    @PostMapping("/{sessionId}/close")
+    public Result<DiningSessionVO> closeSession(
+            @PathVariable @NotNull(message = "用餐会话ID不能为空") Long sessionId) {
+        log.info("管理员清台释放桌位, sessionId: {}", sessionId);
+        DiningSessionVO diningSessionVO = diningSessionService
+                .closeSession(sessionId);
+        return Result.success(diningSessionVO);
     }
 
 }

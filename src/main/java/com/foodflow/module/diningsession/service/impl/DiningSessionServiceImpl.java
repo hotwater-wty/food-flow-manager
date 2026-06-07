@@ -3,10 +3,13 @@ package com.foodflow.module.diningsession.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.enums.DiningSessionStatusEnum;
+import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.utils.NumberUtils;
+import com.foodflow.module.diningorder.entity.DiningOrder;
+import com.foodflow.module.diningorder.service.DiningOrderService;
 import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.mapper.DiningSessionMapper;
@@ -39,6 +42,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
 
     private final DiningTableService diningTableService;
     private final ReservationService reservationService;
+    private final DiningOrderService diningOrderService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -188,7 +192,6 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         return DiningSessionVO.builder()
                 .sessionId(diningSession.getId())
                 .sessionNo(diningSession.getSessionNo())
-                .reservationId(diningSession.getReservationId())
                 .tableId(diningSession.getTableId())
                 .tableNo(diningTable.getTableNo())
                 .sessionStatus(diningSession.getStatus().getCode())
@@ -273,7 +276,6 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         return DiningSessionVO.builder()
                 .sessionId(session.getId())
                 .sessionNo(session.getSessionNo())
-                .reservationId(session.getReservationId())
                 .tableId(session.getTableId())
                 .tableNo(table.getTableNo())
                 .sessionStatus(session.getStatus().getCode())
@@ -291,6 +293,49 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (table == null) {
             throw new BusinessException("桌位不存在");
         }
+        return toDiningSessionVO(session, table);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public DiningSessionVO closeSession(Long sessionId) {
+        DiningSession session = getById(sessionId);
+        if (session == null) {
+            throw new BusinessException("会话不存在");
+        }
+        if (session.getStatus() != DiningSessionStatusEnum.DINING) {
+            throw new BusinessException("会话状态错误");
+        }
+
+        List<DiningOrder> orderList = diningOrderService.query()
+                .eq("session_id", sessionId)
+                .list();
+        if (orderList.isEmpty()) {
+            throw new BusinessException("订单不存在");
+        }
+        orderList.forEach(order -> order.setStatus(OrderStatusEnum.COMPLETED));
+        diningOrderService.saveOrUpdateBatch(orderList);
+
+        session.setStatus(DiningSessionStatusEnum.COMPLETED);
+        session.setUpdateTime(LocalDateTime.now());
+        session.setCloseTime(LocalDateTime.now());
+        session.setCloseEmployeeId(LoginContext.getEmployeeId());
+        updateById(session);
+
+        DiningTable table = diningTableService.getById(session.getTableId());
+        if (table == null) {
+            throw new BusinessException("桌位不存在");
+        }
+        if (table.getStatus() != TableStatusEnum.DINING) {
+            throw new BusinessException("桌位状态错误");
+        }
+        table.setStatus(TableStatusEnum.FREE);
+        table.setUpdateTime(LocalDateTime.now());
+        table.setCurrentSessionId(null);
+        // 桌位状态更新要往后放，减轻并发风险
+        // TODO 要加锁
+        diningTableService.updateById(table);   
+
         return toDiningSessionVO(session, table);
     }
 }

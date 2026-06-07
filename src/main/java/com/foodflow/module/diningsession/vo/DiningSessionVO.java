@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 public class DiningSessionVO {
     private Long sessionId;
     private String sessionNo;
-    private Long reservationId;
     private Long tableId;
     private String tableNo;
     private Integer sessionStatus;
