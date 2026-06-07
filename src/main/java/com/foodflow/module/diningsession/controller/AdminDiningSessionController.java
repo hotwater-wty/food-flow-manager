@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.foodflow.common.result.Result;
 import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.service.DiningSessionService;
+import com.foodflow.module.diningsession.vo.DiningSessionCloseVO;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.diningsession.vo.SessionCancelVO;
 
@@ -62,12 +63,12 @@ public class AdminDiningSessionController {
      * 管理员清台释放桌位
      */
     @PostMapping("/{sessionId}/close")
-    public Result<DiningSessionVO> closeSession(
+    public Result<DiningSessionCloseVO> closeSession(
             @PathVariable @NotNull(message = "用餐会话ID不能为空") Long sessionId) {
         log.info("管理员清台释放桌位, sessionId: {}", sessionId);
-        DiningSessionVO diningSessionVO = diningSessionService
+        DiningSessionCloseVO diningSessionCloseVO = diningSessionService
                 .closeSession(sessionId);
-        return Result.success(diningSessionVO);
+        return Result.success(diningSessionCloseVO);
     }
 
 }

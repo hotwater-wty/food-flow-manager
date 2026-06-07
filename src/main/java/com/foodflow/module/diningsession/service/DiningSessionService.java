@@ -3,6 +3,7 @@ package com.foodflow.module.diningsession.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.entity.DiningSession;
+import com.foodflow.module.diningsession.vo.DiningSessionCloseVO;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.diningsession.vo.SessionCancelVO;
 
@@ -23,5 +24,5 @@ public interface DiningSessionService extends IService<DiningSession> {
 
     DiningSessionVO getSessionDetail(Long sessionId);
 
-    DiningSessionVO closeSession(Long sessionId);
+    DiningSessionCloseVO closeSession(Long sessionId);
 }

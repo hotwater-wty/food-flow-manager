@@ -1,5 +1,7 @@
 package com.foodflow.module.diningsession.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.enums.DiningSessionStatusEnum;
@@ -9,11 +11,12 @@ import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.utils.NumberUtils;
 import com.foodflow.module.diningorder.entity.DiningOrder;
-import com.foodflow.module.diningorder.service.DiningOrderService;
+import com.foodflow.module.diningorder.mapper.DiningOrderMapper;
 import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.mapper.DiningSessionMapper;
 import com.foodflow.module.diningsession.service.DiningSessionService;
+import com.foodflow.module.diningsession.vo.DiningSessionCloseVO;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import com.foodflow.module.diningsession.vo.SessionCancelVO;
 import com.foodflow.module.reservation.entity.Reservation;
@@ -42,7 +45,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
 
     private final DiningTableService diningTableService;
     private final ReservationService reservationService;
-    private final DiningOrderService diningOrderService;
+    private final DiningOrderMapper diningOrderMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -298,7 +301,8 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public DiningSessionVO closeSession(Long sessionId) {
+    public DiningSessionCloseVO closeSession(Long sessionId) {
+        // TODO 要加锁，确保并发安全
         DiningSession session = getById(sessionId);
         if (session == null) {
             throw new BusinessException("会话不存在");
@@ -307,21 +311,6 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
             throw new BusinessException("会话状态错误");
         }
 
-        List<DiningOrder> orderList = diningOrderService.query()
-                .eq("session_id", sessionId)
-                .list();
-        if (orderList.isEmpty()) {
-            throw new BusinessException("订单不存在");
-        }
-        orderList.forEach(order -> order.setStatus(OrderStatusEnum.COMPLETED));
-        diningOrderService.saveOrUpdateBatch(orderList);
-
-        session.setStatus(DiningSessionStatusEnum.COMPLETED);
-        session.setUpdateTime(LocalDateTime.now());
-        session.setCloseTime(LocalDateTime.now());
-        session.setCloseEmployeeId(LoginContext.getEmployeeId());
-        updateById(session);
-
         DiningTable table = diningTableService.getById(session.getTableId());
         if (table == null) {
             throw new BusinessException("桌位不存在");
@@ -329,13 +318,60 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (table.getStatus() != TableStatusEnum.DINING) {
             throw new BusinessException("桌位状态错误");
         }
-        table.setStatus(TableStatusEnum.FREE);
-        table.setUpdateTime(LocalDateTime.now());
-        table.setCurrentSessionId(null);
+        
+        List<DiningOrder> orderList = diningOrderMapper.selectList(
+                new LambdaQueryWrapper<DiningOrder>()
+                        .eq(DiningOrder::getSessionId, sessionId));
+        if (orderList.isEmpty()) {
+            throw new BusinessException("订单不存在");
+        }
+
+        // 订单状态更新需要校验
+        LocalDateTime now = LocalDateTime.now();
+        for (DiningOrder order : orderList) {
+            if (order.getStatus() == OrderStatusEnum.PLACED
+             || order.getStatus() == OrderStatusEnum.COOKING) {
+                throw new BusinessException("订单未完成，不能关闭会话");
+            }
+            if (order.getStatus() == OrderStatusEnum.COMPLETED
+             || order.getStatus() == OrderStatusEnum.CANCELED) {
+                continue;
+            }
+        }
+        DiningOrder orderUpdate = DiningOrder.builder()
+                .status(OrderStatusEnum.COMPLETED)
+                .updateTime(now)
+                .build();
+        diningOrderMapper.update(orderUpdate,
+                new LambdaUpdateWrapper<DiningOrder>()
+                        .eq(DiningOrder::getSessionId, sessionId)
+                        .eq(DiningOrder::getStatus, OrderStatusEnum.SERVED));
+        
+        session.setStatus(DiningSessionStatusEnum.COMPLETED);
+        session.setUpdateTime(now);
+        session.setCloseTime(now);
+        session.setCloseEmployeeId(LoginContext.getEmployeeId());
+        updateById(session);
+        
         // 桌位状态更新要往后放，减轻并发风险
-        // TODO 要加锁
+        table.setStatus(TableStatusEnum.FREE);
+        table.setUpdateTime(now);
+        table.setCurrentSessionId(null);
         diningTableService.updateById(table);   
 
-        return toDiningSessionVO(session, table);
+        return toDiningSessionCloseVO(session, table);
+    }
+
+    private DiningSessionCloseVO toDiningSessionCloseVO(DiningSession session, DiningTable table) {
+        return DiningSessionCloseVO.builder()
+                .sessionId(session.getId())
+                .sessionNo(session.getSessionNo())
+                .tableId(session.getTableId())
+                .tableNo(table.getTableNo())
+                .sessionStatus(session.getStatus().getCode())
+                .tableStatus(table.getStatus().getCode())
+                .closeTime(session.getCloseTime())
+                .closeEmployeeId(session.getCloseEmployeeId())
+                .build();
     }
 }
