@@ -76,7 +76,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .toList();
         List<Dish> dishes = dishService.query()
                 .in("id", dishIds)
-                .eq("status", DishStatusEnum.ON_SALE.getCode())
+                .eq("status", DishStatusEnum.ON_SALE)
                 .list();
         if (dishes.size() != dishIds.size()) {
             throw new BusinessException("菜品不存在或已下架");

@@ -88,8 +88,8 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         // 只返回当前用户的等待中或用餐中的会话
         DiningSession diningSession = query()
                 .eq("user_id", LoginContext.getUserId())
-                .in("status", DiningSessionStatusEnum.WAITING.getCode(),
-                     DiningSessionStatusEnum.DINING.getCode())
+                .in("status", DiningSessionStatusEnum.WAITING,
+                     DiningSessionStatusEnum.DINING)
                 .one();
         if (diningSession == null) {
             throw new BusinessException("当前用户没有用餐会话");
@@ -134,6 +134,16 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (!reservation.getTableId().equals(currentTable.getId())) {
             throw new BusinessException("扫码桌位与预约桌位不一致");
         }
+        // 用户当前是否有用餐会话
+        List<DiningSession> currentSessions = query()
+                .eq("user_id", LoginContext.getUserId())
+                .in("status", DiningSessionStatusEnum.WAITING,
+                     DiningSessionStatusEnum.DINING)
+                .list();
+        if (!currentSessions.isEmpty()) {
+            throw new BusinessException("当前用户已存在用餐会话");
+        }
+
         // TODO 需处理并发问题
 
         // 更新预约状态为已到店
