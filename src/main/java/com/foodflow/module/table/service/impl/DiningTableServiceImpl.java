@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -69,7 +68,10 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
                 && diningTable.getStatus() != TableStatusEnum.FREE) {
             throw new BusinessException("业务状态的桌位不能更新");
         }
-        BeanUtils.copyProperties(tableDTO, diningTable);
+        // BeanUtils.copyProperties(tableDTO, diningTable);
+        diningTable.setTableNo(tableDTO.getTableNo());
+        diningTable.setCapacity(tableDTO.getCapacity());
+        diningTable.setLocationDesc(tableDTO.getLocationDesc());
         diningTable.setId(tableId);
         updateById(diningTable);
     }
