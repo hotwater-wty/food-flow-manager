@@ -27,4 +27,5 @@ public class UserTableController {
         List<TableVO> tableList = diningTableService.userFreeTableList();
         return Result.success(tableList);
     }
+
 }

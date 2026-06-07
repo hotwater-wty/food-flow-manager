@@ -1,12 +1,18 @@
 package com.foodflow.common.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.baomidou.mybatisplus.annotation.IEnum;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import lombok.Getter;
 
 @Getter
-public enum EmployeeRoleEnum {
+public enum EmployeeRoleEnum implements IEnum<Integer> {
     STAFF(1, "店员"),
     MANAGER(2, "店长");
 
+    @EnumValue
+    @JsonValue
     private final Integer code;
     private final String description;
 
@@ -22,5 +28,10 @@ public enum EmployeeRoleEnum {
             }
         }
         throw new IllegalArgumentException("Unknown employee role code: " + code);
+    }
+
+    @Override
+    public Integer getValue() {
+        return code;
     }
 }

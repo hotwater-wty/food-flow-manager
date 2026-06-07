@@ -1,13 +1,19 @@
 package com.foodflow.common.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.baomidou.mybatisplus.annotation.IEnum;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import lombok.Getter;
 
 @Getter
-public enum EmployeeStatusEnum {
+public enum EmployeeStatusEnum implements IEnum<Integer> {
     NORMAL(1, "正常"),
     DISABLED(2, "禁用"),
     RESIGNED(3, "离职");
 
+    @EnumValue
+    @JsonValue
     private final Integer code;
     private final String description;
 
@@ -23,5 +29,10 @@ public enum EmployeeStatusEnum {
             }
         }
         throw new IllegalArgumentException("Unknown employee status code: " + code);
+    }
+
+    @Override
+    public Integer getValue() {
+        return code;
     }
 }

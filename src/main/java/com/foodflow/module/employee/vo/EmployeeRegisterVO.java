@@ -1,0 +1,17 @@
+package com.foodflow.module.employee.vo;
+
+import com.foodflow.common.enums.EmployeeRoleEnum;
+import lombok.Data;
+
+@Data
+public class EmployeeRegisterVO {
+    private Long employeeId;
+
+    private String phone;
+
+    private String name;
+
+    private EmployeeRoleEnum role;
+
+    private Integer status;
+}

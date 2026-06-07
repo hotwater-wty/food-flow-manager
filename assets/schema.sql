@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `order_item` (
 
 -- V1 初始化数据
 INSERT INTO `employee` (`phone`, `password`, `name`, `role`, `status`)
-SELECT '18800000000', '$2a$10$replace_with_encoded_password', '默认店长', 2, 1
+SELECT '18800000000', '$2a$10$KMER9E1bKi1TUMhLnJ7RGO7lrm5avQibzF4ywJExlpVhsT6Oy6l02', '默认店长', 2, 1
 WHERE NOT EXISTS (
   SELECT 1 FROM `employee` WHERE `phone` = '18800000000'
 );

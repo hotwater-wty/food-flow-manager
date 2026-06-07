@@ -2,10 +2,14 @@ package com.foodflow.module.user.vo;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
 @Builder
-public class UserVO {
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserRegisterVO {
 
     private Long userId;
 

@@ -1,13 +1,19 @@
 package com.foodflow.common.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.baomidou.mybatisplus.annotation.IEnum;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import lombok.Getter;
 
 @Getter
-public enum DishStatusEnum {
+public enum DishStatusEnum implements IEnum<Integer> {
     STOPPED(0, "停售"),
     ON_SALE(1, "启售"),
     SOLD_OUT(2, "售罄");
 
+    @EnumValue
+    @JsonValue
     private final Integer code;
     private final String description;
 
@@ -23,5 +29,10 @@ public enum DishStatusEnum {
             }
         }
         throw new IllegalArgumentException("Unknown dish status code: " + code);
+    }
+
+    @Override
+    public Integer getValue() {
+        return code;
     }
 }
