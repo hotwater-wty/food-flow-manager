@@ -3,6 +3,7 @@ package com.foodflow.module.diningsession.controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.foodflow.common.result.Result;
@@ -10,16 +11,12 @@ import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.service.DiningSessionService;
 import com.foodflow.module.diningsession.vo.DiningSessionCloseVO;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
-import com.foodflow.module.diningsession.vo.SessionCancelVO;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-
-import org.springframework.web.bind.annotation.GetMapping;
-
 
 @Slf4j
 @RestController
@@ -31,26 +28,29 @@ public class AdminDiningSessionController {
 
     /**
      * 店员取消等待中的用餐会话
+     * 
      * @param sessionId 用餐会话ID
      * @return 成功结果
      */
     @PostMapping("{sessionId}/cancel")
-    public Result<SessionCancelVO> cancelWaitingSession(@PathVariable Long sessionId) {
-        SessionCancelVO sessionCancelVO = diningSessionService.cancelWaitingSession(sessionId);
-        return Result.success(sessionCancelVO);
+    public Result<DiningSessionCloseVO> cancelWaitingSession(@PathVariable Long sessionId) {
+        DiningSessionCloseVO diningSessionCloseVO = diningSessionService.cancelWaitingSession(sessionId);
+        return Result.success(diningSessionCloseVO);
     }
 
     /**
      * 店员获取所有用餐会话列表
+     * 
      * @return 用餐会话列表
      */
     @GetMapping
     public Result<List<DiningSessionVO>> getSessionList(DiningSessionDTO diningSessionDTO) {
         return Result.success(diningSessionService.getSessionList(diningSessionDTO));
     }
-    
+
     /**
      * 店员获取用餐会话详情
+     * 
      * @param sessionId 用餐会话ID
      * @return 用餐会话详情
      */

@@ -5,7 +5,6 @@ import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.vo.DiningSessionCloseVO;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
-import com.foodflow.module.diningsession.vo.SessionCancelVO;
 
 import java.util.List;
 
@@ -14,7 +13,7 @@ public interface DiningSessionService extends IService<DiningSession> {
 
     DiningSessionVO getCurrentSession();
 
-    SessionCancelVO cancelWaitingSession(Long sessionId);
+    DiningSessionCloseVO cancelWaitingSession(Long sessionId);
     
     DiningSessionVO checkInReservation(Long reservationId, Long tableId);
 

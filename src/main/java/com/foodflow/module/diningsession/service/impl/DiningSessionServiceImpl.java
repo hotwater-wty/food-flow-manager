@@ -18,7 +18,6 @@ import com.foodflow.module.diningsession.mapper.DiningSessionMapper;
 import com.foodflow.module.diningsession.service.DiningSessionService;
 import com.foodflow.module.diningsession.vo.DiningSessionCloseVO;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
-import com.foodflow.module.diningsession.vo.SessionCancelVO;
 import com.foodflow.module.reservation.entity.Reservation;
 import com.foodflow.module.reservation.service.ReservationService;
 import com.foodflow.module.table.entity.DiningTable;
@@ -49,7 +48,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public SessionCancelVO cancelWaitingSession(Long sessionId) {
+    public DiningSessionCloseVO cancelWaitingSession(Long sessionId) {
         DiningSession diningSession = getById(sessionId);
         if (diningSession == null) {
             throw new BusinessException("用餐会话不存在");
@@ -79,11 +78,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         table.setCurrentSessionId(null);
         updateById(diningSession);
         diningTableService.updateById(table);
-        return SessionCancelVO.builder()
-                .closeTime(diningSession.getCloseTime())
-                .closeEmployeeId(LoginContext.getUserId())
-                .updateTime(diningSession.getUpdateTime())
-                .build();
+        return toDiningSessionCloseVO(diningSession, table);
     }
 
     @Override
