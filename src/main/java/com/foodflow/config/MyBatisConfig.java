@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 
 @Configuration
-public class MybatisConfig {
+public class MyBatisConfig {
 
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
