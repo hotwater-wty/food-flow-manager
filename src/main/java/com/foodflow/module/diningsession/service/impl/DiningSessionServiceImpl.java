@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -312,6 +313,9 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         }
         if (table.getStatus() != TableStatusEnum.DINING) {
             throw new BusinessException("桌位状态错误");
+        }
+        if (!Objects.equals(table.getCurrentSessionId(), sessionId)) {
+            throw new BusinessException("桌位与会话匹配异常");
         }
         
         List<DiningOrder> orderList = diningOrderMapper.selectList(

@@ -5,6 +5,7 @@ import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
 import com.foodflow.module.diningorder.service.DiningOrderService;
 import com.foodflow.module.diningorder.vo.DiningOrderCreateVO;
+import com.foodflow.module.diningorder.vo.UserDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.UserDiningOrderVO;
 
 import jakarta.validation.Valid;
@@ -51,5 +52,16 @@ public class UserDiningOrderController {
         List<UserDiningOrderVO> diningOrderVOList = diningOrderService
                 .getOrderList(diningOrderDTO);
         return Result.success(diningOrderVOList);
+    }
+
+    /**
+     * 用户查看堂食订单详情
+     */
+    @GetMapping("/orders/{orderId}")
+    public Result<UserDiningOrderDetailVO> getOrderDetail(@PathVariable Long orderId) {
+        log.info("用户查看堂食订单详情, orderId: {}", orderId);
+        UserDiningOrderDetailVO diningOrderVO = diningOrderService
+                .getOrderDetail(orderId);
+        return Result.success(diningOrderVO);
     }
 }

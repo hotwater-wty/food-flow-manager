@@ -19,6 +19,7 @@ import com.foodflow.module.diningorder.vo.AdminDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderVO;
 import com.foodflow.module.diningorder.vo.DiningOrderCreateVO;
 import com.foodflow.module.diningorder.vo.DiningOrderUpdateVO;
+import com.foodflow.module.diningorder.vo.UserDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.UserDiningOrderVO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.service.DiningSessionService;
@@ -85,6 +86,17 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .collect(Collectors.toMap(Dish::getId, Function.identity()));
         Integer totalAmount = calculateTotalAmount(items, dishMap);
 
+        DiningTable diningTable = diningTableService.getById(session.getTableId());
+        if (diningTable == null) {
+            throw new BusinessException("桌位不存在");
+        }
+        if (diningTable.getStatus() != TableStatusEnum.WAITING) {
+            throw new BusinessException("桌位状态错误");
+        }
+        if (!Objects.equals(diningTable.getCurrentSessionId(), sessionId)) {
+            throw new BusinessException("桌位与会话匹配异常");
+        }
+
         LocalDateTime now = LocalDateTime.now();
 
         session.setStatus(DiningSessionStatusEnum.DINING);
@@ -92,13 +104,6 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
         session.setUpdateTime(now);
         diningSessionService.updateById(session);
 
-        DiningTable diningTable = diningTableService.getById(session.getTableId());
-        if (diningTable == null) {
-            throw new BusinessException("桌位不存在");
-        }
-        if (!Objects.equals(diningTable.getCurrentSessionId(), sessionId)) {
-            throw new BusinessException("桌位与会话匹配异常");
-        }
         diningTable.setStatus(TableStatusEnum.DINING);
         diningTable.setUpdateTime(now);
         diningTableService.updateById(diningTable);
@@ -206,6 +211,36 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                         .createTime(order.getCreateTime())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public UserDiningOrderDetailVO getOrderDetail(Long orderId) {
+        DiningOrder order = getById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        if (!Objects.equals(order.getUserId(), LoginContext.getUserId())) {
+            throw new BusinessException("只能查看自己的订单");
+        }
+        DiningTable table = diningTableService.getById(order.getTableId());
+        List<OrderItem> orderItemList = orderItemService.query()
+                .eq("order_id", orderId)
+                .list();
+        return toUserDiningOrderDetailVO(order, table, orderItemList);
+    }
+
+    private UserDiningOrderDetailVO toUserDiningOrderDetailVO(
+            DiningOrder order, DiningTable table, List<OrderItem> orderItemList) {
+        return UserDiningOrderDetailVO.builder()
+                .orderId(order.getId())
+                .orderNo(order.getOrderNo())
+                .tableId(order.getTableId())
+                .tableNo(table == null ? "已删除桌位" : table.getTableNo())
+                .totalAmount(order.getTotalAmount())
+                .status(order.getStatus().getCode())
+                .createTime(order.getCreateTime())
+                .items(itemsToVOList(orderItemList))
+                .build();
     }
 
     @Override
@@ -336,4 +371,5 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .status(order.getStatus().getCode())
                 .build();
     }
+
 }

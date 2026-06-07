@@ -15,6 +15,7 @@ import com.foodflow.module.employee.mapper.EmployeeMapper;
 import com.foodflow.module.employee.service.EmployeeService;
 import com.foodflow.module.employee.vo.EmployeeLoginVO;
 import com.foodflow.module.employee.vo.EmployeeRegisterVO;
+import com.foodflow.module.employee.vo.EmployeeVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +23,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -104,6 +107,52 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         return employeeLoginVO;
     }
 
+    @Override
+    public List<EmployeeVO> getEmployeeList() {
+        return list().stream()
+                .map(this::toEmployeeVO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public EmployeeVO getEmployeeById(Long employeeId) {
+        return toEmployeeVO(getExistingEmployee(employeeId));
+    }
+
+    @Override
+    public EmployeeVO createEmployee(EmployeeRegisterDTO employeeRegisterDTO) {
+        EmployeeRegisterVO registerVO = register(employeeRegisterDTO);
+        return EmployeeVO.builder()
+                .employeeId(registerVO.getEmployeeId())
+                .phone(registerVO.getPhone())
+                .name(registerVO.getName())
+                .role(registerVO.getRole())
+                .status(registerVO.getStatus())
+                .build();
+    }
+
+    @Override
+    public void disableEmployee(Long employeeId) {
+        Employee employee = getExistingEmployee(employeeId);
+        if (employee.getStatus() == EmployeeStatusEnum.DISABLED) {
+            throw new BusinessException("员工账号已禁用");
+        }
+        employee.setStatus(EmployeeStatusEnum.DISABLED);
+        employee.setUpdateTime(LocalDateTime.now());
+        updateById(employee);
+    }
+
+    @Override
+    public void enableEmployee(Long employeeId) {
+        Employee employee = getExistingEmployee(employeeId);
+        if (employee.getStatus() == EmployeeStatusEnum.NORMAL) {
+            throw new BusinessException("员工账号已启用");
+        }
+        employee.setStatus(EmployeeStatusEnum.NORMAL);
+        employee.setUpdateTime(LocalDateTime.now());
+        updateById(employee);
+    }
+
     private EmployeeLoginVO toLoginVO(Employee employee) {
         EmployeeLoginVO employeeLoginVO = BeanUtil.copyProperties(employee, EmployeeLoginVO.class);
         employeeLoginVO.setEmployeeId(employee.getId());
@@ -116,5 +165,23 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         employeeRegisterVO.setEmployeeId(employee.getId());
         employeeRegisterVO.setStatus(employee.getStatus().getCode());
         return employeeRegisterVO;
+    }
+
+    private Employee getExistingEmployee(Long employeeId) {
+        Employee employee = getById(employeeId);
+        if (employee == null) {
+            throw new BusinessException("员工不存在");
+        }
+        return employee;
+    }
+
+    private EmployeeVO toEmployeeVO(Employee employee) {
+        return EmployeeVO.builder()
+                .employeeId(employee.getId())
+                .phone(employee.getPhone())
+                .name(employee.getName())
+                .role(employee.getRole())
+                .status(employee.getStatus().getCode())
+                .build();
     }
 }

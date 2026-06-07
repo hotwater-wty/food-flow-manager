@@ -11,6 +11,7 @@ import com.foodflow.module.diningorder.vo.AdminDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.AdminDiningOrderVO;
 import com.foodflow.module.diningorder.vo.DiningOrderCreateVO;
 import com.foodflow.module.diningorder.vo.DiningOrderUpdateVO;
+import com.foodflow.module.diningorder.vo.UserDiningOrderDetailVO;
 import com.foodflow.module.diningorder.vo.UserDiningOrderVO;
 
 import jakarta.validation.Valid;
@@ -27,5 +28,7 @@ public interface DiningOrderService extends IService<DiningOrder> {
 
     DiningOrderUpdateVO updateAdminOrderStatus(Long orderId,
             OrderStatusUpdateDTO orderStatusUpdateDTO);
+
+    UserDiningOrderDetailVO getOrderDetail(Long orderId);
     
 }

@@ -4,24 +4,36 @@ import com.foodflow.common.constant.JwtClaimConstants;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.context.LoginInfo;
 import com.foodflow.common.enums.EmployeeRoleEnum;
+import com.foodflow.common.enums.EmployeeStatusEnum;
 import com.foodflow.common.enums.LoginTypeEnum;
+import com.foodflow.common.enums.UserStatusEnum;
 import com.foodflow.common.utils.JwtUtil;
+import com.foodflow.module.employee.entity.Employee;
+import com.foodflow.module.employee.mapper.EmployeeMapper;
+import com.foodflow.module.user.entity.User;
+import com.foodflow.module.user.mapper.UserMapper;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtTokenInterceptor implements HandlerInterceptor {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
 
     // JWT token 前缀
     private static final String BEARER_PREFIX = "Bearer ";
+
+    private final UserMapper userMapper;
+    private final EmployeeMapper employeeMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -71,6 +83,23 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
                     && LoginTypeEnum.EMPLOYEE != loginType) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return false;
+            }
+
+            // 校验用户或员工账号状态是否正常
+            // TODO 后续去缓存里查
+            if (loginType == LoginTypeEnum.USER) {
+                User user = userMapper.selectById(userId);
+                if (user == null || user.getStatus() != UserStatusEnum.NORMAL) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return false;
+                }
+            }
+            if (loginType == LoginTypeEnum.EMPLOYEE) {
+                Employee employee = employeeMapper.selectById(employeeId);
+                if (employee == null || employee.getStatus() != EmployeeStatusEnum.NORMAL) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return false;
+                }
             }
 
             // 校验店长权限是否匹配当前请求路径
