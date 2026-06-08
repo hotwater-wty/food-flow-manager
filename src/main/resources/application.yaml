@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: food-flow-manager
+
+  profiles:
+    active: dev
+
+server:
+  port: 8080
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  group-configs:
+    - group: default
+      paths-to-match: /api/**
+      packages-to-scan: com.foodflow.module
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
