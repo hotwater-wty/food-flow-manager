@@ -148,7 +148,7 @@ http://localhost:8080
 
 ```bash
 cd /opt
-git clone <repository-url> food-flow-manager
+git clone https://github.com/hotwater-wty/food-flow-manager.git food-flow-manager
 cd food-flow-manager
 ```
 
@@ -167,6 +167,12 @@ chmod +x mvnw
 ```
 
 `chmod +x mvnw` 的作用是给 `mvnw` 脚本增加可执行权限。Windows 使用 `mvnw.cmd`，Linux 使用 `mvnw`。
+
+Ubuntu 下推荐将项目目录所有者设置为当前用户，避免权限问题。
+
+```bash
+sudo chown -R $(whoami):$(whoami) /opt/food-flow-manager
+```
 
 执行打包：
 
