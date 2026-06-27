@@ -61,9 +61,18 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         // 当前简单设计，预约时间内都不允许其他用户使用该桌位
 
         // TODO 后续需处理并发问题
-        // 更新桌位状态为已预约
-        table.setStatus(TableStatusEnum.RESERVED);
-        diningTableService.updateById(table);
+        
+        // 使用数据库条件更新，确保并发安全
+        boolean updateResult = diningTableService.lambdaUpdate()
+                        .eq(DiningTable::getId, reservationDTO.getTableId())
+                        .eq(DiningTable::getStatus, TableStatusEnum.FREE)
+                        .ge(DiningTable::getCapacity, reservationDTO.getPeopleCount())
+                        .set(DiningTable::getStatus, TableStatusEnum.RESERVED)
+                        .set(DiningTable::getUpdateTime, LocalDateTime.now())
+                        .update();
+        if (!updateResult) {
+            throw new BusinessException("桌位已被占用");
+        }
         // 创建预约，将桌位预约状态设置为待到店  
         Reservation reservation = toReservation(reservationDTO);
         // 保存预约数据到数据库
@@ -119,9 +128,15 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         reservation.setUpdateTime(LocalDateTime.now());
         updateById(reservation);
         // 更新桌位状态为空闲
-        DiningTable table = diningTableService.getById(reservation.getTableId());
-        table.setStatus(TableStatusEnum.FREE);
-        diningTableService.updateById(table);
+        boolean updateResult = diningTableService.lambdaUpdate()
+                                .eq(DiningTable::getId, reservation.getTableId())
+                                .eq(DiningTable::getStatus, TableStatusEnum.RESERVED)
+                                .set(DiningTable::getStatus, TableStatusEnum.FREE)
+                                .set(DiningTable::getUpdateTime, LocalDateTime.now())
+                                .update();
+        if (!updateResult) {
+            throw new BusinessException("桌位状态更新失败，请重试");
+        }
     }
 
     /**

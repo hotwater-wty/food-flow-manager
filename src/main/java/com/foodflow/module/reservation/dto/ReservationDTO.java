@@ -27,7 +27,7 @@ public class ReservationDTO {
     @Schema(description = "预约时间，格式：yyyy-MM-dd HH:mm:ss", example = "2026-06-08 18:30:00", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "预约时间不能为空")
     @Future(message = "预约时间必须在当前时间之后")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:SS")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:SS")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime reserveTime;
 }
