@@ -34,6 +34,7 @@ import com.foodflow.module.table.service.DiningTableService;
 
 import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +55,13 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
     private final DiningTableService diningTableService;
     private final OrderItemService orderItemService;
 
+    /**
+     * 创建用餐订单
+     * 
+     * @param sessionId 用餐话话ID
+     * @param orderItemCreateDTO 订单项创建DTO
+     * @return 订单创建VO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DiningOrderCreateVO createOrder(Long sessionId, OrderItemCreateDTO orderItemCreateDTO) {
@@ -68,24 +76,32 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
             throw new BusinessException("会话状态错误");
         }
 
+        // 获取订单项列表
         List<OrderItemDTO> items = orderItemCreateDTO.getItems();
 
+        // 获取订单项中的菜品ID列表
         List<Long> dishIds = items.stream()
                 .map(OrderItemDTO::getDishId)
                 .distinct()
                 .toList();
-        List<Dish> dishes = dishService.query()
-                .in("id", dishIds)
-                .eq("status", DishStatusEnum.ON_SALE)
+        
+        // 查询订单项中的菜品
+        List<Dish> dishes = dishService.lambdaQuery()
+                .in(Dish::getId, dishIds)
+                .eq(Dish::getStatus, DishStatusEnum.ON_SALE)
                 .list();
         if (dishes.size() != dishIds.size()) {
             throw new BusinessException("菜品不存在或已下架");
         }
 
+        // 构建菜品ID到菜品的映射
         Map<Long, Dish> dishMap = dishes.stream()
                 .collect(Collectors.toMap(Dish::getId, Function.identity()));
+        
+        // 计算订单总金额
         Integer totalAmount = calculateTotalAmount(items, dishMap);
 
+        // 桌位状态审查
         DiningTable diningTable = diningTableService.getById(session.getTableId());
         if (diningTable == null) {
             throw new BusinessException("桌位不存在");
@@ -99,15 +115,27 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
 
         LocalDateTime now = LocalDateTime.now();
 
-        session.setStatus(DiningSessionStatusEnum.DINING);
-        session.setFirstOrderTime(now);
-        session.setUpdateTime(now);
-        diningSessionService.updateById(session);
+        // 更新会话状态
+        diningSessionService.lambdaUpdate()
+                .eq(DiningSession::getId, sessionId)
+                .eq(DiningSession::getUserId, LoginContext.getUserId())
+                .eq(DiningSession::getTableId, session.getTableId())
+                .eq(DiningSession::getStatus, DiningSessionStatusEnum.WAITING)
+                .set(DiningSession::getStatus, DiningSessionStatusEnum.DINING)
+                .set(DiningSession::getFirstOrderTime, now)
+                .set(DiningSession::getUpdateTime, now)
+                .update();
 
-        diningTable.setStatus(TableStatusEnum.DINING);
-        diningTable.setUpdateTime(now);
-        diningTableService.updateById(diningTable);
+        // 更新桌位状态
+        diningTableService.lambdaUpdate()
+                .eq(DiningTable::getId, session.getTableId())
+                .eq(DiningTable::getCurrentSessionId, sessionId)
+                .eq(DiningTable::getStatus, TableStatusEnum.WAITING)
+                .set(DiningTable::getStatus, TableStatusEnum.DINING)
+                .set(DiningTable::getUpdateTime, now)
+                .update();
 
+        // 创建订单
         DiningOrder order = DiningOrder.builder()
                 .orderNo(NumberUtils.generateOrderNo())
                 .userId(LoginContext.getUserId())
@@ -118,8 +146,10 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .createTime(now)
                 .updateTime(now)
                 .build();
+        // 保存订单
         save(order);
 
+        // 创建订单项
         List<OrderItem> orderItems = new ArrayList<>();
         for (OrderItemDTO item : items) {
             Dish dish = dishMap.get(item.getDishId());
@@ -137,6 +167,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                     .build();
             orderItems.add(orderItem);
         }
+        // 保存订单项
         orderItemService.saveBatch(orderItems);
 
         return DiningOrderCreateVO.builder()

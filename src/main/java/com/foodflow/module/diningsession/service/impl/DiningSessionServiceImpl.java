@@ -35,7 +35,6 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -169,11 +168,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         
         // 构建会话
         DiningSession diningSession = getDiningSession(reservation);
-        try{
-            save(diningSession);    // 数据库active_flag字段唯一约束，重复则抛出异常
-        } catch (DuplicateKeyException e) {
-            throw new BusinessException("当前用户已存在用餐会话，请勿重复开台");
-        }
+        save(diningSession);    // 数据库active_flag字段唯一约束，重复则抛出异常
 
         // 更新桌位状态
         boolean tableUpdated = diningTableService.lambdaUpdate()
@@ -219,11 +214,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
 
         // 构建会话
         DiningSession diningSession = getDiningSession(tableId);
-        try{
-            save(diningSession);    // 数据库active_flag字段唯一约束，重复则抛出异常
-        } catch (DuplicateKeyException e) {
-            throw new BusinessException("当前用户已存在用餐会话，请勿重复开台");
-        }
+        save(diningSession);    // 数据库active_flag字段唯一约束，重复则抛出异常
 
         // 更新桌位状态
         boolean tableUpdated = diningTableService.lambdaUpdate()

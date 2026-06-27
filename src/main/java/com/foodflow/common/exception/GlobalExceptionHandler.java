@@ -1,5 +1,6 @@
 package com.foodflow.common.exception;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -39,7 +40,6 @@ public class GlobalExceptionHandler {
         return Result.error(message);
     }
 
-
     /**
      * 系统全局异常处理
      */
@@ -47,5 +47,14 @@ public class GlobalExceptionHandler {
     public Result<?> handleException(Exception ex) {
         log.error("系统全局异常", ex);
         return Result.error(ex.getMessage());
+    }
+
+    /**
+     * 重复创建异常处理
+     */
+    @ExceptionHandler(DuplicateKeyException.class)
+    public Result<?> handleDuplicateKeyException(DuplicateKeyException ex) {
+        log.error("重复创建异常", ex);
+        return Result.error("重复创建，请稍后重试");
     }
 }
