@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.context.LoginContext;
+import com.foodflow.common.enums.ActiveFlagEnum;
 import com.foodflow.common.enums.DiningSessionStatusEnum;
 import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.common.enums.ReservationStatusEnum;
@@ -34,6 +35,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +49,9 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
     private final ReservationService reservationService;
     private final DiningOrderMapper diningOrderMapper;
 
+    /**
+     * 取消等待中的用餐会话
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DiningSessionCloseVO cancelWaitingSession(Long sessionId) {
@@ -82,6 +87,9 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         return toDiningSessionCloseVO(diningSession, table);
     }
 
+    /**
+     * 获取当前用户等待中的或用餐中的会话
+     */
     @Override
     public DiningSessionVO getCurrentSession() {
         // 过滤掉已完成和已取消的会话
@@ -134,32 +142,50 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (!reservation.getTableId().equals(currentTable.getId())) {
             throw new BusinessException("扫码桌位与预约桌位不一致");
         }
-        // 用户当前是否有用餐会话
-        List<DiningSession> currentSessions = query()
-                .eq("user_id", LoginContext.getUserId())
-                .in("status", DiningSessionStatusEnum.WAITING,
-                     DiningSessionStatusEnum.DINING)
-                .list();
-        if (!currentSessions.isEmpty()) {
+        // 用户当前是否有用餐会话(用作友好提示，业务层面无法真的避免并发问题，由数据库层面约束)
+        DiningSession currentSession = lambdaQuery()
+                .eq(DiningSession::getUserId, LoginContext.getUserId())
+                .eq(DiningSession::getActiveFlag, ActiveFlagEnum.ACTIVE)
+                .one();
+        if (currentSession != null) {
             throw new BusinessException("当前用户已存在用餐会话");
         }
 
-        // TODO 需处理并发问题
+        LocalDateTime now = LocalDateTime.now();
 
         // 更新预约状态为已到店
-        reservation.setStatus(ReservationStatusEnum.CHECKED_IN);
-        reservation.setCheckInTime(LocalDateTime.now());
-        reservation.setUpdateTime(LocalDateTime.now());
-        reservationService.updateById(reservation);
+        boolean reservationUpdated = reservationService.lambdaUpdate()
+                        .eq(Reservation::getId, reservationId)
+                        .eq(Reservation::getUserId, LoginContext.getUserId())
+                        .eq(Reservation::getTableId, tableId)
+                        .eq(Reservation::getStatus, ReservationStatusEnum.WAITING_CHECK_IN)
+                        .set(Reservation::getStatus, ReservationStatusEnum.CHECKED_IN)
+                        .set(Reservation::getCheckInTime, now)
+                        .set(Reservation::getUpdateTime, now)
+                        .update();
+        if (!reservationUpdated) {
+            throw new BusinessException("预约状态更新失败，请重试");
+        }
         
         // 构建会话
         DiningSession diningSession = getDiningSession(reservation);
-        saveOrUpdate(diningSession);
+        try{
+            save(diningSession);    // 数据库active_flag字段唯一约束，重复则抛出异常
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException("当前用户已存在用餐会话，请勿重复开台");
+        }
 
         // 更新桌位状态
-        currentTable.setStatus(TableStatusEnum.WAITING);
-        currentTable.setCurrentSessionId(diningSession.getId());
-        diningTableService.updateById(currentTable);
+        boolean tableUpdated = diningTableService.lambdaUpdate()
+                        .eq(DiningTable::getId, tableId)
+                        .eq(DiningTable::getStatus, TableStatusEnum.RESERVED)
+                        .set(DiningTable::getStatus, TableStatusEnum.WAITING)
+                        .set(DiningTable::getCurrentSessionId, diningSession.getId())
+                        .set(DiningTable::getUpdateTime, now)
+                        .update();
+        if (!tableUpdated) {
+            throw new BusinessException("桌位状态更新失败，请重试");
+        }
         
         // 构建会话VO
         return toDiningSessionVO(diningSession, currentTable);
@@ -215,6 +241,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .tableId(tableId)
                 .reservationId(null)
                 .status(DiningSessionStatusEnum.WAITING)
+                .activeFlag(ActiveFlagEnum.ACTIVE)
                 .openTime(LocalDateTime.now())
                 .firstOrderTime(null)
                 .closeTime(null)
@@ -231,6 +258,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .tableId(reservation.getTableId())
                 .reservationId(reservation.getId())
                 .status(DiningSessionStatusEnum.WAITING)
+                .activeFlag(ActiveFlagEnum.ACTIVE)
                 .openTime(LocalDateTime.now())
                 .firstOrderTime(null)
                 .closeTime(null)

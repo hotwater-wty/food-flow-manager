@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.foodflow.common.enums.ActiveFlagEnum;
 import com.foodflow.common.enums.DiningSessionStatusEnum;
 
 import lombok.AllArgsConstructor;
@@ -29,6 +30,9 @@ public class DiningSession {
     private Long reservationId;
 
     private DiningSessionStatusEnum status;
+
+    // 数据库中活跃会话唯一表示，0: 未激活, 1: 已激活
+    private ActiveFlagEnum activeFlag;     
 
     private LocalDateTime openTime;
 

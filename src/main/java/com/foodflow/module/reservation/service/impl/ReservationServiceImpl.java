@@ -129,11 +129,11 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         updateById(reservation);
         // 更新桌位状态为空闲
         boolean updateResult = diningTableService.lambdaUpdate()
-                                .eq(DiningTable::getId, reservation.getTableId())
-                                .eq(DiningTable::getStatus, TableStatusEnum.RESERVED)
-                                .set(DiningTable::getStatus, TableStatusEnum.FREE)
-                                .set(DiningTable::getUpdateTime, LocalDateTime.now())
-                                .update();
+                .eq(DiningTable::getId, reservation.getTableId())
+                .eq(DiningTable::getStatus, TableStatusEnum.RESERVED)
+                .set(DiningTable::getStatus, TableStatusEnum.FREE)
+                .set(DiningTable::getUpdateTime, LocalDateTime.now())
+                .update();
         if (!updateResult) {
             throw new BusinessException("桌位状态更新失败，请重试");
         }
