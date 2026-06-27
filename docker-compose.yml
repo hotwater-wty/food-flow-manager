@@ -7,6 +7,9 @@ services:
     environment:
       TZ: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: 1234
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
     volumes:
       - "/usr/local/app/mysql/data:/var/lib/mysql"
       - "./assets/schema.sql:/docker-entrypoint-initdb.d/schema.sql"

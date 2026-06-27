@@ -2,6 +2,9 @@
 -- MySQL 8.x
 -- Charset: utf8mb4
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS `food_flow_manager`
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_0900_ai_ci;
