@@ -131,15 +131,15 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
             throw new BusinessException("只能操作自己的预约");
         }
         // 审查桌位状态
-        DiningTable currentTable = diningTableService.getById(tableId);
-        if (currentTable == null) {
-            throw new BusinessException("桌位不存在");
+        DiningTable diningTable = diningTableService.getById(tableId);
+        if (diningTable == null || diningTable.getStatus() == TableStatusEnum.DISABLED) {
+            throw new BusinessException("桌位不存在或已禁用");
         }
-        if (currentTable.getStatus() != TableStatusEnum.RESERVED) {
-            throw new BusinessException("桌位状态错误");
+        if (diningTable.getStatus() != TableStatusEnum.FREE) {
+            throw new BusinessException("该桌位已被使用");
         }
         // 扫码桌位必须与预约桌位一致
-        if (!reservation.getTableId().equals(currentTable.getId())) {
+        if (!reservation.getTableId().equals(diningTable.getId())) {
             throw new BusinessException("扫码桌位与预约桌位不一致");
         }
         // 用户当前是否有用餐会话(用作友好提示，业务层面无法真的避免并发问题，由数据库层面约束)
@@ -188,17 +188,18 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         }
         
         // 构建会话VO
-        return toDiningSessionVO(diningSession, currentTable);
+        return toDiningSessionVO(diningSession, diningTable);
     }
 
     /**
-     * 非预约用户扫码占座
+     * 非预约用户扫码到店
      * @param tableId 桌位ID
      * @return 会话VO
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DiningSessionVO checkInTable(Long tableId) {
+        // 预审查桌位状态
         DiningTable diningTable = diningTableService.getById(tableId);
         if (diningTable == null || diningTable.getStatus() == TableStatusEnum.DISABLED) {
             throw new BusinessException("桌位不存在或已禁用");
@@ -207,16 +208,34 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
             throw new BusinessException("该桌位已被使用");
         }
 
-        // TODO 需处理并发问题
+        // 用户当前是否有用餐会话(用作友好提示，业务层面无法真的避免并发问题，由数据库层面约束)
+        DiningSession currentSession = lambdaQuery()
+                .eq(DiningSession::getUserId, LoginContext.getUserId())
+                .eq(DiningSession::getActiveFlag, ActiveFlagEnum.ACTIVE)
+                .one();
+        if (currentSession != null) {
+            throw new BusinessException("当前用户已存在用餐会话");
+        }
 
         // 构建会话
         DiningSession diningSession = getDiningSession(tableId);
-        saveOrUpdate(diningSession);
+        try{
+            save(diningSession);    // 数据库active_flag字段唯一约束，重复则抛出异常
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException("当前用户已存在用餐会话，请勿重复开台");
+        }
 
         // 更新桌位状态
-        diningTable.setStatus(TableStatusEnum.WAITING);
-        diningTable.setCurrentSessionId(diningSession.getId());
-        diningTableService.updateById(diningTable);
+        boolean tableUpdated = diningTableService.lambdaUpdate()
+                        .eq(DiningTable::getId, tableId)
+                        .eq(DiningTable::getStatus, TableStatusEnum.FREE)
+                        .set(DiningTable::getStatus, TableStatusEnum.WAITING)
+                        .set(DiningTable::getCurrentSessionId, diningSession.getId())
+                        .set(DiningTable::getUpdateTime, LocalDateTime.now())
+                        .update();
+        if (!tableUpdated) {
+            throw new BusinessException("桌位状态更新失败，请重试");
+        }
         
         // 构建会话VO
         return toDiningSessionVO(diningSession, diningTable);
@@ -268,6 +287,11 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .build();
     }
 
+    /**
+     * 查询用餐会话列表
+     * @param diningSessionDTO 查询参数DTO
+     * @return 会话VO列表
+     */
     @Override
     public List<DiningSessionVO> getSessionList(DiningSessionDTO diningSessionDTO) {
         DiningSessionStatusEnum status = diningSessionDTO.getStatusEnum();
@@ -320,6 +344,11 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .build();
     }
 
+    /**
+     * 查询用餐会话详情
+     * @param sessionId 会话ID
+     * @return 会话VO
+     */
     @Override
     public DiningSessionVO getSessionDetail(Long sessionId) {
         DiningSession session = getById(sessionId);
@@ -333,6 +362,11 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         return toDiningSessionVO(session, table);
     }
 
+    /**
+     * 关闭用餐会话
+     * @param sessionId 会话ID
+     * @return 关闭会话VO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DiningSessionCloseVO closeSession(Long sessionId) {
