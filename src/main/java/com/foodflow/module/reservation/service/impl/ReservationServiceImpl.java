@@ -152,15 +152,31 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         if (reservation.getStatus() != ReservationStatusEnum.WAITING_CHECK_IN) {
             throw new BusinessException("预约状态错误，请重试");
         }
+
+        LocalDateTime now = LocalDateTime.now();
+
         // 更新预约状态为已取消
-        reservation.setStatus(ReservationStatusEnum.CANCELED);
-        reservation.setCancelTime(LocalDateTime.now());
-        reservation.setUpdateTime(LocalDateTime.now());
-        updateById(reservation);
+        boolean reservationUpdated = lambdaUpdate()
+                        .eq(Reservation::getId, reservationId)
+                        .eq(Reservation::getStatus, ReservationStatusEnum.WAITING_CHECK_IN)
+                        .set(Reservation::getStatus, ReservationStatusEnum.CANCELED)
+                        .set(Reservation::getCancelTime, now)
+                        .set(Reservation::getUpdateTime, now)
+                        .update();
+        if (!reservationUpdated) {
+            throw new BusinessException("预约状态更新失败，请重试");
+        }
+
         // 更新桌位状态为空闲
-        DiningTable table = diningTableService.getById(reservation.getTableId());
-        table.setStatus(TableStatusEnum.FREE);
-        diningTableService.updateById(table);
+        boolean tableUpdated = diningTableService.lambdaUpdate()
+                .eq(DiningTable::getId, reservation.getTableId())
+                .eq(DiningTable::getStatus, TableStatusEnum.RESERVED)
+                .set(DiningTable::getStatus, TableStatusEnum.FREE)
+                .set(DiningTable::getUpdateTime, LocalDateTime.now())
+                .update();
+        if (!tableUpdated) {
+            throw new BusinessException("桌位状态更新失败，请重试");
+        }
     }
     
     /**

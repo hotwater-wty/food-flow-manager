@@ -31,7 +31,7 @@ public class DiningSession {
 
     private DiningSessionStatusEnum status;
 
-    // 数据库中活跃会话唯一表示，0: 未激活, 1: 已激活
+    // 数据库中活跃会话唯一表示，null: 未激活, ACTIVE: 已激活
     private ActiveFlagEnum activeFlag;     
 
     private LocalDateTime openTime;
