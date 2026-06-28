@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.foodflow.common.dto.PageQueryDTO;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.result.Result;
 import com.foodflow.module.table.dto.TableDTO;
 import com.foodflow.module.table.service.DiningTableService;
@@ -20,7 +22,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import lombok.extern.slf4j.Slf4j;
-import java.util.List;
+
+import org.springdoc.core.annotations.ParameterObject;
+
 import com.foodflow.module.table.vo.TableVO;
 
 @Slf4j
@@ -53,9 +57,9 @@ public class AdminTableController {
      */
     @GetMapping
     @Operation(summary = "查询桌位列表", description = "管理端查询全部桌位列表")
-    public Result<List<TableVO>> getTableList() {
-        log.info("获取桌位列表");
-        List<TableVO> tableList = diningTableService.adminTableList();
+    public Result<PageResult<TableVO>> getTableList(@ParameterObject @Validated PageQueryDTO pageQueryDTO) {
+        log.info("获取桌位列表, pageQueryDTO: {}", pageQueryDTO);
+        PageResult<TableVO> tableList = diningTableService.adminTableList(pageQueryDTO);
         return Result.success(tableList);
     }
 

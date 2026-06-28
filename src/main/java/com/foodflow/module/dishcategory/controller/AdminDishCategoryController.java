@@ -1,7 +1,5 @@
 package com.foodflow.module.dishcategory.controller;
 
-import java.util.List;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.foodflow.common.dto.PageQueryDTO;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.result.Result;
 import com.foodflow.module.dishcategory.dto.DishCategoryDTO;
 import com.foodflow.module.dishcategory.service.DishCategoryService;
@@ -22,6 +22,8 @@ import com.foodflow.module.dishcategory.vo.DishCategoryVO;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springdoc.core.annotations.ParameterObject;
 
 @Slf4j
 @RestController
@@ -41,9 +43,10 @@ public class AdminDishCategoryController {
 
     @GetMapping
     @Operation(summary = "查询菜品分类列表", description = "管理端查询全部菜品分类")
-    public Result<List<DishCategoryVO>> getCategoryList() {
-        log.info("获取菜品分类列表");
-        return Result.success(dishCategoryService.getAdminCategoryList());
+    public Result<PageResult<DishCategoryVO>> getCategoryList(
+            @ParameterObject @Validated PageQueryDTO pageQueryDTO) {
+        log.info("获取菜品分类列表, pageQueryDTO: {}", pageQueryDTO);
+        return Result.success(dishCategoryService.getAdminCategoryList(pageQueryDTO));
     }
 
     @GetMapping("/{categoryId}")

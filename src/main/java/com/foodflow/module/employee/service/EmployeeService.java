@@ -1,8 +1,8 @@
 package com.foodflow.module.employee.service;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.foodflow.common.dto.PageQueryDTO;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.module.employee.dto.EmployeeLoginDTO;
 import com.foodflow.module.employee.dto.EmployeeRegisterDTO;
 import com.foodflow.module.employee.entity.Employee;
@@ -16,7 +16,7 @@ public interface EmployeeService extends IService<Employee> {
 
     EmployeeLoginVO login(@Valid EmployeeLoginDTO employeeLoginDTO);
 
-    List<EmployeeVO> getEmployeeList();
+    PageResult<EmployeeVO> getEmployeeList(PageQueryDTO pageQueryDTO);
 
     EmployeeVO getEmployeeById(Long employeeId);
 

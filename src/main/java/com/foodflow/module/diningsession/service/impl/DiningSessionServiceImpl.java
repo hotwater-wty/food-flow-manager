@@ -2,6 +2,7 @@ package com.foodflow.module.diningsession.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.enums.ActiveFlagEnum;
@@ -10,6 +11,7 @@ import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.utils.NumberUtils;
 import com.foodflow.module.diningorder.entity.DiningOrder;
 import com.foodflow.module.diningorder.mapper.DiningOrderMapper;
@@ -323,18 +325,27 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
      * @return 会话VO列表
      */
     @Override
-    public List<DiningSessionVO> getSessionList(DiningSessionDTO diningSessionDTO) {
+    public PageResult<DiningSessionVO> getSessionList(DiningSessionDTO diningSessionDTO) {
         DiningSessionStatusEnum status = diningSessionDTO.getStatusEnum();
-        List<DiningSession> sessionList = querySessionList(diningSessionDTO, status);
+        Page<DiningSession> sessionPage = querySessionPage(diningSessionDTO, status);
+        List<DiningSession> sessionList = sessionPage.getRecords();
         Map<Long, DiningTable> tableMap = getTableMap(sessionList);
-        return sessionList.stream()
+        List<DiningSessionVO> records = sessionList.stream()
                 .map(session -> toDiningSessionVO(session, tableMap))
                 .collect(Collectors.toList());
+        return new PageResult<>(
+                sessionPage.getTotal(),
+                diningSessionDTO.getPageNo(),
+                diningSessionDTO.getPageSize(),
+                records);
     }
 
-    private List<DiningSession> querySessionList(
+    private Page<DiningSession> querySessionPage(
                 DiningSessionDTO diningSessionDTO, DiningSessionStatusEnum status) {
-        return query()
+        Page<DiningSession> pageParam = new Page<>(
+                diningSessionDTO.getPageNo(),
+                diningSessionDTO.getPageSize());
+        return page(pageParam, query()
                 .eq(diningSessionDTO.getReservationId() != null,
                         "reservation_id", diningSessionDTO.getReservationId())
                 .eq(diningSessionDTO.getTableId() != null,
@@ -342,7 +353,8 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .eq(diningSessionDTO.getSessionId() != null,
                         "id", diningSessionDTO.getSessionId())
                 .eq(status != null, "status", status)
-                .list();
+                .orderByDesc("create_time")
+                .getWrapper());
     }
 
     private Map<Long, DiningTable> getTableMap(List<DiningSession> sessionList) {

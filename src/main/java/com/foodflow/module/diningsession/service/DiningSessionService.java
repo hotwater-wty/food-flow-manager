@@ -1,13 +1,11 @@
 package com.foodflow.module.diningsession.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.vo.DiningSessionCloseVO;
 import com.foodflow.module.diningsession.vo.DiningSessionVO;
-
-import java.util.List;
-
 
 public interface DiningSessionService extends IService<DiningSession> {
 
@@ -44,7 +42,7 @@ public interface DiningSessionService extends IService<DiningSession> {
      * @param diningSessionDTO 会话查询DTO
      * @return 会话VO
      */
-    List<DiningSessionVO> getSessionList(DiningSessionDTO diningSessionDTO);
+    PageResult<DiningSessionVO> getSessionList(DiningSessionDTO diningSessionDTO);
 
     /**
      * 获取会话详情

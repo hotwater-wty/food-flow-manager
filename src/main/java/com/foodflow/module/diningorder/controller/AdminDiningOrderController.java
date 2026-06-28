@@ -26,8 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
 @Slf4j
 @RestController
 @RequestMapping("/api/admin/orders")
@@ -38,7 +36,7 @@ public class AdminDiningOrderController {
 
     /**
      * 管理员查看堂食订单列表
-    */
+     */
     @GetMapping
     @Operation(summary = "查询堂食订单列表", description = "管理端按桌位、订单ID或订单状态筛选堂食订单")
     public Result<PageResult<AdminDiningOrderVO>> getOrderList(
@@ -51,7 +49,7 @@ public class AdminDiningOrderController {
 
     /**
      * 管理员查看堂食订单详情
-    */
+     */
     @GetMapping("/{orderId}")
     @Operation(summary = "查询堂食订单详情", description = "管理端根据订单ID查询堂食订单详情和明细")
     public Result<AdminDiningOrderDetailVO> getOrderDetail(
@@ -65,7 +63,7 @@ public class AdminDiningOrderController {
 
     /**
      * 管理员更新堂食订单状态
-    */
+     */
     @PutMapping("/{orderId}/status")
     @Operation(summary = "修改堂食订单状态", description = "管理端更新堂食订单状态，用于接单、制作、完成等状态流转")
     public Result<DiningOrderUpdateVO> updateOrderStatus(

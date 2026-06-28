@@ -1,12 +1,15 @@
 package com.foodflow.module.employee.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.constant.JwtClaimConstants;
 import com.foodflow.common.enums.EmployeeRoleEnum;
 import com.foodflow.common.enums.EmployeeStatusEnum;
 import com.foodflow.common.enums.LoginTypeEnum;
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.utils.JwtUtil;
 import com.foodflow.module.employee.dto.EmployeeLoginDTO;
 import com.foodflow.module.employee.dto.EmployeeRegisterDTO;
@@ -108,10 +111,19 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
     }
 
     @Override
-    public List<EmployeeVO> getEmployeeList() {
-        return list().stream()
+    public PageResult<EmployeeVO> getEmployeeList(PageQueryDTO pageQueryDTO) {
+        Page<Employee> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
+        Page<Employee> employeePage = page(pageParam, query()
+                .orderByDesc("create_time")
+                .getWrapper());
+        List<EmployeeVO> records = employeePage.getRecords().stream()
                 .map(this::toEmployeeVO)
                 .collect(Collectors.toList());
+        return new PageResult<>(
+                employeePage.getTotal(),
+                pageQueryDTO.getPageNo(),
+                pageQueryDTO.getPageSize(),
+                records);
     }
 
     @Override

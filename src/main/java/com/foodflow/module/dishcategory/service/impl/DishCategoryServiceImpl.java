@@ -6,9 +6,12 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.CategoryStatusEnum;
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.module.dishcategory.dto.DishCategoryDTO;
 import com.foodflow.module.dishcategory.entity.DishCategory;
 import com.foodflow.module.dishcategory.mapper.DishCategoryMapper;
@@ -59,12 +62,19 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
     }
 
     @Override
-    public List<DishCategoryVO> getAdminCategoryList() {
-        return query()
+    public PageResult<DishCategoryVO> getAdminCategoryList(PageQueryDTO pageQueryDTO) {
+        Page<DishCategory> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
+        Page<DishCategory> categoryPage = page(pageParam, query()
                 .orderByAsc("sort")
-                .list().stream()
+                .getWrapper());
+        List<DishCategoryVO> records = categoryPage.getRecords().stream()
                 .map(this::toVO)
                 .collect(Collectors.toList());
+        return new PageResult<>(
+                categoryPage.getTotal(),
+                pageQueryDTO.getPageNo(),
+                pageQueryDTO.getPageSize(),
+                records);
     }
 
     @Override

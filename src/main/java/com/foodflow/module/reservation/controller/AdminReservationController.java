@@ -1,5 +1,7 @@
 package com.foodflow.module.reservation.controller;
 
+import com.foodflow.common.dto.PageQueryDTO;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.result.Result;
 import com.foodflow.module.reservation.service.ReservationService;
 import com.foodflow.module.reservation.vo.ReservationVO;
@@ -10,8 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,9 +33,10 @@ public class AdminReservationController {
     */
     @GetMapping
     @Operation(summary = "查询全部预约列表", description = "管理端查询所有用户预约记录")
-    public Result<List<ReservationVO>> getReservationList(){
-        log.info("查看所有预约");
-        List<ReservationVO> reservationList = reservationService.getAllReservation();
+    public Result<PageResult<ReservationVO>> getReservationList(
+            @ParameterObject @Validated PageQueryDTO pageQueryDTO){
+        log.info("查看所有预约, pageQueryDTO: {}", pageQueryDTO);
+        PageResult<ReservationVO> reservationList = reservationService.getAllReservation(pageQueryDTO);
         return Result.success(reservationList);
     }
 

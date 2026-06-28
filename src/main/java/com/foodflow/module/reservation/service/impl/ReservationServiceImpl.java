@@ -6,11 +6,14 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.utils.NumberUtils;
 import com.foodflow.module.reservation.dto.ReservationDTO;
 import com.foodflow.module.reservation.entity.Reservation;
@@ -98,12 +101,19 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
      * 获取所有预约列表
      */
     @Override
-    public List<ReservationVO> getAllReservation() {
-        List<Reservation> reservationList = query()
-                .list();
-        return reservationList.stream()
+    public PageResult<ReservationVO> getAllReservation(PageQueryDTO pageQueryDTO) {
+        Page<Reservation> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
+        Page<Reservation> reservationPage = page(pageParam, query()
+                .orderByDesc("create_time")
+                .getWrapper());
+        List<ReservationVO> records = reservationPage.getRecords().stream()
                 .map(this::toVO)
                 .toList();
+        return new PageResult<>(
+                reservationPage.getTotal(),
+                pageQueryDTO.getPageNo(),
+                pageQueryDTO.getPageSize(),
+                records);
     }
 
     /**

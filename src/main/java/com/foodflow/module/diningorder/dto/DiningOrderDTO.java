@@ -25,9 +25,12 @@ public class DiningOrderDTO {
     private Integer status;
 
     @Schema(description = "页码", example = "1")
+    @Min(value = 1, message = "页码必须大于等于1")
     private Integer pageNo = 1;
 
     @Schema(description = "每页数量", example = "10")
+    @Min(value = 1, message = "每页数量必须大于等于1")
+    @Max(value = 500, message = "每页数量不能超过500")
     private Integer pageSize = 10;
 
     public OrderStatusEnum getStatusEnum() {

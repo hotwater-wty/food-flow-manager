@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.result.Result;
 import com.foodflow.module.diningsession.dto.DiningSessionDTO;
 import com.foodflow.module.diningsession.service.DiningSessionService;
@@ -19,8 +20,6 @@ import com.foodflow.module.diningsession.vo.DiningSessionVO;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -52,7 +51,7 @@ public class AdminDiningSessionController {
     */
     @GetMapping
     @Operation(summary = "查询堂食会话列表", description = "管理端按桌位、预约、会话或状态筛选堂食会话")
-    public Result<List<DiningSessionVO>> getSessionList(@ParameterObject DiningSessionDTO diningSessionDTO) {
+    public Result<PageResult<DiningSessionVO>> getSessionList(@ParameterObject DiningSessionDTO diningSessionDTO) {
         return Result.success(diningSessionService.getSessionList(diningSessionDTO));
     }
 

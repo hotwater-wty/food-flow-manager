@@ -3,6 +3,8 @@ package com.foodflow.module.dish.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.foodflow.common.dto.PageQueryDTO;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.module.dish.dto.DishCreateDTO;
 import com.foodflow.module.dish.dto.DishUpdateDTO;
 import com.foodflow.module.dish.entity.Dish;
@@ -18,7 +20,7 @@ public interface DishService extends IService<Dish> {
 
     DishVO getDishById(Long dishId);
 
-    List<DishVO> getDishList();
+    PageResult<DishVO> getDishList(PageQueryDTO pageQueryDTO);
 
     DishVO updateDish(Long dishId, @Valid DishUpdateDTO dishUpdateDTO);
 

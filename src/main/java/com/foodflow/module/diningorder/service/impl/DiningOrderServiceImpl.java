@@ -34,7 +34,6 @@ import com.foodflow.module.orderitem.vo.OrderItemVO;
 import com.foodflow.module.table.entity.DiningTable;
 import com.foodflow.module.table.service.DiningTableService;
 
-import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -42,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -311,8 +311,8 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
         if (orderList.isEmpty()) {
             return new PageResult<>(
                     orderPage.getTotal(),
-                    diningOrderDTO.getPageSize(),
                     diningOrderDTO.getPageNo(),
+                    diningOrderDTO.getPageSize(),
                     Collections.emptyList()
             );
         }
@@ -343,8 +343,8 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .toList();
         return new PageResult<>(
                 orderPage.getTotal(),
-                diningOrderDTO.getPageSize(),
                 diningOrderDTO.getPageNo(),
+                diningOrderDTO.getPageSize(),
                 records
         );
     }

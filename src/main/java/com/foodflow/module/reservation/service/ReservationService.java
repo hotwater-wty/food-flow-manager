@@ -3,6 +3,8 @@ package com.foodflow.module.reservation.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.foodflow.common.dto.PageQueryDTO;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.module.reservation.dto.ReservationDTO;
 import com.foodflow.module.reservation.entity.Reservation;
 import com.foodflow.module.reservation.vo.ReservationCreateVO;
@@ -16,7 +18,7 @@ public interface ReservationService extends IService<Reservation>{
 
     void cancelReservation(Long reservationId);
 
-    List<ReservationVO> getAllReservation();
+    PageResult<ReservationVO> getAllReservation(PageQueryDTO pageQueryDTO);
 
     ReservationVO getAdminReservationDetail(Long reservationId);
 

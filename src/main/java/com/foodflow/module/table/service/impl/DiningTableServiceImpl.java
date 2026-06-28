@@ -1,8 +1,11 @@
 package com.foodflow.module.table.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.module.table.dto.TableDTO;
 import com.foodflow.module.table.entity.DiningTable;
 import com.foodflow.module.table.mapper.DiningTableMapper;
@@ -22,16 +25,23 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, DiningTable> implements DiningTableService {
 
-    // TODO 后续要做分页查询
-
     /**
      * 商户端查询桌位列表(全部信息)
      */
     @Override
-    public List<TableVO> adminTableList() {
-        return query().list().stream()
+    public PageResult<TableVO> adminTableList(PageQueryDTO pageQueryDTO) {
+        Page<DiningTable> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
+        Page<DiningTable> tablePage = page(pageParam, query()
+                .orderByAsc("id")
+                .getWrapper());
+        List<TableVO> records = tablePage.getRecords().stream()
                 .map(this::toTableVO)
                 .collect(Collectors.toList());
+        return new PageResult<>(
+                tablePage.getTotal(),
+                pageQueryDTO.getPageNo(),
+                pageQueryDTO.getPageSize(),
+                records);
     }
 
     @Override

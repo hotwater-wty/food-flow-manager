@@ -1,9 +1,12 @@
 package com.foodflow.module.dish.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.CategoryStatusEnum;
 import com.foodflow.common.enums.DishStatusEnum;
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.module.dish.dto.DishCreateDTO;
 import com.foodflow.module.dish.dto.DishUpdateDTO;
 import com.foodflow.module.dish.entity.Dish;
@@ -79,10 +82,19 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     }
 
     @Override
-    public List<DishVO> getDishList() {
-        return list().stream()
+    public PageResult<DishVO> getDishList(PageQueryDTO pageQueryDTO) {
+        Page<Dish> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
+        Page<Dish> dishPage = page(pageParam, query()
+                .orderByDesc("create_time")
+                .getWrapper());
+        List<DishVO> records = dishPage.getRecords().stream()
                 .map(this::toDishVO)
                 .collect(Collectors.toList());
+        return new PageResult<>(
+                dishPage.getTotal(),
+                pageQueryDTO.getPageNo(),
+                pageQueryDTO.getPageSize(),
+                records);
     }
 
     @Override
