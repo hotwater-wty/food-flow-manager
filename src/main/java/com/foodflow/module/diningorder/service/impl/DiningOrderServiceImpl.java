@@ -1,5 +1,6 @@
 package com.foodflow.module.diningorder.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.enums.DiningSessionStatusEnum;
@@ -7,6 +8,7 @@ import com.foodflow.common.enums.DishStatusEnum;
 import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.utils.NumberUtils;
 import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
@@ -286,24 +288,46 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .build();
     }
 
+    /**
+     * 管理员获取订单列表
+     * 
+     * @param diningOrderDTO 订单查询参数
+     * @return 订单列表
+     */
     @Override
-    public List<AdminDiningOrderVO> getAdminOrderList(DiningOrderDTO diningOrderDTO) {
-        List<DiningOrder> orderList = query()
-                .eq(diningOrderDTO.getTableId() != null, "table_id", diningOrderDTO.getTableId())
-                .eq(diningOrderDTO.getOrderId() != null, "id", diningOrderDTO.getOrderId())
-                .eq(diningOrderDTO.getStatusEnum() != null, "status", diningOrderDTO.getStatusEnum())
-                .list();
+    public PageResult<AdminDiningOrderVO> getAdminOrderList(DiningOrderDTO diningOrderDTO) {
+        // 引入MyBatis-Plus分页查询功能
+        Page<DiningOrder> page = new Page<>(diningOrderDTO.getPageNo(), diningOrderDTO.getPageSize());
+        // 分页查询订单
+        Page<DiningOrder> orderPage = page(page, lambdaQuery()
+                .eq(diningOrderDTO.getTableId() != null, DiningOrder::getTableId, diningOrderDTO.getTableId())
+                .eq(diningOrderDTO.getOrderId() != null, DiningOrder::getId, diningOrderDTO.getOrderId())
+                .eq(diningOrderDTO.getStatusEnum() != null, DiningOrder::getStatus, diningOrderDTO.getStatusEnum())
+                .orderByDesc(DiningOrder::getCreateTime)
+                .getWrapper());
+        // 处理分页结果
+        List<DiningOrder> orderList = orderPage.getRecords();
+        
         if (orderList.isEmpty()) {
-            return Collections.emptyList();
+            return new PageResult<>(
+                    orderPage.getTotal(),
+                    diningOrderDTO.getPageSize(),
+                    diningOrderDTO.getPageNo(),
+                    Collections.emptyList()
+            );
         }
 
-        List<Long> tableIdList = orderList.stream()
+        // 获取桌位ID列表
+        List<Long> tableIds = orderList.stream()
                 .map(DiningOrder::getTableId)
-                .collect(Collectors.toList());
-        List<DiningTable> tableList = diningTableService.listByIds(tableIdList);
-        Map<Long, DiningTable> tableMap = tableList.stream()
+                .distinct()
+                .toList();
+        // 处理订单列表，生成桌位信息的id映射表
+        Map<Long, DiningTable> tableMap = diningTableService.listByIds(tableIds)
+                .stream()
                 .collect(Collectors.toMap(DiningTable::getId, Function.identity()));
-        return orderList.stream()
+        // 封装订单列表
+        List<AdminDiningOrderVO> records = orderList.stream()
                 .map(order -> AdminDiningOrderVO.builder()
                         .orderId(order.getId())
                         .orderNo(order.getOrderNo())
@@ -317,6 +341,12 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                         .createTime(order.getCreateTime())
                         .build())
                 .toList();
+        return new PageResult<>(
+                orderPage.getTotal(),
+                diningOrderDTO.getPageSize(),
+                diningOrderDTO.getPageNo(),
+                records
+        );
     }
 
     @Override

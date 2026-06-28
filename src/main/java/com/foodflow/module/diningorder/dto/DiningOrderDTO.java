@@ -24,6 +24,12 @@ public class DiningOrderDTO {
     @Max(value = 5, message = "状态不能大于5")
     private Integer status;
 
+    @Schema(description = "页码", example = "1")
+    private Integer pageNo = 1;
+
+    @Schema(description = "每页数量", example = "10")
+    private Integer pageSize = 10;
+
     public OrderStatusEnum getStatusEnum() {
         return status == null ? null : OrderStatusEnum.ofCode(status);
     }

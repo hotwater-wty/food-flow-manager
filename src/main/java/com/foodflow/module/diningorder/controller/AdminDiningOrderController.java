@@ -1,5 +1,6 @@
 package com.foodflow.module.diningorder.controller;
 
+import com.foodflow.common.result.PageResult;
 import com.foodflow.common.result.Result;
 import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderStatusUpdateDTO;
@@ -40,10 +41,10 @@ public class AdminDiningOrderController {
     */
     @GetMapping
     @Operation(summary = "查询堂食订单列表", description = "管理端按桌位、订单ID或订单状态筛选堂食订单")
-    public Result<List<AdminDiningOrderVO>> getOrderList(
+    public Result<PageResult<AdminDiningOrderVO>> getOrderList(
             @ParameterObject @Valid DiningOrderDTO diningOrderDTO) {
         log.info("管理员查看堂食订单列表, diningOrderDTO: {}", diningOrderDTO);
-        List<AdminDiningOrderVO> diningOrderVOList = diningOrderService
+        PageResult<AdminDiningOrderVO> diningOrderVOList = diningOrderService
                 .getAdminOrderList(diningOrderDTO);
         return Result.success(diningOrderVOList);
     }

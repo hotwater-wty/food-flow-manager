@@ -3,6 +3,7 @@ package com.foodflow.module.diningorder.service;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.foodflow.common.result.PageResult;
 import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
 import com.foodflow.module.diningorder.dto.OrderStatusUpdateDTO;
@@ -22,7 +23,7 @@ public interface DiningOrderService extends IService<DiningOrder> {
 
     List<UserDiningOrderVO> getOrderList(@Valid DiningOrderDTO diningOrderDTO);
 
-    List<AdminDiningOrderVO> getAdminOrderList(@Valid DiningOrderDTO diningOrderDTO);
+    PageResult<AdminDiningOrderVO> getAdminOrderList(@Valid DiningOrderDTO diningOrderDTO);
 
     AdminDiningOrderDetailVO getAdminOrderDetail(Long orderId);
 
