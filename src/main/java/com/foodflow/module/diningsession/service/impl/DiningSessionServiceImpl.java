@@ -374,7 +374,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
     @Override
     @Transactional(rollbackFor = Exception.class)
     public DiningSessionCloseVO closeSession(Long sessionId) {
-        // TODO 要加锁，确保并发安全
+        // 预校验会话状态
         DiningSession session = getById(sessionId);
         if (session == null) {
             throw new BusinessException("会话不存在");
@@ -382,7 +382,8 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (session.getStatus() != DiningSessionStatusEnum.DINING) {
             throw new BusinessException("会话状态错误");
         }
-
+        
+        // 预校验桌位状态
         DiningTable table = diningTableService.getById(session.getTableId());
         if (table == null) {
             throw new BusinessException("桌位不存在");
@@ -393,26 +394,21 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (!Objects.equals(table.getCurrentSessionId(), sessionId)) {
             throw new BusinessException("桌位与会话匹配异常");
         }
-        
-        List<DiningOrder> orderList = diningOrderMapper.selectList(
+
+        // 审查是否有未完成订单项
+        Long unfinishedCount = diningOrderMapper.selectCount(
                 new LambdaQueryWrapper<DiningOrder>()
-                        .eq(DiningOrder::getSessionId, sessionId));
-        if (orderList.isEmpty()) {
-            throw new BusinessException("订单不存在");
+                        .eq(DiningOrder::getSessionId, sessionId)
+                        .in(DiningOrder::getStatus, 
+                            OrderStatusEnum.PLACED, 
+                            OrderStatusEnum.COOKING));
+        if (unfinishedCount > 0) {
+            throw new BusinessException("有订单未完成，不能关闭会话");
         }
 
-        // 订单状态更新需要校验
         LocalDateTime now = LocalDateTime.now();
-        for (DiningOrder order : orderList) {
-            if (order.getStatus() == OrderStatusEnum.PLACED
-             || order.getStatus() == OrderStatusEnum.COOKING) {
-                throw new BusinessException("订单未完成，不能关闭会话");
-            }
-            if (order.getStatus() == OrderStatusEnum.COMPLETED
-             || order.getStatus() == OrderStatusEnum.CANCELED) {
-                continue;
-            }
-        }
+
+        // 更新订单状态为已完成
         DiningOrder orderUpdate = DiningOrder.builder()
                 .status(OrderStatusEnum.COMPLETED)
                 .updateTime(now)
@@ -422,18 +418,37 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                         .eq(DiningOrder::getSessionId, sessionId)
                         .eq(DiningOrder::getStatus, OrderStatusEnum.SERVED));
         
-        session.setActiveFlag(null);
-        session.setStatus(DiningSessionStatusEnum.COMPLETED);
-        session.setUpdateTime(now);
-        session.setCloseTime(now);
-        session.setCloseEmployeeId(LoginContext.getEmployeeId());
-        updateById(session);
+        // 更新会话状态为已完成
+        boolean sessionUpdated = lambdaUpdate()
+                .eq(DiningSession::getId, sessionId)
+                .eq(DiningSession::getStatus, DiningSessionStatusEnum.DINING)
+                .eq(DiningSession::getActiveFlag, ActiveFlagEnum.ACTIVE)
+                .set(DiningSession::getStatus, DiningSessionStatusEnum.COMPLETED)
+                .set(DiningSession::getActiveFlag, null)
+                .set(DiningSession::getCloseTime, now)
+                .set(DiningSession::getCloseEmployeeId, LoginContext.getEmployeeId())
+                .set(DiningSession::getUpdateTime, now)
+                .update();
+        if (!sessionUpdated) {
+            throw new BusinessException("会话状态更新失败");
+        }
         
         // 桌位状态更新要往后放，减轻并发风险
-        table.setStatus(TableStatusEnum.FREE);
-        table.setUpdateTime(now);
-        table.setCurrentSessionId(null);
-        diningTableService.updateById(table);   
+        boolean tableUpdated = diningTableService.lambdaUpdate()
+                        .eq(DiningTable::getId, table.getId())
+                        .eq(DiningTable::getStatus, TableStatusEnum.DINING)
+                        .eq(DiningTable::getCurrentSessionId, sessionId)
+                        .set(DiningTable::getStatus, TableStatusEnum.FREE)
+                        .set(DiningTable::getCurrentSessionId, null)
+                        .set(DiningTable::getUpdateTime, now)
+                        .update();
+        if (!tableUpdated) {
+            throw new BusinessException("桌位状态更新失败");
+        }
+
+        // 获取更新后的会话和桌位信息
+        table = diningTableService.getById(session.getTableId());
+        session = getById(sessionId);
 
         return toDiningSessionCloseVO(session, table);
     }
