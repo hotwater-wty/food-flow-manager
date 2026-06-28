@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 public enum ActiveFlagEnum implements IEnum<Integer> {
-    INACTIVE(0, "未激活"),
+    // INACTIVE(null, "未激活"),    // 会报空指针异常，业务中直接使用null表示未激活
     ACTIVE(1, "已激活");
 
     @EnumValue

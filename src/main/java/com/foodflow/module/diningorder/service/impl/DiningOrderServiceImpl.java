@@ -116,7 +116,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
         LocalDateTime now = LocalDateTime.now();
 
         // 更新会话状态
-        diningSessionService.lambdaUpdate()
+        boolean sessionUpdated = diningSessionService.lambdaUpdate()
                 .eq(DiningSession::getId, sessionId)
                 .eq(DiningSession::getUserId, LoginContext.getUserId())
                 .eq(DiningSession::getTableId, session.getTableId())
@@ -125,15 +125,27 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .set(DiningSession::getFirstOrderTime, now)
                 .set(DiningSession::getUpdateTime, now)
                 .update();
+        if (!sessionUpdated) {
+            throw new BusinessException("会话状态更新失败");
+        }
 
         // 更新桌位状态
-        diningTableService.lambdaUpdate()
-                .eq(DiningTable::getId, session.getTableId())
-                .eq(DiningTable::getCurrentSessionId, sessionId)
-                .eq(DiningTable::getStatus, TableStatusEnum.WAITING)
-                .set(DiningTable::getStatus, TableStatusEnum.DINING)
-                .set(DiningTable::getUpdateTime, now)
-                .update();
+        boolean tableUpdated = diningTableService.lambdaUpdate()
+                        .eq(DiningTable::getId, session.getTableId())
+                        .eq(DiningTable::getCurrentSessionId, sessionId)
+                        .eq(DiningTable::getStatus, TableStatusEnum.WAITING)
+                        .set(DiningTable::getStatus, TableStatusEnum.DINING)
+                        .set(DiningTable::getUpdateTime, now)
+                        .update();
+        if (!tableUpdated) {
+            throw new BusinessException("桌位状态更新失败");
+        }
+
+        // TODO 此处操作缓存
+
+        // 获取更新后的桌位状态
+        diningTable = diningTableService.getById(session.getTableId());
+        session = diningSessionService.getById(sessionId);
 
         // 创建订单
         DiningOrder order = DiningOrder.builder()

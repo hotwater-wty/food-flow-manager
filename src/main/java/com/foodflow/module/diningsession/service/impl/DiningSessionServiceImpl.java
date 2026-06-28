@@ -77,7 +77,9 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (table.getStatus() != TableStatusEnum.WAITING) {
             throw new BusinessException("用餐会话关联的餐桌状态异常");
         }
-        // 预约状态 已到店为终态之一，无需处理
+        
+        // 重置会话状态为未激活
+        diningSession.setActiveFlag(null);
         // TODO 为保证健壮性，这里可能需要做异常处理，v2开始考虑
         table.setStatus(TableStatusEnum.FREE);
         table.setCurrentSessionId(null);
@@ -134,13 +136,12 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (diningTable == null || diningTable.getStatus() == TableStatusEnum.DISABLED) {
             throw new BusinessException("桌位不存在或已禁用");
         }
-        if (diningTable.getStatus() != TableStatusEnum.FREE) {
-            throw new BusinessException("该桌位已被使用");
-        }
         // 扫码桌位必须与预约桌位一致
-        if (!reservation.getTableId().equals(diningTable.getId())) {
-            throw new BusinessException("扫码桌位与预约桌位不一致");
+        if (diningTable.getStatus() != TableStatusEnum.RESERVED || 
+            !reservation.getTableId().equals(diningTable.getId())) {
+            throw new BusinessException("桌位匹配错误");
         }
+        
         // 用户当前是否有用餐会话(用作友好提示，业务层面无法真的避免并发问题，由数据库层面约束)
         DiningSession currentSession = lambdaQuery()
                 .eq(DiningSession::getUserId, LoginContext.getUserId())
@@ -181,6 +182,11 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (!tableUpdated) {
             throw new BusinessException("桌位状态更新失败，请重试");
         }
+
+        // TODO 此处操作缓存
+
+        // 获取更新后的桌位状态
+        diningTable = diningTableService.getById(tableId);
         
         // 构建会话VO
         return toDiningSessionVO(diningSession, diningTable);
@@ -211,7 +217,9 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         if (currentSession != null) {
             throw new BusinessException("当前用户已存在用餐会话");
         }
-
+        
+        LocalDateTime now = LocalDateTime.now();
+        
         // 构建会话
         DiningSession diningSession = getDiningSession(tableId);
         save(diningSession);    // 数据库active_flag字段唯一约束，重复则抛出异常
@@ -222,11 +230,16 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                         .eq(DiningTable::getStatus, TableStatusEnum.FREE)
                         .set(DiningTable::getStatus, TableStatusEnum.WAITING)
                         .set(DiningTable::getCurrentSessionId, diningSession.getId())
-                        .set(DiningTable::getUpdateTime, LocalDateTime.now())
+                        .set(DiningTable::getUpdateTime, now)
                         .update();
         if (!tableUpdated) {
             throw new BusinessException("桌位状态更新失败，请重试");
         }
+
+        // TODO 此处操作缓存
+
+        // 获取更新后的桌位状态
+        diningTable = diningTableService.getById(tableId);
         
         // 构建会话VO
         return toDiningSessionVO(diningSession, diningTable);
@@ -409,6 +422,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                         .eq(DiningOrder::getSessionId, sessionId)
                         .eq(DiningOrder::getStatus, OrderStatusEnum.SERVED));
         
+        session.setActiveFlag(null);
         session.setStatus(DiningSessionStatusEnum.COMPLETED);
         session.setUpdateTime(now);
         session.setCloseTime(now);
