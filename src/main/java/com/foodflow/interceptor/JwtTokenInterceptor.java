@@ -1,5 +1,6 @@
 package com.foodflow.interceptor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodflow.common.constant.JwtClaimConstants;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.context.LoginInfo;
@@ -19,6 +20,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -32,8 +37,14 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
     // JWT token 前缀
     private static final String BEARER_PREFIX = "Bearer ";
 
+    // 缓存键前缀
+    private static final String USER_STATUS_CACHE_KEY = "foodflow:account:user:status:";
+    private static final String EMPLOYEE_STATUS_CACHE_KEY = "foodflow:account:employee:status:";
+
     private final UserMapper userMapper;
     private final EmployeeMapper employeeMapper;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -85,21 +96,14 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-            // 校验用户或员工账号状态是否正常
-            // TODO 后续去缓存里查
-            if (loginType == LoginTypeEnum.USER) {
-                User user = userMapper.selectById(userId);
-                if (user == null || user.getStatus() != UserStatusEnum.NORMAL) {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    return false;
-                }
+            // 校验用户或员工账号
+            if (loginType == LoginTypeEnum.USER && !isNormalUser(userId)) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return false;
             }
-            if (loginType == LoginTypeEnum.EMPLOYEE) {
-                Employee employee = employeeMapper.selectById(employeeId);
-                if (employee == null || employee.getStatus() != EmployeeStatusEnum.NORMAL) {
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    return false;
-                }
+            if (loginType == LoginTypeEnum.EMPLOYEE && !isNormalEmployee(employeeId)) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return false;
             }
 
             // 校验店长权限是否匹配当前请求路径
@@ -117,7 +121,14 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
                     .loginType(loginType)
                     .employeeRole(employeeRole)
                     .build());
-                    
+
+            // 更新账户状态缓存
+            stringRedisTemplate.opsForValue().set(
+                    USER_STATUS_CACHE_KEY + userId,
+                    String.valueOf(UserStatusEnum.NORMAL.getCode()),
+                    10,
+                    TimeUnit.MINUTES
+            );
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
             log.info("Invalid JWT token", ex);
@@ -133,6 +144,49 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         LoginContext.clear();
     }
 
+    // 查用户账号缓存，并校验状态是否正常
+    private boolean isNormalUser(Long userId) {
+        String cacheKey = USER_STATUS_CACHE_KEY + userId;
+        String cachedStatus = stringRedisTemplate.opsForValue().get(cacheKey);
+
+        if (cachedStatus != null) {
+            return String.valueOf(UserStatusEnum.NORMAL.getCode()).equals(cachedStatus);
+        }
+
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            stringRedisTemplate.opsForValue().set(cacheKey, "", 1, TimeUnit.MINUTES);
+            return false;
+        }
+
+        String statusCode = String.valueOf(user.getStatus().getCode());
+        stringRedisTemplate.opsForValue().set(cacheKey, statusCode, 10, TimeUnit.MINUTES);
+
+        return user.getStatus() == UserStatusEnum.NORMAL;
+    }
+
+    // 查员工账号缓存，并校验状态是否正常
+    private boolean isNormalEmployee(Long employeeId) {
+        String cacheKey = EMPLOYEE_STATUS_CACHE_KEY + employeeId;
+        String cachedStatus = stringRedisTemplate.opsForValue().get(cacheKey);
+
+        if (cachedStatus != null) {
+            return String.valueOf(EmployeeStatusEnum.NORMAL.getCode()).equals(cachedStatus);
+        }
+
+        Employee employee = employeeMapper.selectById(employeeId);
+        if (employee == null) {
+            stringRedisTemplate.opsForValue().set(cacheKey, "", 1, TimeUnit.MINUTES);
+            return false;
+        }
+
+        String statusCode = String.valueOf(employee.getStatus().getCode());
+        stringRedisTemplate.opsForValue().set(cacheKey, statusCode, 10, TimeUnit.MINUTES);
+
+        return employee.getStatus() == EmployeeStatusEnum.NORMAL;
+    }
+
+    // 校验请求路径是否为店长权限路径
     private boolean isManagerOnlyPath(HttpServletRequest request) {
         String method = request.getMethod();
         String path = request.getRequestURI();

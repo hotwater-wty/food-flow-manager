@@ -134,7 +134,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         // 从数据库查询
         Page<Dish> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
         Page<Dish> dishPage = page(pageParam, lambdaQuery()
-                .orderByDesc(Dish::getCreateTime));
+                .orderByDesc(Dish::getCreateTime)
+                .getWrapper());
         List<DishVO> records = dishPage.getRecords().stream()
                 .map(this::toDishVO)
                 .collect(Collectors.toList());
