@@ -4,3 +4,15 @@ spring:
     url: jdbc:mysql://localhost:3306/food_flow_manager?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: 197024315ab
+  data: 
+    redis:
+      host: 192.168.100.129
+      port: 6379
+      password: 
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8 # 最大连接数
+          max-idle: 8   # 最大空闲连接数
+          min-idle: 0   # 最小空闲连接数
+          max-wait: 100 # 最大等待时间

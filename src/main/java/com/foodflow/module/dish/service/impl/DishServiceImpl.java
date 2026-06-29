@@ -81,6 +81,11 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         return toDishVO(dish);
     }
 
+    /**
+     * 分页查询菜品列表
+     * @param pageQueryDTO 分页查询参数
+     * @return 分页结果集
+     */
     @Override
     public PageResult<DishVO> getDishList(PageQueryDTO pageQueryDTO) {
         Page<Dish> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
