@@ -1,6 +1,6 @@
 package com.foodflow.interceptor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.constant.JwtClaimConstants;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.context.LoginInfo;
@@ -37,14 +37,9 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
     // JWT token 前缀
     private static final String BEARER_PREFIX = "Bearer ";
 
-    // 缓存键前缀
-    private static final String USER_STATUS_CACHE_KEY = "foodflow:account:user:status:";
-    private static final String EMPLOYEE_STATUS_CACHE_KEY = "foodflow:account:employee:status:";
-
     private final UserMapper userMapper;
     private final EmployeeMapper employeeMapper;
     private final StringRedisTemplate stringRedisTemplate;
-    private final ObjectMapper objectMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -124,7 +119,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
 
             // 更新账户状态缓存
             stringRedisTemplate.opsForValue().set(
-                    USER_STATUS_CACHE_KEY + userId,
+                    CacheConstants.USER_STATUS_CACHE_KEY + userId,
                     String.valueOf(UserStatusEnum.NORMAL.getCode()),
                     10,
                     TimeUnit.MINUTES
@@ -138,15 +133,15 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
-            Exception ex) {
+    public void afterCompletion(HttpServletRequest request, 
+            HttpServletResponse response, Object handler, Exception ex) {
         // 请求处理完成后清理 ThreadLocal，避免 Tomcat 线程复用造成用户信息串用。
         LoginContext.clear();
     }
 
     // 查用户账号缓存，并校验状态是否正常
     private boolean isNormalUser(Long userId) {
-        String cacheKey = USER_STATUS_CACHE_KEY + userId;
+        String cacheKey = CacheConstants.USER_STATUS_CACHE_KEY + userId;
         String cachedStatus = stringRedisTemplate.opsForValue().get(cacheKey);
 
         if (cachedStatus != null) {
@@ -167,7 +162,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
 
     // 查员工账号缓存，并校验状态是否正常
     private boolean isNormalEmployee(Long employeeId) {
-        String cacheKey = EMPLOYEE_STATUS_CACHE_KEY + employeeId;
+        String cacheKey = CacheConstants.EMPLOYEE_STATUS_CACHE_KEY + employeeId;
         String cachedStatus = stringRedisTemplate.opsForValue().get(cacheKey);
 
         if (cachedStatus != null) {

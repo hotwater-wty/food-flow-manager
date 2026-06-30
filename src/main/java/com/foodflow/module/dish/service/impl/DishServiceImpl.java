@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.CategoryStatusEnum;
 import com.foodflow.common.enums.DishStatusEnum;
@@ -39,25 +40,12 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     private final DishCategoryService dishCategoryService;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
-
-    // private static final String DISH_PAGE_CACHE_PREFIX = "foodflow:dish:page:";
-
-    // private String buildDishPageCacheKey(PageQueryDTO pageQueryDTO) {
-    // return DISH_PAGE_CACHE_PREFIX
-    //         + pageQueryDTO.getPageNo()
-    //         + ":"
-    //         + pageQueryDTO.getPageSize();
-    // }
-
-    // 用户端查询菜品信息的缓存键
-    private static final String DISH_ON_SALE_ALL_KEY = "foodflow:dish:on-sale:all";
-    private static final String DISH_ON_SALE_CATEGORY_PREFIX = "foodflow:dish:on-sale:category:";
-
+   
     private String buildOnSaleDishCacheKey(Long categoryId) {
         if (categoryId == null) {
-            return DISH_ON_SALE_ALL_KEY;
+            return CacheConstants.DISH_ON_SALE_ALL_KEY;
         }
-        return DISH_ON_SALE_CATEGORY_PREFIX + categoryId;
+        return CacheConstants.DISH_ON_SALE_CATEGORY_PREFIX + categoryId;
     }
 
     /**
@@ -244,12 +232,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
      * @param categoryId 菜品分类ID
      */
     private void checkEnabledCategory(Long categoryId) {
-        // // 从缓存中获取
-        // String cacheKey = DISH_ON_SALE_CATEGORY_PREFIX + categoryId;
-        // Object cachedResult = redisTemplate.opsForValue().get(cacheKey);
-        // if (cachedResult != null) {
-        //     return;
-        // }
+        // TODO 从缓存中获取
 
         // 检查菜品分类是否存在且已启用
         DishCategory category = dishCategoryService.getById(categoryId);
@@ -265,8 +248,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
      * 清理菜品缓存
      */
     private void cleanDishCache() {
-        stringRedisTemplate.delete(DISH_ON_SALE_ALL_KEY);
-        Set<String> keys = stringRedisTemplate.keys(DISH_ON_SALE_CATEGORY_PREFIX + "*");
+        stringRedisTemplate.delete(CacheConstants.DISH_ON_SALE_ALL_KEY);
+        Set<String> keys = stringRedisTemplate.keys(CacheConstants.DISH_ON_SALE_CATEGORY_PREFIX + "*");
         if (keys != null && !keys.isEmpty()) {
             stringRedisTemplate.delete(keys);
         }

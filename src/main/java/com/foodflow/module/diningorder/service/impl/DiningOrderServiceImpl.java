@@ -58,9 +58,6 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
     private final DishService dishService;
     private final DiningTableService diningTableService;
     private final OrderItemService orderItemService;
-    private final RedisTemplate<String, Object> redisTemplate;
-
-    
 
     /**
      * 创建用餐订单

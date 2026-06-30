@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.dto.PageQueryDTO;
+import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.constant.JwtClaimConstants;
 import com.foodflow.common.enums.EmployeeRoleEnum;
 import com.foodflow.common.enums.EmployeeStatusEnum;
@@ -21,6 +22,8 @@ import com.foodflow.module.employee.vo.EmployeeRegisterVO;
 import com.foodflow.module.employee.vo.EmployeeVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +39,13 @@ import java.util.stream.Collectors;
 public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> implements EmployeeService {
 
     private final PasswordEncoder passwordEncoder;
+    private final StringRedisTemplate stringRedisTemplate;
 
+    /**
+     * 注册员工账号
+     * @param employeeRegisterDTO 注册请求
+     * @return 注册响应
+     */
     @Override
     public EmployeeRegisterVO register(EmployeeRegisterDTO employeeRegisterDTO) {
         String phone = employeeRegisterDTO.getPhone();
@@ -69,19 +78,24 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
                 .build();
 
         // 注册流程 5：保存后 MyBatis-Plus 会把数据库生成的主键 id 回填到 employee 对象中。
-        saveOrUpdate(employee);
+        save(employee);
 
         // 注册流程 6：封装注册响应，避免把 password 返回给前端。
         return toRegisterVO(employee);
     }
 
+    /**
+     * 登录员工账号
+     * @param employeeLoginDTO 员工登录请求
+     * @return 登录响应
+     */
     @Override
     public EmployeeLoginVO login(EmployeeLoginDTO employeeLoginDTO) {
         String phone = employeeLoginDTO.getPhone();
 
         // 登录流程 1：先按手机号查出员工，不能把明文密码放到 SQL 条件里比价
-        Employee employee = query()
-                .eq("phone", phone)
+        Employee employee = lambdaQuery()
+                .eq(Employee::getPhone, phone)
                 .one();
 
         // 登录流程 2：使用 BCrypt 的 matches 比较明文密码和数据库中的加密密码。
@@ -110,6 +124,11 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
         return employeeLoginVO;
     }
 
+    /**
+     * 分页查询员工列表
+     * @param pageQueryDTO 分页查询DTO
+     * @return 分页结果
+     */
     @Override
     public PageResult<EmployeeVO> getEmployeeList(PageQueryDTO pageQueryDTO) {
         Page<Employee> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
@@ -126,11 +145,21 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
                 records);
     }
 
+    /**
+     * 根据员工ID查询员工信息
+     * @param employeeId 员工ID
+     * @return 员工VO
+     */
     @Override
     public EmployeeVO getEmployeeById(Long employeeId) {
         return toEmployeeVO(getExistingEmployee(employeeId));
     }
 
+    /**
+     * 创建员工账号
+     * @param employeeRegisterDTO 员工注册DTO
+     * @return 员工VO
+     */
     @Override
     public EmployeeVO createEmployee(EmployeeRegisterDTO employeeRegisterDTO) {
         EmployeeRegisterVO registerVO = register(employeeRegisterDTO);
@@ -143,26 +172,56 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
                 .build();
     }
 
+    // TODO 更新员工信息
+
+    /**
+     * 禁用员工账号
+     * @param employeeId 员工ID
+     */
     @Override
     public void disableEmployee(Long employeeId) {
+        String cacheKey = CacheConstants.EMPLOYEE_STATUS_CACHE_KEY + employeeId;
         Employee employee = getExistingEmployee(employeeId);
         if (employee.getStatus() == EmployeeStatusEnum.DISABLED) {
             throw new BusinessException("员工账号已禁用");
         }
-        employee.setStatus(EmployeeStatusEnum.DISABLED);
-        employee.setUpdateTime(LocalDateTime.now());
-        updateById(employee);
+        
+        boolean statusUpdated = lambdaUpdate()
+                        .eq(Employee::getId, employeeId)
+                        .notIn(Employee::getStatus, EmployeeStatusEnum.DISABLED)
+                        .set(Employee::getStatus, EmployeeStatusEnum.DISABLED)
+                        .set(Employee::getUpdateTime, LocalDateTime.now())
+                        .update();
+        if (!statusUpdated) {
+            throw new BusinessException("员工账号禁用失败");
+        }
+        // 清空员工缓存
+        stringRedisTemplate.delete(cacheKey);
     }
 
+    /**
+     * 启用员工账号
+     * @param employeeId 员工ID
+     */
     @Override
     public void enableEmployee(Long employeeId) {
+        String cacheKey = CacheConstants.EMPLOYEE_STATUS_CACHE_KEY + employeeId;
         Employee employee = getExistingEmployee(employeeId);
         if (employee.getStatus() == EmployeeStatusEnum.NORMAL) {
             throw new BusinessException("员工账号已启用");
         }
-        employee.setStatus(EmployeeStatusEnum.NORMAL);
-        employee.setUpdateTime(LocalDateTime.now());
-        updateById(employee);
+        
+        boolean statusUpdated = lambdaUpdate()
+                        .eq(Employee::getId, employeeId)
+                        .notIn(Employee::getStatus, EmployeeStatusEnum.NORMAL)
+                        .set(Employee::getStatus, EmployeeStatusEnum.NORMAL)
+                        .set(Employee::getUpdateTime, LocalDateTime.now())
+                        .update();
+        if (!statusUpdated) {
+            throw new BusinessException("员工账号启用失败");
+        }
+        // 清空员工缓存
+        stringRedisTemplate.delete(cacheKey);
     }
 
     private EmployeeLoginVO toLoginVO(Employee employee) {
