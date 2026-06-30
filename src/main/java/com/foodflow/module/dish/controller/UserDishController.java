@@ -5,7 +5,9 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,9 +37,25 @@ public class UserDishController {
     public Result<List<DishVO>> getDishList(
             @Parameter(description = "菜品分类ID，不传则查询全部可售菜品", example = "1")
             @RequestParam(required = false) Long categoryId) {
-        // TODO v2做分页查询
         log.info("获取用户启售中的菜品");
         List<DishVO> dishVOList = dishService.getEnabledDishList(categoryId);
         return Result.success(dishVOList);
     }
+
+    /**
+     * 用户获取菜品详情
+     * 
+     * @param dishId 菜品ID
+     * @return 菜品VO
+    */
+    @GetMapping("/{dishId}")
+    @Operation(summary = "查询菜品详情", description = "用户端查询指定菜品的详细信息")
+    public Result<DishVO> getDishDetail(
+            @Parameter(description = "菜品ID", example = "1")
+            @PathVariable Long dishId) {
+        log.info("获取用户菜品详情: {}", dishId);
+        DishVO dishVO = dishService.getDishDetail(dishId);
+        return Result.success(dishVO);
+    }
+    
 }
