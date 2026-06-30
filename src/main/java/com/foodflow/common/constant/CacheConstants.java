@@ -13,7 +13,11 @@ public class CacheConstants {
     public static final String DISH_ON_SALE_ALL_KEY = "foodflow:dish:on-sale:all";
     // 用户端按分类查询上架菜品信息的缓存键前缀
     public static final String DISH_ON_SALE_CATEGORY_PREFIX = "foodflow:dish:on-sale:category:";
-
+    // 启用分类列表 缓存键
+    public static final String CATEGORY_ENABLED_LIST_KEY = "foodflow:dish-category:enabled:list";
+    // 启用分类 缓存键前缀
+    public static final String CATEGORY_ENABLED_PREFIX = "foodflow:dish-category:enabled:";
+    
     private CacheConstants() {
     }
 }

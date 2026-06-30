@@ -2,12 +2,18 @@ package com.foodflow.module.dishcategory.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.CategoryStatusEnum;
 import com.foodflow.common.exception.BusinessException;
@@ -27,6 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, DishCategory>
         implements DishCategoryService {
 
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
+
+    /**
+     * 创建分类
+     * @param dishCategoryDTO 分类DTO
+     * @return 创建后的分类VO
+     */
     @Override
     public DishCategoryVO createCategory(DishCategoryDTO dishCategoryDTO) {
         DishCategory category = DishCategory.builder()
@@ -37,9 +51,16 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
                 .updateTime(LocalDateTime.now())
                 .build();
         save(category);
+        cleanCategoryCache();
         return toVO(category);
     }
 
+    /**
+     * 更新分类
+     * @param categoryId 分类ID
+     * @param dishCategoryDTO 分类DTO
+     * @return 更新后的分类VO
+     */
     @Override
     public DishCategoryVO updateCategory(Long categoryId, DishCategoryDTO dishCategoryDTO) {
         DishCategory category = getExistingCategory(categoryId);
@@ -47,6 +68,7 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
         category.setSort(dishCategoryDTO.getSort());
         category.setUpdateTime(LocalDateTime.now());
         updateById(category);
+        cleanCategoryCache();
         return toVO(category);
     }
 
@@ -54,6 +76,7 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
     public void deleteCategory(Long categoryId) {
         getExistingCategory(categoryId);
         removeById(categoryId);
+        cleanCategoryCache();
     }
 
     @Override
@@ -61,6 +84,11 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
         return toVO(getExistingCategory(categoryId));
     }
 
+    /**
+     * 管理员获取分类列表
+     * @param pageQueryDTO 分页查询参数
+     * @return 分页结果
+     */
     @Override
     public PageResult<DishCategoryVO> getAdminCategoryList(PageQueryDTO pageQueryDTO) {
         Page<DishCategory> pageParam = new Page<>(pageQueryDTO.getPageNo(), pageQueryDTO.getPageSize());
@@ -69,7 +97,7 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
                 .getWrapper());
         List<DishCategoryVO> records = categoryPage.getRecords().stream()
                 .map(this::toVO)
-                .collect(Collectors.toList());
+                .toList();
         return new PageResult<>(
                 categoryPage.getTotal(),
                 pageQueryDTO.getPageNo(),
@@ -77,38 +105,91 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
                 records);
     }
 
+    /**
+     * 获取启用的分类列表
+     * @return 启用分类列表
+     */
     @Override
     public List<DishCategoryVO> getEnabledCategoryList() {
-        return query()
-                .eq("status", CategoryStatusEnum.ENABLED)
-                .orderByAsc("sort")
+        String cachedKey = CacheConstants.CATEGORY_ENABLED_LIST_KEY;
+        String cachedListJson = stringRedisTemplate.opsForValue().get(cachedKey);
+        if (cachedListJson != null) {
+            try {
+                return objectMapper.readValue(
+                    cachedListJson, 
+                    new TypeReference<List<DishCategoryVO>>() {});
+            } catch (JsonProcessingException e) {
+                throw new BusinessException("解析启用分类列表失败");
+            }
+        }
+        List<DishCategoryVO> records = lambdaQuery()
+                .eq(DishCategory::getStatus, CategoryStatusEnum.ENABLED)
+                .orderByAsc(DishCategory::getSort)
                 .list().stream()
                 .map(this::toVO)
-                .collect(Collectors.toList());
+                .toList();
+        try{
+            String listJson = objectMapper.writeValueAsString(records);
+            stringRedisTemplate.opsForValue().set(cachedKey, listJson, 10, TimeUnit.MINUTES);
+        } catch (JsonProcessingException e) {
+            throw new BusinessException("序列化启用分类列表失败");
+        }
+        return records;
     }
 
+    /**
+     * 启用菜品分类
+     * @param categoryId 分类id
+     */
     @Override
     public void enableCategory(Long categoryId) {
         DishCategory category = getExistingCategory(categoryId);
         if (category.getStatus() == CategoryStatusEnum.ENABLED) {
             throw new BusinessException("分类已启用");
         }
-        category.setStatus(CategoryStatusEnum.ENABLED);
-        category.setUpdateTime(LocalDateTime.now());
-        updateById(category);
+        
+        boolean enabled = lambdaUpdate()
+                        .eq(DishCategory::getId, categoryId)
+                        .ne(DishCategory::getStatus, CategoryStatusEnum.ENABLED)
+                        .set(DishCategory::getStatus, CategoryStatusEnum.ENABLED)
+                        .set(DishCategory::getUpdateTime, LocalDateTime.now())
+                        .update();
+        if (!enabled) {
+            throw new BusinessException("启用分类失败");
+        }
+        
+        cleanCategoryCache();
     }
 
+    /**
+     * 禁用菜品分类
+     * @param categoryId 分类id
+     */
     @Override
     public void disableCategory(Long categoryId) {
         DishCategory category = getExistingCategory(categoryId);
         if (category.getStatus() == CategoryStatusEnum.DISABLED) {
             throw new BusinessException("分类已禁用");
         }
-        category.setStatus(CategoryStatusEnum.DISABLED);
-        category.setUpdateTime(LocalDateTime.now());
-        updateById(category);
+        
+        boolean disabled = lambdaUpdate()
+                        .eq(DishCategory::getId, categoryId)
+                        .ne(DishCategory::getStatus, CategoryStatusEnum.DISABLED)
+                        .set(DishCategory::getStatus, CategoryStatusEnum.DISABLED)
+                        .set(DishCategory::getUpdateTime, LocalDateTime.now())
+                        .update();
+        if (!disabled) {
+            throw new BusinessException("禁用分类失败");
+        }
+        
+        cleanCategoryCache();
     }
 
+    /**
+     * 从数据库获取存在的分类并校验
+     * @param categoryId 分类ID
+     * @return 存在的分类
+     */
     private DishCategory getExistingCategory(Long categoryId) {
         DishCategory category = getById(categoryId);
         if (category == null) {
@@ -124,5 +205,16 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
                 .sort(category.getSort())
                 .status(category.getStatus().getCode())
                 .build();
+    }
+
+    /**
+     * 清空启用分类缓存
+     */
+    private void cleanCategoryCache() {
+        stringRedisTemplate.delete(CacheConstants.CATEGORY_ENABLED_LIST_KEY);
+        Set<String> keys = stringRedisTemplate.keys(CacheConstants.CATEGORY_ENABLED_PREFIX + "*");
+        if (keys != null && !keys.isEmpty()) {
+            stringRedisTemplate.delete(keys);
+        }
     }
 }
