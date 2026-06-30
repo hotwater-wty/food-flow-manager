@@ -116,14 +116,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
                     .loginType(loginType)
                     .employeeRole(employeeRole)
                     .build());
-
-            // 更新账户状态缓存
-            stringRedisTemplate.opsForValue().set(
-                    CacheConstants.USER_STATUS_CACHE_KEY + userId,
-                    String.valueOf(UserStatusEnum.NORMAL.getCode()),
-                    10,
-                    TimeUnit.MINUTES
-            );
+                    
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
             log.info("Invalid JWT token", ex);

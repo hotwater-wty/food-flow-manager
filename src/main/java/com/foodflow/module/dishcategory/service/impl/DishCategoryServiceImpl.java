@@ -212,9 +212,16 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
      */
     private void cleanCategoryCache() {
         stringRedisTemplate.delete(CacheConstants.CATEGORY_ENABLED_LIST_KEY);
-        Set<String> keys = stringRedisTemplate.keys(CacheConstants.CATEGORY_ENABLED_PREFIX + "*");
-        if (keys != null && !keys.isEmpty()) {
-            stringRedisTemplate.delete(keys);
+        Set<String> categoryKeys = stringRedisTemplate.keys(CacheConstants.CATEGORY_ENABLED_PREFIX + "*");
+        if (categoryKeys != null && !categoryKeys.isEmpty()) {
+            stringRedisTemplate.delete(categoryKeys);
+        }
+
+        // 清空启售菜品缓存
+        stringRedisTemplate.delete(CacheConstants.DISH_ON_SALE_ALL_KEY);
+        Set<String> dishKeys = stringRedisTemplate.keys(CacheConstants.DISH_ON_SALE_CATEGORY_PREFIX + "*");
+        if (dishKeys != null && !dishKeys.isEmpty()) {
+            stringRedisTemplate.delete(dishKeys);
         }
     }
 }

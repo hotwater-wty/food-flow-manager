@@ -243,7 +243,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         // 从缓存中获取
         String cacheKey = buildDishDetailCacheKey(dishId);
         String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
-        if (cachedJson != null) {
+        if (cachedJson != null && !"".equals(cachedJson)) {
             try {
                 return objectMapper.readValue(
                     cachedJson, 
@@ -256,8 +256,18 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         Dish dish = getById(dishId);
         if (dish == null) {
             // 缓存空对象，防止重复查询
-            stringRedisTemplate.opsForValue().set(cacheKey, "", 10, TimeUnit.MINUTES);
+            stringRedisTemplate.opsForValue().set(cacheKey, "", 1, TimeUnit.MINUTES);
             throw new BusinessException("菜品不存在");
+        }
+        if (dish.getStatus() != DishStatusEnum.ON_SALE) {
+            // 缓存空对象，防止重复查询
+            stringRedisTemplate.opsForValue().set(cacheKey, "", 1, TimeUnit.MINUTES);
+            throw new BusinessException("菜品已下架");
+        }
+        if (dish.getStatus() != DishStatusEnum.SOLD_OUT) {
+            // 缓存空对象，防止重复查询
+            stringRedisTemplate.opsForValue().set(cacheKey, "", 1, TimeUnit.MINUTES);
+            throw new BusinessException("菜品已售罄");
         }
 
         // 缓存结果
@@ -276,9 +286,9 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
      */
     private void checkEnabledCategory(Long categoryId) {
         // TODO 从缓存中获取
-        String cacheKey = CacheConstants.CATEGORY_ENABLED_LIST_KEY;
+        String cacheKey = CacheConstants.CATEGORY_ENABLED_PREFIX + categoryId;
         String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
-        if (cachedJson != null) {
+        if (cachedJson != null && !"".equals(cachedJson)) {
             try {
                 objectMapper.readValue(
                         cachedJson, 
