@@ -5,6 +5,9 @@ package com.foodflow.common.constant;
  */
 public class CacheConstants {
 
+    // 缓存空值
+    public static final String CACHE_EMPTY_VALUE = "";
+
     //用户状态缓存键前缀
     public static final String USER_STATUS_CACHE_KEY = "foodflow:account:user:status:";
     //员工状态缓存键前缀

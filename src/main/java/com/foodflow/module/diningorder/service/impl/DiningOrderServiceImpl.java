@@ -3,7 +3,6 @@ package com.foodflow.module.diningorder.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.context.LoginContext;
-import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.DiningSessionStatusEnum;
 import com.foodflow.common.enums.DishStatusEnum;
 import com.foodflow.common.enums.OrderStatusEnum;
@@ -37,7 +36,6 @@ import com.foodflow.module.table.service.DiningTableService;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
