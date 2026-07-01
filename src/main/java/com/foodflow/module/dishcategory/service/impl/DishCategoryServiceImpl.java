@@ -2,22 +2,16 @@ package com.foodflow.module.dishcategory.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.CategoryStatusEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.result.PageResult;
+import com.foodflow.common.utils.DishCategoryCacheClient;
 import com.foodflow.module.dishcategory.dto.DishCategoryDTO;
 import com.foodflow.module.dishcategory.entity.DishCategory;
 import com.foodflow.module.dishcategory.mapper.DishCategoryMapper;
@@ -33,8 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, DishCategory>
         implements DishCategoryService {
 
-    private final StringRedisTemplate stringRedisTemplate;
-    private final ObjectMapper objectMapper;
+    private final DishCategoryCacheClient dishCategoryCacheClient;
 
     /**
      * 创建分类
@@ -111,16 +104,9 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
      */
     @Override
     public List<DishCategoryVO> getEnabledCategoryList() {
-        String cachedKey = CacheConstants.CATEGORY_ENABLED_LIST_KEY;
-        String cachedListJson = stringRedisTemplate.opsForValue().get(cachedKey);
-        if (cachedListJson != null) {
-            try {
-                return objectMapper.readValue(
-                    cachedListJson, 
-                    new TypeReference<List<DishCategoryVO>>() {});
-            } catch (JsonProcessingException e) {
-                throw new BusinessException("解析启用分类列表失败");
-            }
+        List<DishCategoryVO> cachedList = dishCategoryCacheClient.getEnabledCategoryListCache();
+        if (cachedList != null) {
+            return cachedList;
         }
         List<DishCategoryVO> records = lambdaQuery()
                 .eq(DishCategory::getStatus, CategoryStatusEnum.ENABLED)
@@ -128,12 +114,7 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
                 .list().stream()
                 .map(this::toVO)
                 .toList();
-        try{
-            String listJson = objectMapper.writeValueAsString(records);
-            stringRedisTemplate.opsForValue().set(cachedKey, listJson, 10, TimeUnit.MINUTES);
-        } catch (JsonProcessingException e) {
-            throw new BusinessException("序列化启用分类列表失败");
-        }
+        dishCategoryCacheClient.setEnabledCategoryListCache(records);
         return records;
     }
 
@@ -211,17 +192,6 @@ public class DishCategoryServiceImpl extends ServiceImpl<DishCategoryMapper, Dis
      * 清空启用分类缓存
      */
     private void cleanCategoryCache() {
-        stringRedisTemplate.delete(CacheConstants.CATEGORY_ENABLED_LIST_KEY);
-        Set<String> categoryKeys = stringRedisTemplate.keys(CacheConstants.CATEGORY_ENABLED_PREFIX + "*");
-        if (categoryKeys != null && !categoryKeys.isEmpty()) {
-            stringRedisTemplate.delete(categoryKeys);
-        }
-
-        // 清空启售菜品缓存
-        stringRedisTemplate.delete(CacheConstants.DISH_ON_SALE_ALL_KEY);
-        Set<String> dishKeys = stringRedisTemplate.keys(CacheConstants.DISH_ON_SALE_CATEGORY_PREFIX + "*");
-        if (dishKeys != null && !dishKeys.isEmpty()) {
-            stringRedisTemplate.delete(dishKeys);
-        }
+        dishCategoryCacheClient.cleanCategoryCache();
     }
 }

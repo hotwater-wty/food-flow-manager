@@ -4,13 +4,13 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.dto.PageQueryDTO;
-import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.constant.JwtClaimConstants;
 import com.foodflow.common.enums.EmployeeRoleEnum;
 import com.foodflow.common.enums.EmployeeStatusEnum;
 import com.foodflow.common.enums.LoginTypeEnum;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.result.PageResult;
+import com.foodflow.common.utils.AccountStatusCacheClient;
 import com.foodflow.common.utils.JwtUtil;
 import com.foodflow.module.employee.dto.EmployeeLoginDTO;
 import com.foodflow.module.employee.dto.EmployeeRegisterDTO;
@@ -23,7 +23,6 @@ import com.foodflow.module.employee.vo.EmployeeVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +38,7 @@ import java.util.stream.Collectors;
 public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> implements EmployeeService {
 
     private final PasswordEncoder passwordEncoder;
-    private final StringRedisTemplate stringRedisTemplate;
+    private final AccountStatusCacheClient accountStatusCacheClient;
 
     /**
      * 注册员工账号
@@ -180,7 +179,6 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
      */
     @Override
     public void disableEmployee(Long employeeId) {
-        String cacheKey = CacheConstants.EMPLOYEE_STATUS_CACHE_KEY + employeeId;
         Employee employee = getExistingEmployee(employeeId);
         if (employee.getStatus() == EmployeeStatusEnum.DISABLED) {
             throw new BusinessException("员工账号已禁用");
@@ -196,7 +194,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
             throw new BusinessException("员工账号禁用失败");
         }
         // 清空员工缓存
-        stringRedisTemplate.delete(cacheKey);
+        accountStatusCacheClient.cleanEmployeeStatusCache(employeeId);
     }
 
     /**
@@ -205,7 +203,6 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
      */
     @Override
     public void enableEmployee(Long employeeId) {
-        String cacheKey = CacheConstants.EMPLOYEE_STATUS_CACHE_KEY + employeeId;
         Employee employee = getExistingEmployee(employeeId);
         if (employee.getStatus() == EmployeeStatusEnum.NORMAL) {
             throw new BusinessException("员工账号已启用");
@@ -221,7 +218,7 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
             throw new BusinessException("员工账号启用失败");
         }
         // 清空员工缓存
-        stringRedisTemplate.delete(cacheKey);
+        accountStatusCacheClient.cleanEmployeeStatusCache(employeeId);
     }
 
     private EmployeeLoginVO toLoginVO(Employee employee) {

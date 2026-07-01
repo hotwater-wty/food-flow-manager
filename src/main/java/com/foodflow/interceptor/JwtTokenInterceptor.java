@@ -1,6 +1,5 @@
 package com.foodflow.interceptor;
 
-import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.constant.JwtClaimConstants;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.context.LoginInfo;
@@ -8,6 +7,8 @@ import com.foodflow.common.enums.EmployeeRoleEnum;
 import com.foodflow.common.enums.EmployeeStatusEnum;
 import com.foodflow.common.enums.LoginTypeEnum;
 import com.foodflow.common.enums.UserStatusEnum;
+import com.foodflow.common.result.CacheResult;
+import com.foodflow.common.utils.AccountStatusCacheClient;
 import com.foodflow.common.utils.JwtUtil;
 import com.foodflow.module.employee.entity.Employee;
 import com.foodflow.module.employee.mapper.EmployeeMapper;
@@ -21,9 +22,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
-
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -39,7 +37,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
 
     private final UserMapper userMapper;
     private final EmployeeMapper employeeMapper;
-    private final StringRedisTemplate stringRedisTemplate;
+    private final AccountStatusCacheClient accountStatusCacheClient;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -134,42 +132,42 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
 
     // 查用户账号缓存，并校验状态是否正常
     private boolean isNormalUser(Long userId) {
-        String cacheKey = CacheConstants.USER_STATUS_CACHE_KEY + userId;
-        String cachedStatus = stringRedisTemplate.opsForValue().get(cacheKey);
-
-        if (cachedStatus != null) {
-            return String.valueOf(UserStatusEnum.NORMAL.getCode()).equals(cachedStatus);
+        CacheResult<String> cacheResult = accountStatusCacheClient.getUserStatusCache(userId);
+        if (cacheResult.isHit()) {
+            return String.valueOf(UserStatusEnum.NORMAL.getCode()).equals(cacheResult.getData());
+        }
+        if (cacheResult.isEmpty()) {
+            return false;
         }
 
         User user = userMapper.selectById(userId);
         if (user == null) {
-            stringRedisTemplate.opsForValue().set(cacheKey, "", 1, TimeUnit.MINUTES);
+            accountStatusCacheClient.setUserStatusEmptyCache(userId);
             return false;
         }
 
-        String statusCode = String.valueOf(user.getStatus().getCode());
-        stringRedisTemplate.opsForValue().set(cacheKey, statusCode, 10, TimeUnit.MINUTES);
+        accountStatusCacheClient.setUserStatusCache(userId, user.getStatus().getCode());
 
         return user.getStatus() == UserStatusEnum.NORMAL;
     }
 
     // 查员工账号缓存，并校验状态是否正常
     private boolean isNormalEmployee(Long employeeId) {
-        String cacheKey = CacheConstants.EMPLOYEE_STATUS_CACHE_KEY + employeeId;
-        String cachedStatus = stringRedisTemplate.opsForValue().get(cacheKey);
-
-        if (cachedStatus != null) {
-            return String.valueOf(EmployeeStatusEnum.NORMAL.getCode()).equals(cachedStatus);
+        CacheResult<String> cacheResult = accountStatusCacheClient.getEmployeeStatusCache(employeeId);
+        if (cacheResult.isHit()) {
+            return String.valueOf(EmployeeStatusEnum.NORMAL.getCode()).equals(cacheResult.getData());
+        }
+        if (cacheResult.isEmpty()) {
+            return false;
         }
 
         Employee employee = employeeMapper.selectById(employeeId);
         if (employee == null) {
-            stringRedisTemplate.opsForValue().set(cacheKey, "", 1, TimeUnit.MINUTES);
+            accountStatusCacheClient.setEmployeeStatusEmptyCache(employeeId);
             return false;
         }
 
-        String statusCode = String.valueOf(employee.getStatus().getCode());
-        stringRedisTemplate.opsForValue().set(cacheKey, statusCode, 10, TimeUnit.MINUTES);
+        accountStatusCacheClient.setEmployeeStatusCache(employeeId, employee.getStatus().getCode());
 
         return employee.getStatus() == EmployeeStatusEnum.NORMAL;
     }

@@ -29,9 +29,7 @@ public class CacheUtil {
      */
     public <T> CacheResult<T> getCache(String cacheKey, Class<T> type) {
         // 从缓存中获取数据
-        if (cacheKey == null || cacheKey.isEmpty()) {
-            throw new BusinessException("缓存键不能为空");
-        }
+        checkCacheKey(cacheKey);
         String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
         if (cachedJson == null){
             return CacheResult.miss();
@@ -57,9 +55,7 @@ public class CacheUtil {
      */
     public <T> CacheResult<T> getCache(String cacheKey, TypeReference<T> typeReference) {
         // 从缓存中获取数据
-        if (cacheKey == null || cacheKey.isEmpty()) {
-            throw new BusinessException("缓存键不能为空");
-        }
+        checkCacheKey(cacheKey);
         String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
         
         if (cachedJson == null){
@@ -84,9 +80,7 @@ public class CacheUtil {
      */
     public void setCache(String cacheKey, Object value) {
         // 缓存数据
-        if (cacheKey == null || cacheKey.isEmpty()) {
-            throw new BusinessException("缓存键不能为空");
-        }
+        checkCacheKey(cacheKey);
         if (value == null) {
             throw new BusinessException("缓存值不能为空");
         }
@@ -103,6 +97,7 @@ public class CacheUtil {
      * @param cacheKey 缓存键
      */
     public void setEmptyCache(String cacheKey) {
+        checkCacheKey(cacheKey);
         stringRedisTemplate.opsForValue().set(cacheKey, CacheConstants.CACHE_EMPTY_VALUE, 1, TimeUnit.MINUTES);
     }
 
@@ -113,6 +108,12 @@ public class CacheUtil {
      */
     public boolean isEmptyCache(String cachedJson) {
         return CacheConstants.CACHE_EMPTY_VALUE.equals(cachedJson);
+    }
+
+    private void checkCacheKey(String cacheKey) {
+        if (cacheKey == null || cacheKey.isEmpty()) {
+            throw new BusinessException("缓存键不能为空");
+        }
     }
     
 }

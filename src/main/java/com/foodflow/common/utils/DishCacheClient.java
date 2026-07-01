@@ -79,6 +79,14 @@ public class DishCacheClient {
         cacheUtil.setCache(buildDishDetailCacheKey(dishId), dishVO);
     }
 
+    /**
+     * 清理菜品详情缓存
+     * @param dishId 菜品ID
+     */
+    public void cleanDishDetailCache(Long dishId) {
+        stringRedisTemplate.delete(buildDishDetailCacheKey(dishId));
+    }
+
     /*
      * 启用菜品缓存
      */ 
@@ -110,7 +118,7 @@ public class DishCacheClient {
     }
 
     /**
-     * 清理菜品缓存
+     * 清理启售菜品列表缓存
      */
     public void cleanDishCache() {
         stringRedisTemplate.delete(CacheConstants.DISH_ON_SALE_ALL_KEY);

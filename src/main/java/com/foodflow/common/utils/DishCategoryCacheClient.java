@@ -1,14 +1,17 @@
 package com.foodflow.common.utils;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.result.CacheResult;
 import com.foodflow.module.dishcategory.entity.DishCategory;
+import com.foodflow.module.dishcategory.vo.DishCategoryVO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,15 +22,33 @@ public class DishCategoryCacheClient {
     private final StringRedisTemplate stringRedisTemplate;
 
     /**
-     * 构建启用菜品缓存键
-     * @param categoryId 分类ID(可选)
+     * 从缓存中获取启用分类列表
+     * @return 启用分类列表
+     */
+    public List<DishCategoryVO> getEnabledCategoryListCache() {
+        CacheResult<List<DishCategoryVO>> cacheResult = cacheUtil.getCache(
+            CacheConstants.CATEGORY_ENABLED_LIST_KEY, new TypeReference<List<DishCategoryVO>>() {});
+        if (cacheResult.isMiss()) {
+            return null;
+        }
+        return cacheResult.getData();
+    }
+
+    /**
+     * 设置启用分类列表缓存
+     * @param categoryVOList 启用分类列表
+     */
+    public void setEnabledCategoryListCache(List<DishCategoryVO> categoryVOList) {
+        cacheUtil.setCache(CacheConstants.CATEGORY_ENABLED_LIST_KEY, categoryVOList);
+    }
+
+    /**
+     * 构建启用分类缓存键
+     * @param categoryId 分类ID
      * @return 缓存键
      */
-    public String buildOnSaleDishCacheKey(Long categoryId) {
-        if (categoryId == null) {
-            return CacheConstants.DISH_ON_SALE_ALL_KEY;
-        }
-        return CacheConstants.DISH_ON_SALE_CATEGORY_PREFIX + categoryId;
+    public String buildEnabledCategoryCacheKey(Long categoryId) {
+        return CacheConstants.CATEGORY_ENABLED_PREFIX + categoryId;
     }
 
     /**
@@ -35,7 +56,7 @@ public class DishCategoryCacheClient {
      * @param categoryId 分类ID
      */
     public void setDishCategoryEmptyCache(Long categoryId) {
-        cacheUtil.setEmptyCache(buildOnSaleDishCacheKey(categoryId));
+        cacheUtil.setEmptyCache(buildEnabledCategoryCacheKey(categoryId));
     }
 
     /**
@@ -44,7 +65,7 @@ public class DishCategoryCacheClient {
      * @param category 分类
      */
     public void setDishCategoryCache(Long categoryId, DishCategory category) {
-        cacheUtil.setCache(buildOnSaleDishCacheKey(categoryId), category);
+        cacheUtil.setCache(buildEnabledCategoryCacheKey(categoryId), category);
     }
 
     /**
@@ -54,7 +75,7 @@ public class DishCategoryCacheClient {
      */
     public DishCategory getDishCategoryCache(Long categoryId) {
         CacheResult<DishCategory> cacheResult = cacheUtil.getCache(
-            buildOnSaleDishCacheKey(categoryId), DishCategory.class);
+            buildEnabledCategoryCacheKey(categoryId), DishCategory.class);
         if (cacheResult.isEmpty()) {
             throw new BusinessException("分类不存在");
         }

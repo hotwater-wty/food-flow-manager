@@ -1,9 +1,7 @@
 package com.foodflow.module.dish.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.CategoryStatusEnum;
 import com.foodflow.common.enums.DishStatusEnum;
@@ -11,7 +9,6 @@ import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.result.PageResult;
 import com.foodflow.common.utils.DishCacheClient;
 import com.foodflow.common.utils.DishCategoryCacheClient;
-import com.foodflow.common.utils.CacheUtil;
 import com.foodflow.module.dish.dto.DishCreateDTO;
 import com.foodflow.module.dish.dto.DishUpdateDTO;
 import com.foodflow.module.dish.entity.Dish;
@@ -36,7 +33,6 @@ import org.springframework.stereotype.Service;
 public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements DishService {
 
     private final DishCategoryService dishCategoryService;
-    private final CacheUtil cacheUtil;
     private final DishCacheClient dishCacheClient;
     private final DishCategoryCacheClient dishCategoryCacheClient;
 
@@ -90,6 +86,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         }
         removeById(dishId);
         // 清除缓存
+        dishCacheClient.cleanDishDetailCache(dishId);
         dishCacheClient.cleanDishCache();
     }
 
@@ -157,6 +154,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         saveOrUpdate(dish);
 
         // 清除缓存
+        dishCacheClient.cleanDishDetailCache(dishId);
         dishCacheClient.cleanDishCache();
         return toDishVO(dish);
     }
@@ -175,6 +173,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         dish.setStatus(DishStatusEnum.ofCode(status));
         dish.setUpdateTime(LocalDateTime.now());
         updateById(dish);
+        dishCacheClient.cleanDishDetailCache(dishId);
         dishCacheClient.cleanDishCache();
     }
 
@@ -234,6 +233,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             dishCacheClient.setDishDetailEmptyCache(dishId);
             throw new BusinessException("菜品已下架");
         }
+        // TODO 待修改：用户端应当能看到售罄菜品，只是不能购买，后续调整
         if (dish.getStatus() != DishStatusEnum.SOLD_OUT) {
             dishCacheClient.setDishDetailEmptyCache(dishId);
             throw new BusinessException("菜品已售罄");
