@@ -18,7 +18,7 @@ springdoc:
   group-configs:
     - group: default
       paths-to-match: /api/**
-      packages-to-scan: com.foodflow.module
+      packages-to-scan: com.foodflow
 
 knife4j:
   enable: true
