@@ -46,7 +46,11 @@ public class UserDiningOrderController {
     @Operation(summary = "创建堂食订单", description = "用户在当前堂食会话中提交菜品明细并创建订单")
     public Result<DiningOrderCreateVO> createOrder(
                 @Parameter(description = "堂食会话ID", example = "1") @PathVariable Long sessionId,
-                @Parameter(description = "防重复提交token") @RequestHeader("X-Submit-Token") String submitToken,
+                @Parameter(
+                        description = "防重复提交令牌，需先调用 /api/user/submit-token 获取",
+                        example = "8f2d9a7c6b5e4d3c9a1b0f1234567890",
+                        required = true)
+                @RequestHeader("X-Submit-Token") String submitToken,
                 @Valid @RequestBody OrderItemCreateDTO orderItemCreateDTO) {
                         
         LoginInfo loginInfo = LoginContext.get();

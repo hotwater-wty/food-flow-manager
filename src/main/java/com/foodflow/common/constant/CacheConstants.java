@@ -8,7 +8,7 @@ public class CacheConstants {
     // 缓存空值
     public static final String CACHE_EMPTY_VALUE = "";
 
-    // 防重复提交的token缓存键前缀
+    // 防重复提交令牌缓存键前缀
     public static final String SUBMIT_TOKEN_PREFIX = "foodflow:submit-token:";
 
     //用户状态缓存键前缀

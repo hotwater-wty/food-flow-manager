@@ -229,12 +229,12 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             dishCacheClient.setDishDetailEmptyCache(dishId);
             throw new BusinessException("菜品不存在");
         }
-        if (dish.getStatus() != DishStatusEnum.ON_SALE) {
+        if (dish.getStatus() == DishStatusEnum.STOPPED) {
             dishCacheClient.setDishDetailEmptyCache(dishId);
-            throw new BusinessException("菜品已下架");
+            throw new BusinessException("菜品已停售");
         }
         // TODO 待修改：用户端应当能看到售罄菜品，只是不能购买，后续调整
-        if (dish.getStatus() != DishStatusEnum.SOLD_OUT) {
+        if (dish.getStatus() == DishStatusEnum.SOLD_OUT) {
             dishCacheClient.setDishDetailEmptyCache(dishId);
             throw new BusinessException("菜品已售罄");
         }

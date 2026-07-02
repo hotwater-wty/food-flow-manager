@@ -79,8 +79,14 @@ public class AdminDishController {
         return Result.success(dishVO);
     }
 
+    /**
+     * 获取菜品列表
+     * 
+     * @param pageQueryDTO 分页查询DTO
+     * @return 菜品VO列表
+     */
     @GetMapping
-    @Operation(summary = "查询菜品列表", description = "管理端查询全部菜品列表")
+    @Operation(summary = "分页查询菜品列表", description = "管理端分页查询全部菜品列表")
     public Result<PageResult<DishVO>> getDishList(@ParameterObject @Validated PageQueryDTO pageQueryDTO) {
         log.info("获取菜品列表, pageQueryDTO: {}", pageQueryDTO);
         PageResult<DishVO> dishVOList = dishService.getDishList(pageQueryDTO);
@@ -89,7 +95,7 @@ public class AdminDishController {
 
     /**
      * 更新菜品
-     * @param dishDTO 菜品创建DTO
+     * @param dishUpdateDTO 菜品修改DTO
      * @return 菜品VO
      */
     @PutMapping("/{dishId}")

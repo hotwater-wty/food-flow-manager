@@ -45,7 +45,11 @@ public class UserReservationController {
     @PostMapping
     @Operation(summary = "创建预约", description = "用户选择空闲桌位、人数和预约时间创建预约")
     public Result<ReservationCreateVO> createReservation(
-            @Parameter(description = "防重复提交token") @RequestHeader("X-Submit-Token") String submitToken,
+            @Parameter(
+                    description = "防重复提交令牌，需先调用 /api/user/submit-token 获取",
+                    example = "8f2d9a7c6b5e4d3c9a1b0f1234567890",
+                    required = true)
+            @RequestHeader("X-Submit-Token") String submitToken,
             @Validated @RequestBody ReservationDTO reservationDTO){
                 
         LoginInfo loginInfo = LoginContext.get();
