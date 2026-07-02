@@ -7,10 +7,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.foodflow.common.context.LoginContext;
+import com.foodflow.common.context.LoginInfo;
+import com.foodflow.common.enums.SubmitSceneEnum;
 import com.foodflow.common.result.Result;
+import com.foodflow.common.service.SubmitTokenService;
 import com.foodflow.module.reservation.dto.ReservationDTO;
 import com.foodflow.module.reservation.service.ReservationService;
 import com.foodflow.module.reservation.vo.ReservationCreateVO;
@@ -29,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "用户端-预约管理", description = "用户端创建、查询和取消预约接口")
 public class UserReservationController {
     private final ReservationService reservationService;
+    private final SubmitTokenService submitTokenService;
 
     /**
      * 创建预约
@@ -38,7 +44,17 @@ public class UserReservationController {
     */
     @PostMapping
     @Operation(summary = "创建预约", description = "用户选择空闲桌位、人数和预约时间创建预约")
-    public Result<ReservationCreateVO> createReservation(@Validated @RequestBody ReservationDTO reservationDTO){
+    public Result<ReservationCreateVO> createReservation(
+            @Parameter(description = "防重复提交token") @RequestHeader("X-Submit-Token") String submitToken,
+            @Validated @RequestBody ReservationDTO reservationDTO){
+                
+        LoginInfo loginInfo = LoginContext.get();
+        submitTokenService.validateAndConsume(
+                loginInfo.getLoginType(),
+                loginInfo.getUserId(),
+                SubmitSceneEnum.CREATE_RESERVATION,
+                submitToken);
+                
         log.info("创建预约: {}", reservationDTO);
         ReservationCreateVO reservationCreateVO = reservationService.createReservation(reservationDTO);
         return Result.success(reservationCreateVO);

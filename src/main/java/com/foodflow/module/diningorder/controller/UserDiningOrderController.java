@@ -1,6 +1,10 @@
 package com.foodflow.module.diningorder.controller;
 
+import com.foodflow.common.context.LoginContext;
+import com.foodflow.common.context.LoginInfo;
+import com.foodflow.common.enums.SubmitSceneEnum;
 import com.foodflow.common.result.Result;
+import com.foodflow.common.service.SubmitTokenService;
 import com.foodflow.module.diningorder.dto.DiningOrderDTO;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
 import com.foodflow.module.diningorder.service.DiningOrderService;
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "用户端-堂食订单", description = "用户端堂食下单、订单列表和订单详情接口")
 public class UserDiningOrderController {
     private final DiningOrderService diningOrderService;
+    private final SubmitTokenService submitTokenService;
     
     /**
      * 创建堂食订单
@@ -40,7 +46,16 @@ public class UserDiningOrderController {
     @Operation(summary = "创建堂食订单", description = "用户在当前堂食会话中提交菜品明细并创建订单")
     public Result<DiningOrderCreateVO> createOrder(
                 @Parameter(description = "堂食会话ID", example = "1") @PathVariable Long sessionId,
+                @Parameter(description = "防重复提交token") @RequestHeader("X-Submit-Token") String submitToken,
                 @Valid @RequestBody OrderItemCreateDTO orderItemCreateDTO) {
+                        
+        LoginInfo loginInfo = LoginContext.get();
+        submitTokenService.validateAndConsume(
+                loginInfo.getLoginType(),
+                loginInfo.getUserId(),
+                SubmitSceneEnum.CREATE_ORDER,
+                submitToken);
+                                
         log.info("创建堂食订单, sessionId: {}, orderItemsDTOList: {}", 
                 sessionId, orderItemCreateDTO);
         DiningOrderCreateVO diningOrderCreateVO = diningOrderService
