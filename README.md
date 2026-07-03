@@ -139,7 +139,7 @@ http://localhost:8080
 
 ## Docker 部署
 
-当前 Docker 部署采用“服务器本地打包 jar，再由 Docker Compose 构建并启动容器”的方式。
+当前 Docker 部署采用 Docker 多阶段构建。部署者只需要拉取仓库并执行 `docker compose up -d --build`，Docker 会在构建阶段自动完成 Maven 打包，不再需要手动生成、复制或改名 jar 包。
 
 ### 1. 服务器环境要求
 
@@ -147,7 +147,7 @@ http://localhost:8080
 - 已安装 Docker。
 - 已安装 Docker Compose。
 - 服务器能访问 Git 仓库。
-- 服务器能拉取基础镜像，例如 `eclipse-temurin:17-jre-jammy`、`mysql:8`、`redis:8.6.2`。
+- 服务器能拉取基础镜像，例如 `eclipse-temurin:17-jdk-jammy`、`eclipse-temurin:17-jre-jammy`、`mysql:8`、`redis:8.6.2`。
 
 ### 2. 拉取项目
 
@@ -165,44 +165,25 @@ cd food-flow-manager
 git pull
 ```
 
-### 3. 在服务器本地打包 jar
+### 3. 确认项目目录权限
 
-Linux 下执行 Maven Wrapper 前，需要确认 `mvnw` 具有可执行权限：
-
-```bash
-chmod +x mvnw
-```
-
-`chmod +x mvnw` 的作用是给 `mvnw` 脚本增加可执行权限。Windows 使用 `mvnw.cmd`，Linux 使用 `mvnw`。
-
-Ubuntu 下推荐将项目目录所有者设置为当前用户，避免权限问题：
+Ubuntu 下推荐将项目目录所有者设置为当前用户，避免后续 `git pull` 或 Docker 构建时出现权限问题：
 
 ```bash
 sudo chown -R $(whoami):$(whoami) /opt/food-flow-manager
 ```
 
-执行打包：
+当前多阶段 Dockerfile 会在容器构建阶段执行 Maven Wrapper。部署者通常不需要手动执行 `chmod +x mvnw`、`./mvnw clean package` 或复制 jar 包。
 
-```bash
-./mvnw clean package -DskipTests
-```
-
-将 Maven 生成的 jar 复制到 Dockerfile 同级目录，并改名为 Dockerfile 中约定的名称：
-
-```bash
-cp target/food-flow-manager-0.0.1-SNAPSHOT.jar food-flow-manager.jar
-```
-
-最终项目根目录中应存在：
+项目根目录中应存在：
 
 ```text
 Dockerfile
 docker-compose.yml
-food-flow-manager.jar
 assets/schema.sql
 ```
 
-### 4. 启动容器
+### 4. 一键构建并启动容器
 
 在 `docker-compose.yml` 所在目录执行：
 
@@ -210,7 +191,14 @@ assets/schema.sql
 docker compose up -d --build
 ```
 
-当前部署方式要求 `docker-compose.yml`、`Dockerfile`、`food-flow-manager.jar` 位于同一项目目录中。不要单独移动 `docker-compose.yml`，否则需要同步调整 `build.context`、Dockerfile 路径、jar 路径和 SQL 挂载路径。
+该命令会自动完成：
+
+- 构建后端应用镜像。
+- 在构建阶段执行 Maven 打包。
+- 启动 MySQL、Redis 和后端服务容器。
+- 挂载 `assets/schema.sql` 作为 MySQL 初始化脚本。
+
+不要单独移动 `docker-compose.yml`，否则需要同步调整 `build.context`、Dockerfile 路径和 SQL 挂载路径。
 
 ### 5. 验证部署
 
