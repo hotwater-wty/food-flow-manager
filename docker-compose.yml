@@ -1,36 +1,75 @@
 services:
   mysql:
     image: mysql:8
-    container_name: mysql
+    container_name: food-flow-manager-mysql
+    restart: unless-stopped
     ports:
       - "3306:3306"
     environment:
       TZ: Asia/Shanghai
       MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: food_flow_manager
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+08:00
     volumes:
       - "/usr/local/app/mysql/data:/var/lib/mysql"
-      - "./assets/schema.sql:/docker-entrypoint-initdb.d/schema.sql"
+      - "./assets/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - food-flow-manager-net
+
+  redis:
+    image: redis:8.6.2
+    container_name: food-flow-manager-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: Asia/Shanghai
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - "/usr/local/app/redis/data:/data"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - food-flow-manager-net
+
   food-flow-manager:
     build: 
       context: .
       dockerfile: Dockerfile
     container_name: food-flow-manager-server
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/food_flow_manager?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_DATABASE: 0
     networks:
       - food-flow-manager-net
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 networks:
   food-flow-manager-net:
     name: food-flow-manager
+    driver: bridge
