@@ -243,8 +243,8 @@ http://localhost:8080/v3/api-docs
 业务接口设计稿：
 
 ```text
-assets/核心接口清单设计.md
-assets/接口规范设计.md
+assets/设计文档/核心接口清单设计.md
+assets/设计文档/接口规范设计.md
 ```
 
 ## 数据库设计说明
@@ -270,7 +270,7 @@ assets/schema.sql
 领域模型和表设计说明：
 
 ```text
-assets/领域模型与核心表设计.md
+assets/设计文档/领域模型与核心表设计.md
 ```
 
 ## V1 已完成功能
@@ -315,34 +315,39 @@ V2 的主要增强已经完成，后续更多属于继续迭代的方向：
 详细任务见：
 
 ```text
-assets/V2待办任务清单.md
-assets/V2业务增强功能清单.md
+assets/任务清单/V2待办任务清单.md
+assets/历史归档/V2业务增强功能清单.md
 ```
 
 ## 项目文档索引
 
 正式设计文档：
 
-- `assets/餐饮预约与堂食排班管理系统项目计划书.md`
-- `assets/V1最小业务闭环功能清单.md`
-- `assets/V2业务增强功能清单.md`
-- `assets/核心业务流程设计.md`
-- `assets/领域模型与核心表设计.md`
-- `assets/核心接口清单设计.md`
-- `assets/接口规范设计.md`
-- `assets/技术选型与依赖规划.md`
-- `assets/项目包结构设计.md`
+- `assets/设计文档/餐饮预约与堂食排班管理系统项目计划书.md`
+- `assets/设计文档/核心业务流程设计.md`
+- `assets/设计文档/领域模型与核心表设计.md`
+- `assets/设计文档/核心接口清单设计.md`
+- `assets/设计文档/接口规范设计.md`
+- `assets/设计文档/技术选型与依赖规划.md`
+- `assets/设计文档/项目包结构设计.md`
 
 收尾和迭代文档：
 
-- `assets/V1收尾阶段行动计划.md`
-- `assets/v1阶段开发计划.md`
-- `assets/V2待办任务清单.md`
-- `assets/v2阶段开发计划.md`
+- `assets/阶段计划/V1收尾阶段行动计划.md`
+- `assets/阶段计划/v1阶段开发计划.md`
+- `assets/阶段计划/v2阶段开发计划.md`
+- `assets/任务清单/V2待办任务清单.md`
+- `assets/历史归档/`
 
 过程资产：
 
 - `assets/过程资产/V1阶段项目复盘.md`
+- `assets/过程资产/V2阶段项目复盘.md`
 - `assets/过程资产/技术实现问题记录.md`
 - `assets/过程资产/工程设计决策记录.md`
 - `assets/过程资产/专题文档/`
+
+文档维护规则：
+
+- `assets/结果资产(设计)/项目文档格式说明.md`
+- `assets/结果资产(设计)/过程资产维护手册.md`
