@@ -4,7 +4,7 @@
 
 这个项目更偏向真实后端工程实践，而不是简单 CRUD 练习。开发过程中重点关注了需求收敛、状态流转、角色鉴权、跨模块协作、接口文档、缓存设计和 Docker 部署。
 
-> 当前边界：仓库为纯后端项目，暂未提供前端页面；V1/V2 完成状态均指后端业务、缓存和部署范围，后续候选功能不作为当前已完成功能。
+> 当前边界：后端业务、缓存和部署已形成可运行基线；仓库暂未创建 `frontend/` 前端源码，`documents/frontend/` 仅是前端目标规格。V1/V2 完成状态只指后端范围，候选功能不作为当前已完成功能。
 
 ## 项目简介
 
@@ -245,9 +245,22 @@ http://localhost:8080/v3/api-docs
 业务接口设计稿：
 
 ```text
-assets/设计文档/核心接口清单设计.md
-assets/设计文档/接口规范设计.md
+documents/architecture/backend/核心接口清单设计.md
+documents/architecture/backend/接口规范设计.md
 ```
+
+## 前端文档
+
+前端目标规格采用 Vue 3、TypeScript、Vite、Pinia、Vue Router 和 Axios；顾客端计划使用 Vant，商户端计划使用 Element Plus。当前 `frontend/` 目录为空，尚未创建前端工程。
+
+前端文档入口：
+
+```text
+documents/frontend/README.md
+documents/frontend/06-纵向切片开发计划.md
+```
+
+前端首版计划以“顾客登录 -> 预约或模拟扫码 -> 点餐 -> 查看订单；店员登录 -> 处理订单 -> 清台”的真实后端闭环为验收目标。
 
 ## 数据库设计说明
 
@@ -272,7 +285,7 @@ assets/schema.sql
 领域模型和表设计说明：
 
 ```text
-assets/设计文档/领域模型与核心表设计.md
+documents/architecture/backend/领域模型与核心表设计.md
 ```
 
 ## V1 已完成功能
@@ -304,7 +317,7 @@ assets/设计文档/领域模型与核心表设计.md
 - Docker Compose 支持 MySQL、Redis 和后端服务协同启动。
 - 补充了大量接口注解，Knife4j / OpenAPI 可展示更完整的接口信息。
 
-## V2 规划
+## 后续候选方向
 
 V2 的主要增强已经完成，后续更多属于继续迭代的方向：
 
@@ -314,42 +327,51 @@ V2 的主要增强已经完成，后续更多属于继续迭代的方向：
 - 消息队列与异步通知。
 - 更完整的自动化测试。
 
-详细任务见：
+历史候选池仅供追溯，不作为当前任务来源；需要启动后端增强时，先在 `documents/planning/` 建立当前阶段计划并校准源码。
 
 ```text
-assets/任务清单/V2待办任务清单.md
-assets/历史归档/V2业务增强功能清单.md
+documents/archive/backend/tasks/V2待办任务清单.md
+documents/archive/backend/requirements/V2业务增强功能清单.md
 ```
 
 ## 项目文档索引
 
-正式设计文档：
+文档总入口：
 
-- `assets/设计文档/餐饮预约与堂食排班管理系统项目计划书.md`
-- `assets/设计文档/核心业务流程设计.md`
-- `assets/设计文档/领域模型与核心表设计.md`
-- `assets/设计文档/核心接口清单设计.md`
-- `assets/设计文档/接口规范设计.md`
-- `assets/设计文档/技术选型与依赖规划.md`
-- `assets/设计文档/项目包结构设计.md`
+- `documents/README.md`
+- `documents/CURRENT.md`
 
-收尾和迭代文档：
+后端架构文档：
 
-- `assets/阶段计划/V1收尾阶段行动计划.md`
-- `assets/阶段计划/v1阶段开发计划.md`
-- `assets/阶段计划/v2阶段开发计划.md`
-- `assets/任务清单/V2待办任务清单.md`
-- `assets/历史归档/`
+- `documents/architecture/backend/核心业务流程设计.md`
+- `documents/architecture/backend/领域模型与核心表设计.md`
+- `documents/architecture/backend/核心接口清单设计.md`
+- `documents/architecture/backend/接口规范设计.md`
+- `documents/architecture/backend/技术选型与依赖规划.md`
+- `documents/architecture/backend/项目包结构设计.md`
+
+历史收尾与迭代记录：
+
+- `documents/archive/backend/plans/V1收尾阶段行动计划.md`
+- `documents/archive/backend/plans/v1阶段开发计划.md`
+- `documents/archive/backend/plans/v2阶段开发计划.md`
+- `documents/archive/backend/tasks/V2待办任务清单.md`
+- `documents/archive/backend/requirements/`
 
 过程资产：
 
-- `assets/过程资产/V1阶段项目复盘.md`
-- `assets/过程资产/V2阶段项目复盘.md`
-- `assets/过程资产/技术实现问题记录.md`
-- `assets/过程资产/工程设计决策记录.md`
-- `assets/过程资产/专题文档/`
+- `documents/records/reviews/V1阶段项目复盘.md`
+- `documents/records/reviews/V2阶段项目复盘.md`
+- `documents/records/issues/技术实现问题记录.md`
+- `documents/records/decisions/工程设计决策记录.md`
+- `documents/records/topics/`
+
+历史归档：
+
+- `documents/archive/backend/`
+- `documents/archive/drafts/`
 
 文档维护规则：
 
-- `assets/结果资产(设计)/项目文档格式说明.md`
-- `assets/结果资产(设计)/过程资产维护手册.md`
+- `documents/guides/项目文档格式说明.md`
+- `documents/guides/过程资产维护手册.md`
