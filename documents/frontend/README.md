@@ -3,7 +3,7 @@
 这里记录 `food-flow-manager` 前端补建之前的产品、交互、工程和 AI 协作决策。
 
 > 文档状态：当前目标规格
-> 实现状态：根目录 `frontend/` 已预留，目前仅含占位文件，尚未初始化 Vue 前端工程
+> 实现状态：根目录 `frontend/` 已完成 Vue 3 + TypeScript + Vite 基础初始化，业务切片尚未实现
 > 当前后端事实入口：[`../architecture/backend/核心接口清单设计.md`](../architecture/backend/核心接口清单设计.md)
 
 计划中的正式前端工程位于项目根目录的 `frontend/`；目录已创建，当前尚未初始化源码。
