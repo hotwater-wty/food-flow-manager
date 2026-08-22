@@ -16,6 +16,7 @@
 | 前端页面与交互状态 | [`frontend/03-页面地图与交互状态.md`](frontend/03-页面地图与交互状态.md) | 路由、权限和异常状态 |
 | 前端接口契约 | [`frontend/05-前端工程与接口契约.md`](frontend/05-前端工程与接口契约.md) | 请求、鉴权和数据约定 |
 | 前端开发顺序与验收 | [`frontend/06-纵向切片开发计划.md`](frontend/06-纵向切片开发计划.md) | 每个切片均须可验证 |
+| 前端学习型开发总计划 | [`planning/frontend-development-plan.md`](planning/frontend-development-plan.md) | 分块编码、知识补足和阶段检查点 |
 | AI 协作边界 | [`frontend/07-AI协作与验收规则.md`](frontend/07-AI协作与验收规则.md) | 任务边界、证据和人工控制点 |
 
 ## 归档判断
