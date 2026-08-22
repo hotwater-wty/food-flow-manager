@@ -30,9 +30,11 @@ documents/
     └── drafts/
 ```
 
+仓库代码边界：`backend/` 是当前后端 Maven 工程，`frontend/` 是已预留但尚未初始化的前端工程目录；根目录 `docker-compose.yml` 负责跨服务编排。
+
 ## 单一事实源
 
-- 可运行行为、接口实际语义和完成范围：以当前代码、测试、`README.md` 和 `assets/schema.sql` 为准。
+- 可运行行为、接口实际语义和完成范围：以 `backend/` 当前代码、测试、`README.md` 和 `assets/schema.sql` 为准。
 - 前端当前范围和验收方式：以 [`frontend/`](frontend/) 为准。
 - 后端架构设计：以 [`architecture/backend/`](architecture/backend/) 为准；若与代码不一致，先修正设计文档或标注差异。
 - 过程记录解释结论如何形成，但不替代当前设计文档。

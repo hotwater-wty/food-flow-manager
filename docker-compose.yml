@@ -14,7 +14,7 @@ services:
       - --collation-server=utf8mb4_0900_ai_ci
       - --default-time-zone=+08:00
     volumes:
-      - "/usr/local/app/mysql/data:/var/lib/mysql"
+      - food-flow-manager-mysql-data:/var/lib/mysql
       - "./assets/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro"
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
@@ -35,7 +35,7 @@ services:
       TZ: Asia/Shanghai
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - "/usr/local/app/redis/data:/data"
+      - food-flow-manager-redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -46,7 +46,7 @@ services:
 
   food-flow-manager:
     build: 
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: food-flow-manager-server
     restart: unless-stopped
@@ -73,3 +73,9 @@ networks:
   food-flow-manager-net:
     name: food-flow-manager
     driver: bridge
+
+volumes:
+  food-flow-manager-mysql-data:
+    name: food-flow-manager-mysql-data
+  food-flow-manager-redis-data:
+    name: food-flow-manager-redis-data

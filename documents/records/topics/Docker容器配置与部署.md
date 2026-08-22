@@ -2,13 +2,13 @@
 
 > 文档状态：历史记录，已按当前部署配置校准关键结论
 > 当前事实入口：[后端技术选型与当前依赖](../../architecture/backend/技术选型与依赖规划.md)
-> 历史边界：本文保留部署方案形成过程；以根目录 `Dockerfile`、`docker-compose.yml` 和运行配置为准。
+> 历史边界：本文保留部署方案形成过程；以 `backend/Dockerfile`、根目录 `docker-compose.yml` 和运行配置为准。
 
 ## 1. 背景与当前结论
 
 本文记录项目引入 Docker Compose 的过程，以及部署时需要理解的网络、环境变量、数据卷和初始化 SQL 边界。早期版本曾要求在宿主机执行 Maven 打包并把 jar 复制到项目根目录；该流程已经失效。
 
-当前 `Dockerfile` 使用**多阶段构建**：
+当前 `backend/Dockerfile` 使用**多阶段构建**：
 
 ```text
 构建阶段（Java 17 JDK）
@@ -23,19 +23,19 @@
 
 ## 2. 当前项目如何使用
 
-根目录包含以下运行时资产：
+仓库包含以下运行时资产：
 
 ```text
-Dockerfile
 docker-compose.yml
 assets/schema.sql
+backend/Dockerfile
 ```
 
 `docker-compose.yml` 编排三个服务：
 
 - `mysql`：MySQL 8，持久化数据库文件，并在首次初始化时执行 `assets/schema.sql`。
 - `redis`：Redis 8.6.2，启用 AOF 并持久化数据。
-- `food-flow-manager`：由根目录 `Dockerfile` 构建的 Spring Boot 服务。
+- `food-flow-manager`：由 `backend/Dockerfile` 构建的 Spring Boot 服务，Compose 构建上下文为 `./backend`。
 
 应用通过 Compose 服务名访问依赖：
 

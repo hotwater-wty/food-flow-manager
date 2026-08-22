@@ -24,8 +24,8 @@
 当前项目已经有两个分页基础类：
 
 ```text
-src/main/java/com/foodflow/config/MyBatisConfig.java
-src/main/java/com/foodflow/common/result/PageResult.java
+backend/src/main/java/com/foodflow/config/MyBatisConfig.java
+backend/src/main/java/com/foodflow/common/result/PageResult.java
 ```
 
 它们对应分页实现的两端：

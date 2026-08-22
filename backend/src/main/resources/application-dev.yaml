@@ -6,7 +6,7 @@ spring:
     password: 197024315ab
   data: 
     redis:
-      host: 192.168.100.129
+      host: localhost
       port: 6379
       password: 
       database: 0

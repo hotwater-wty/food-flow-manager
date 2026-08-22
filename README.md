@@ -4,7 +4,27 @@
 
 这个项目更偏向真实后端工程实践，而不是简单 CRUD 练习。开发过程中重点关注了需求收敛、状态流转、角色鉴权、跨模块协作、接口文档、缓存设计和 Docker 部署。
 
-> 当前边界：后端业务、缓存和部署已形成可运行基线；仓库暂未创建 `frontend/` 前端源码，`documents/frontend/` 仅是前端目标规格。V1/V2 完成状态只指后端范围，候选功能不作为当前已完成功能。
+> 当前边界：后端业务、缓存和部署已形成可运行基线；根目录 `frontend/` 已建立但尚未初始化 Vue 前端源码，`documents/frontend/` 是前端目标规格。V1/V2 完成状态只指后端范围，候选功能不作为当前已完成功能。
+
+## 仓库结构
+
+```text
+food-flow-manager/
+├── backend/                  # 当前 Spring Boot 单体 Maven 工程
+│   ├── src/
+│   ├── pom.xml
+│   ├── mvnw / mvnw.cmd
+│   ├── .mvn/
+│   ├── .dockerignore
+│   └── Dockerfile
+├── frontend/                 # Vue 前端工程目录，当前尚未初始化
+├── docker-compose.yml        # 根目录统一编排 MySQL、Redis 和后端
+├── assets/schema.sql         # 数据库初始化运行时资产
+├── documents/                # 当前、规划、指南、记录和归档
+└── .gitignore / .gitattributes
+```
+
+当前只完成后端工程目录分离，仍是按业务包组织的单体应用；未来是否转为 Maven 多模块，需要单独建立迁移计划，不属于本次整理范围。
 
 ## 项目简介
 
@@ -87,7 +107,7 @@ V1 的目标是先做成一个可运行、可测试、可复盘的最小业务�
 - JDK 17+
 - MySQL 8.x
 - Redis
-- Maven Wrapper，项目已包含 `mvnw.cmd`
+- Maven Wrapper，位于 `backend/mvnw.cmd`
 
 ### 2. 初始化数据库
 
@@ -110,7 +130,7 @@ assets/schema.sql
 根据本机 MySQL 和 Redis 配置修改：
 
 ```text
-src/main/resources/application-dev.yaml
+backend/src/main/resources/application-dev.yaml
 ```
 
 重点确认：
@@ -123,7 +143,17 @@ src/main/resources/application-dev.yaml
 
 ### 4. 启动项目
 
+macOS / Linux：
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+Windows PowerShell：
+
 ```powershell
+cd backend
 .\mvnw.cmd spring-boot:run
 ```
 
@@ -135,7 +165,17 @@ http://localhost:8080
 
 ### 5. 构建验证
 
+macOS / Linux：
+
+```bash
+cd backend
+./mvnw clean test
+```
+
+Windows PowerShell：
+
 ```powershell
+cd backend
 .\mvnw.cmd clean test
 ```
 
@@ -180,9 +220,9 @@ sudo chown -R $(whoami):$(whoami) /opt/food-flow-manager
 项目根目录中应存在：
 
 ```text
-Dockerfile
 docker-compose.yml
 assets/schema.sql
+backend/Dockerfile
 ```
 
 ### 4. 一键构建并启动容器
@@ -195,12 +235,12 @@ docker compose up -d --build
 
 该命令会自动完成：
 
-- 构建后端应用镜像。
+- 使用 `backend/` 作为构建上下文并构建后端应用镜像。
 - 在构建阶段执行 Maven 打包。
 - 启动 MySQL、Redis 和后端服务容器。
 - 挂载 `assets/schema.sql` 作为 MySQL 初始化脚本。
 
-不要单独移动 `docker-compose.yml`，否则需要同步调整 `build.context`、Dockerfile 路径和 SQL 挂载路径。
+Compose 位于根目录，后端 Dockerfile 位于 `backend/Dockerfile`；如果调整任一位置，必须同步检查 `build.context`、Dockerfile 路径和 SQL 挂载路径。
 
 ### 5. 验证部署
 
@@ -251,7 +291,7 @@ documents/architecture/backend/接口规范设计.md
 
 ## 前端文档
 
-前端目标规格采用 Vue 3、TypeScript、Vite、Pinia、Vue Router 和 Axios；顾客端计划使用 Vant，商户端计划使用 Element Plus。当前 `frontend/` 目录为空，尚未创建前端工程。
+前端目标规格采用 Vue 3、TypeScript、Vite、Pinia、Vue Router 和 Axios；顾客端计划使用 Vant，商户端计划使用 Element Plus。当前 `frontend/` 目录已建立，但尚未初始化前端工程。
 
 前端文档入口：
 
