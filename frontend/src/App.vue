@@ -7,6 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <RouterLink class="brand" to="/">膳畅管家</RouterLink>
     <nav aria-label="主导航">
       <RouterLink to="/">首页</RouterLink>
+      <RouterLink to="/customer/login">顾客登录</RouterLink>
     </nav>
   </header>
   <main class="app-main">
