@@ -1,24 +1,27 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { loginUser } from '../services/user-auth'
-import type { UserLoginData } from '../types/api'
+import { useAuthStore } from '../stores/auth'
 
 const phone = ref('')
 const password = ref('')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
-const loginResult = ref<UserLoginData | null>(null)
+const authStore = useAuthStore()
+const { isAuthenticated, user } = storeToRefs(authStore)
 
 async function handleSubmit() {
   errorMessage.value = ''
-  loginResult.value = null
   isSubmitting.value = true
 
   try {
-    loginResult.value = await loginUser({
+    const loginData = await loginUser({
       phone: phone.value,
       password: password.value,
     })
+    authStore.login(loginData)
+    password.value = ''
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '登录请求失败，请稍后重试'
   } finally {
@@ -35,7 +38,24 @@ async function handleSubmit() {
       <p>使用手机号登录，验证真实后端认证链路。</p>
     </div>
 
-    <form class="auth-form" @submit.prevent="handleSubmit">
+    <div v-if="isAuthenticated && user" class="auth-session">
+      <p class="feedback feedback-success" role="status">
+        已登录，欢迎 {{ user.nickname }}。
+      </p>
+      <dl class="auth-user-details">
+        <div>
+          <dt>手机号</dt>
+          <dd>{{ user.phone }}</dd>
+        </div>
+        <div>
+          <dt>用户 ID</dt>
+          <dd>{{ user.userId }}</dd>
+        </div>
+      </dl>
+      <button class="secondary-button" type="button" @click="authStore.logout">退出登录</button>
+    </div>
+
+    <form v-else class="auth-form" @submit.prevent="handleSubmit">
       <label>
         手机号
         <input
@@ -60,9 +80,6 @@ async function handleSubmit() {
       </label>
 
       <p v-if="errorMessage" class="feedback feedback-error" role="alert">{{ errorMessage }}</p>
-      <p v-if="loginResult" class="feedback feedback-success" role="status">
-        登录成功，欢迎 {{ loginResult.nickname }}。本轮暂不保存 Token。
-      </p>
 
       <button type="submit" :disabled="isSubmitting">
         {{ isSubmitting ? '登录中...' : '登录' }}
