@@ -9,6 +9,7 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/">首页</RouterLink>
       <RouterLink to="/customer/login">顾客登录</RouterLink>
       <RouterLink to="/customer/account">顾客账户</RouterLink>
+      <RouterLink to="/customer/reservations/create">预约</RouterLink>
     </nav>
   </header>
   <main class="app-main">

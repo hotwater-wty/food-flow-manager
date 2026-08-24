@@ -16,3 +16,18 @@ export interface UserLoginData {
   status: number
   token: string
 }
+
+export interface TableVO {
+  tableId: number
+  tableNo: string
+  capacity: number
+  locationDesc: string
+  status: number
+  currentSessionId: number | null
+}
+
+export interface ReservationRequest {
+  tableId: number
+  peopleCount: number
+  reserveTime: string
+}

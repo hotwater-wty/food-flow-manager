@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import CustomerLoginView from '../views/CustomerLoginView.vue'
 import CustomerAccountView from '../views/CustomerAccountView.vue'
+import CustomerReservationCreateView from '../views/CustomerReservationCreateView.vue'
 import { useAuthStore } from '../stores/auth'
 
 declare module 'vue-router' {
@@ -27,6 +28,12 @@ export const router = createRouter({
       path: '/customer/account',
       name: 'customer-account',
       component: CustomerAccountView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/customer/reservations/create',
+      name: 'customer-reservation-create',
+      component: CustomerReservationCreateView,
       meta: { requiresAuth: true },
     },
   ],
