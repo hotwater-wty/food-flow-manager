@@ -72,7 +72,7 @@ onMounted(loadTables)
     <div class="reservation-heading">
       <p class="eyebrow">顾客预约</p>
       <h1>选择桌位与预约时间</h1>
-      <p>选择空闲桌位并提交真实预约。</p>
+      <p>选择空闲桌位并提交真实预约，也可以查看已有预约。</p>
     </div>
 
     <div v-if="reservationResult" class="reservation-result">

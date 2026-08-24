@@ -68,6 +68,18 @@ code { background: #edf4f1; border-radius: 4px; color: #176b5b; padding: 2px 6px
 .reservation-form button { background: #176b5b; border: 0; border-radius: 4px; color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: 12px; }
 .reservation-form button:disabled { cursor: not-allowed; opacity: .5; }
 .reservation-result { display: grid; gap: 18px; margin-top: 32px; }
+.reservation-list { display: grid; gap: 14px; margin-top: 32px; }
+.reservation-card { border: 1px solid #dce5e2; border-radius: 6px; padding: 18px; }
+.reservation-card-heading { align-items: flex-start; display: flex; gap: 16px; justify-content: space-between; }
+.reservation-card-heading div { display: grid; gap: 7px; }
+.reservation-card-heading span, .reservation-time { color: #52605d; }
+.reservation-status { color: #176b5b; font-weight: 700; white-space: nowrap; }
+.reservation-time { margin: 14px 0; }
+.reservation-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.danger-button { background: #fff; border: 1px solid #b42318; border-radius: 4px; color: #b42318; cursor: pointer; font: inherit; font-weight: 700; padding: 11px 12px; }
+.danger-button:disabled, .secondary-button:disabled { cursor: wait; opacity: .55; }
+.reservation-detail { border-top: 1px solid #e5ece9; display: grid; margin: 18px 0 0; }
+.reservation-detail div { align-items: baseline; border-bottom: 1px solid #e5ece9; display: flex; justify-content: space-between; padding: 10px 0; }
 .feedback { border-radius: 4px; line-height: 1.5; margin: 0; padding: 10px 12px; }
 .feedback-error { background: #fff1f0; color: #b42318; }
 .feedback-success { background: #edf8f2; color: #176b5b; }

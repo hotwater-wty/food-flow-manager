@@ -50,3 +50,5 @@ export interface ReservationCreateData {
   reserveTime: string
   status: number
 }
+
+export type ReservationData = ReservationCreateData
