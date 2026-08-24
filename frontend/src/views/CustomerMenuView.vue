@@ -1,6 +1,7 @@
 <script setup lang="ts">
+// 顾客菜单页：后端菜品是事实，购物车是当前页面内等待提交的临时状态。
 import { computed, onMounted, ref } from 'vue'
-import { getDishCategories, getDishes } from '../services/dish'
+import { getDishCategories, getDishDetail, getDishes } from '../services/dish'
 import { getCurrentSession } from '../services/session'
 import { createOrder } from '../services/order'
 import type { DishCategoryData, DishData, DiningSessionData, OrderCreateData } from '../types/api'
@@ -16,6 +17,7 @@ const errorMessage = ref('')
 const currentSession = ref<DiningSessionData | null>(null)
 const isSubmitting = ref(false)
 const orderResult = ref<OrderCreateData | null>(null)
+const selectedDish = ref<DishData | null>(null)
 
 const cartItems = computed(() => Object.keys(cart.value).map(Number).map((dishId) => dishCatalog.value[dishId]).filter((dish): dish is DishData => dish !== undefined))
 const cartCount = computed(() => Object.values(cart.value).reduce((total, quantity) => total + quantity, 0))
@@ -86,6 +88,10 @@ async function handleCreateOrder() {
   }
 }
 
+async function showDishDetail(dish: DishData) {
+  try { selectedDish.value = await getDishDetail(dish.id) } catch (error) { errorMessage.value = error instanceof Error ? error.message : '菜品详情查询失败' }
+}
+
 onMounted(loadMenu)
 </script>
 
@@ -124,6 +130,7 @@ onMounted(loadMenu)
               <strong>{{ dish.name }}</strong>
               <p>{{ dish.description || '暂无菜品描述' }}</p>
               <span class="dish-price">{{ formatPrice(dish.price) }}</span>
+              <button class="secondary-button" type="button" @click="showDishDetail(dish)">查看详情</button>
             </div>
             <div class="quantity-control">
               <button type="button" :disabled="!cart[dish.id]" :aria-label="`减少 ${dish.name}`" @click="decreaseFromCart(dish)">−</button>
@@ -135,6 +142,7 @@ onMounted(loadMenu)
       </div>
 
       <aside class="cart-panel" aria-label="购物车">
+        <p v-if="selectedDish" class="feedback feedback-success" role="status">{{ selectedDish.name }}：{{ selectedDish.description || '暂无描述' }}</p>
         <h2>购物车</h2>
         <p v-if="cartItems.length === 0" class="feedback" role="status">还没有选择菜品。</p>
         <ul v-else class="cart-list">

@@ -1,3 +1,4 @@
+// 员工认证 Store：持久化管理端 Token 和员工身份，独立于顾客 Store。
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { EmployeeLoginData } from '../types/api'

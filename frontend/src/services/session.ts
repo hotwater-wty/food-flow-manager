@@ -1,3 +1,4 @@
+// 顾客会话服务：区分当前会话查询、非预约开台和预约到店开台。
 import type { DiningSessionData, Result } from '../types/api'
 import { http } from './http'
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 顾客订单页：先加载摘要列表，用户展开某项时再请求详情明细。
 import { onMounted, ref } from 'vue'
 import { getOrderDetail, getOrders } from '../services/order-query'
 import type { OrderData, OrderDetailData } from '../types/api'

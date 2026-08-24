@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 顾客账户页：读取认证 Store，验证受保护路由和退出登录行为。
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '../stores/auth'
 

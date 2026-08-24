@@ -1,3 +1,4 @@
+// 前端 API 类型边界：字段与后端 DTO/VO 对齐，避免页面自行猜测响应结构。
 export interface Result<T> {
   code: 0 | 1
   msg: string
@@ -16,6 +17,9 @@ export interface UserLoginData {
   status: number
   token: string
 }
+
+export interface UserRegisterRequest { phone: string; password: string; nickname: string }
+export interface UserRegisterData { userId: number; phone: string; nickname: string; status: number }
 
 export interface EmployeeLoginData {
   employeeId: number

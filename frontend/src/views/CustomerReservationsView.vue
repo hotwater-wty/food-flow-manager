@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 顾客预约页：展示预约状态，并把待到店预约连接到预约开台动作。
 import { onMounted, ref } from 'vue'
 import { cancelReservation, getReservationDetail, getReservations } from '../services/reservation'
 import { checkInReservation } from '../services/session'

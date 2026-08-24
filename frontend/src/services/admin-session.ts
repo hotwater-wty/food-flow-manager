@@ -1,3 +1,4 @@
+// 管理会话服务：查询会话，并执行取消等待或清台写操作。
 import type { DiningSessionCloseData, DiningSessionData, PageResult, Result } from '../types/api'
 import { http } from './http'
 
@@ -5,6 +6,13 @@ export async function getAdminSessions(pageNo = 1, status?: number): Promise<Pag
   const response = await http.get<Result<PageResult<DiningSessionData>>>('/admin/sessions', { params: { pageNo, pageSize: 10, ...(status ? { status } : {}) } })
   const result = response.data
   if (result.code !== 1 || result.data === null) throw new Error(result.msg || '会话列表查询失败')
+  return result.data
+}
+
+export async function getAdminSessionDetail(sessionId: number): Promise<DiningSessionData> {
+  const response = await http.get<Result<DiningSessionData>>(`/admin/sessions/${sessionId}`)
+  const result = response.data
+  if (result.code !== 1 || result.data === null) throw new Error(result.msg || '会话详情查询失败')
   return result.data
 }
 

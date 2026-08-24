@@ -1,3 +1,4 @@
+// Axios 基础实例：根据请求路径选择顾客或员工 Token，并统一处理 401。
 import axios from 'axios'
 import { router } from '../router'
 import { useAuthStore } from '../stores/auth'

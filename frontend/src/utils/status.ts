@@ -1,3 +1,4 @@
+// 顾客预约状态映射和可执行操作规则。
 const reservationStatusLabels: Record<number, string> = {
   0: '待到店',
   1: '已到店',

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 管理端登录页：提交员工凭证，成功后把服务端 Token 写入员工 Store。
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { loginEmployee } from '../services/admin-auth'

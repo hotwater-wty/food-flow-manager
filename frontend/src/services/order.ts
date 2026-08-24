@@ -1,3 +1,4 @@
+// 创建订单服务：先取一次性令牌，再提交当前会话中的购物车明细。
 import type { OrderCreateData, OrderCreateRequest, Result, SubmitTokenData } from '../types/api'
 import { http } from './http'
 

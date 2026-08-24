@@ -1,3 +1,4 @@
+// 顾客预约服务：包含令牌保护的创建、查询详情和取消。
 import axios from 'axios'
 import type {
   ReservationCreateData,

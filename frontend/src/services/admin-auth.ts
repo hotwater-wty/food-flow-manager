@@ -1,3 +1,4 @@
+// 管理端认证服务：只调用员工登录接口，不与顾客认证复用数据类型。
 import axios from 'axios'
 import type { EmployeeLoginData, Result } from '../types/api'
 import { http } from './http'

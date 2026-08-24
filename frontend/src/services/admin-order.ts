@@ -1,3 +1,4 @@
+// 管理订单服务：封装分页查询、详情和状态推进请求。
 import type { AdminOrderData, OrderDetailData, PageResult, Result } from '../types/api'
 import { http } from './http'
 

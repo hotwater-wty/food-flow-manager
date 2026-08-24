@@ -1,3 +1,4 @@
+// 应用入口：创建 Pinia、恢复两类认证状态，再挂载 Vue 根组件。
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'

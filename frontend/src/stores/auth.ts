@@ -1,3 +1,4 @@
+// 顾客认证 Store：负责内存状态、localStorage 恢复和退出时清理。
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { UserLoginData } from '../types/api'

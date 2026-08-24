@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 顾客会话页：用桌位选择模拟扫码输入，真实会话仍由服务端创建和恢复。
 import { onMounted, ref } from 'vue'
 import { getAvailableTables } from '../services/table'
 import { getCurrentSession, openSession } from '../services/session'

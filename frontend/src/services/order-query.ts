@@ -1,3 +1,4 @@
+// 顾客订单只负责读取列表和详情，创建订单由 order.ts 单独负责。
 import type { OrderData, OrderDetailData, Result } from '../types/api'
 import { http } from './http'
 

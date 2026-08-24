@@ -1,3 +1,4 @@
+// 路由集中描述页面入口，并在导航前区分顾客和员工两套认证边界。
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import CustomerLoginView from '../views/CustomerLoginView.vue'

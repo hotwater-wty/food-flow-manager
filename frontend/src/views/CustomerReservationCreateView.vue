@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 顾客预约创建页：表单校验只负责体验，最终桌位和预约合法性由后端确认。
 import { computed, onMounted, ref } from 'vue'
 import { getAvailableTables } from '../services/table'
 import { createReservation } from '../services/reservation'

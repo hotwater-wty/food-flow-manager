@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 管理订单工作台：分页读取订单，并按照后端状态机推进订单状态。
 import { onMounted, ref } from 'vue'
 import { getAdminOrderDetail, getAdminOrders, updateOrderStatus } from '../services/admin-order'
 import type { AdminOrderData, OrderDetailData } from '../types/api'
