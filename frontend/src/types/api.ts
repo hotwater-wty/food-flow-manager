@@ -107,3 +107,27 @@ export interface OrderCreateData {
   status: number
   items: OrderItemCreateData[]
 }
+
+export interface OrderData {
+  orderId: number
+  orderNo: string
+  tableId: number
+  tableNo: string
+  totalAmount: number
+  status: number
+  createTime: string
+}
+
+export interface OrderItemData {
+  dishId: number
+  dishName: string
+  dishImage: string | null
+  dishPrice: number
+  quantity: number
+  amount: number
+  remark: string | null
+}
+
+export interface OrderDetailData extends OrderData {
+  items: OrderItemData[]
+}

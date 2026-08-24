@@ -6,6 +6,7 @@ import CustomerReservationCreateView from '../views/CustomerReservationCreateVie
 import CustomerReservationsView from '../views/CustomerReservationsView.vue'
 import CustomerSessionView from '../views/CustomerSessionView.vue'
 import CustomerMenuView from '../views/CustomerMenuView.vue'
+import CustomerOrdersView from '../views/CustomerOrdersView.vue'
 import { useAuthStore } from '../stores/auth'
 
 declare module 'vue-router' {
@@ -55,6 +56,12 @@ export const router = createRouter({
       path: '/customer/menu',
       name: 'customer-menu',
       component: CustomerMenuView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/customer/orders',
+      name: 'customer-orders',
+      component: CustomerOrdersView,
       meta: { requiresAuth: true },
     },
   ],
