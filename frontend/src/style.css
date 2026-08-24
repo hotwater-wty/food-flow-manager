@@ -109,6 +109,7 @@ code { background: #edf4f1; border-radius: 4px; color: #176b5b; padding: 2px 6px
 .cart-list li { display: flex; gap: 12px; justify-content: space-between; }
 .cart-summary { border-top: 1px solid #e5ece9; display: flex; justify-content: space-between; margin-top: 18px; padding-top: 14px; }
 .cart-note { color: #697773; font-size: .85rem; line-height: 1.5; }
+.order-result { display: grid; gap: 18px; margin-top: 24px; }
 @media (max-width: 760px) { .menu-layout { grid-template-columns: 1fr; } .cart-panel { border-left: 0; border-top: 1px solid #e5ece9; padding-left: 0; padding-top: 24px; } }
 @media (max-width: 560px) {
   .status-list div { align-items: flex-start; flex-direction: column; gap: 4px; }

@@ -78,3 +78,32 @@ export interface DishData {
   description: string | null
   status: number
 }
+
+export interface OrderItemRequest {
+  dishId: number
+  quantity: number
+  remark?: string
+}
+
+export interface OrderCreateRequest {
+  items: OrderItemRequest[]
+}
+
+export interface OrderItemCreateData {
+  dishId: number
+  dishName: string
+  dishPrice: number
+  quantity: number
+  amount: number
+}
+
+export interface OrderCreateData {
+  orderId: number
+  orderNo: string
+  sessionId: number
+  tableId: number
+  tableNo: string
+  totalAmount: number
+  status: number
+  items: OrderItemCreateData[]
+}
