@@ -52,3 +52,12 @@ export interface ReservationCreateData {
 }
 
 export type ReservationData = ReservationCreateData
+
+export interface DiningSessionData {
+  sessionId: number
+  sessionNo: string
+  tableId: number
+  tableNo: string
+  sessionStatus: number
+  tableStatus: number
+}
