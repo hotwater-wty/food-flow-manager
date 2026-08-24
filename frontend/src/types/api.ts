@@ -61,3 +61,20 @@ export interface DiningSessionData {
   sessionStatus: number
   tableStatus: number
 }
+
+export interface DishCategoryData {
+  id: number
+  name: string
+  sort: number
+  status: number
+}
+
+export interface DishData {
+  id: number
+  categoryId: number
+  name: string
+  price: number
+  image: string | null
+  description: string | null
+  status: number
+}

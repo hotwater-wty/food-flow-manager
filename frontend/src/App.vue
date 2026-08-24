@@ -12,6 +12,7 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/customer/reservations/create">预约</RouterLink>
       <RouterLink to="/customer/reservations">我的预约</RouterLink>
       <RouterLink to="/customer/session">模拟开台</RouterLink>
+      <RouterLink to="/customer/menu">菜单</RouterLink>
     </nav>
   </header>
   <main class="app-main">
