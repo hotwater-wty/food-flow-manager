@@ -30,7 +30,7 @@ documents/
     └── drafts/
 ```
 
-仓库代码边界：`backend/` 是当前后端 Maven 工程，`frontend/` 是已预留但尚未初始化的前端工程目录；根目录 `docker-compose.yml` 负责跨服务编排。
+仓库代码边界：`backend/` 是当前后端 Maven 工程，`frontend/` 是已初始化并逐步实现业务切片的 Vue 工程目录；根目录 `docker-compose.yml` 负责跨服务编排。
 
 ## 单一事实源
 

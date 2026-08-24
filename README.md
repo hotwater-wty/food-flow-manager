@@ -4,7 +4,7 @@
 
 这个项目更偏向真实后端工程实践，而不是简单 CRUD 练习。开发过程中重点关注了需求收敛、状态流转、角色鉴权、跨模块协作、接口文档、缓存设计和 Docker 部署。
 
-> 当前边界：后端业务、缓存和部署已形成可运行基线；根目录 `frontend/` 已建立但尚未初始化 Vue 前端源码，`documents/frontend/` 是前端目标规格。V1/V2 完成状态只指后端范围，候选功能不作为当前已完成功能。
+> 当前边界：后端业务、缓存和部署已形成可运行基线；根目录 `frontend/` 已初始化 Vue 3 + TypeScript + Vite，并已接入顾客认证、鉴权、桌位查询和预约创建提交链路，后续预约查询/取消、开台、点餐和商户端仍在开发。V1/V2 完成状态只指后端范围，候选功能不作为当前已完成功能。
 
 ## 仓库结构
 
@@ -17,7 +17,7 @@ food-flow-manager/
 │   ├── .mvn/
 │   ├── .dockerignore
 │   └── Dockerfile
-├── frontend/                 # Vue 前端工程目录，当前尚未初始化
+├── frontend/                 # Vue 3 + TypeScript + Vite 前端工程
 ├── docker-compose.yml        # 根目录统一编排 MySQL、Redis 和后端
 ├── assets/schema.sql         # 数据库初始化运行时资产
 ├── documents/                # 当前、规划、指南、记录和归档
@@ -291,7 +291,7 @@ documents/architecture/backend/接口规范设计.md
 
 ## 前端文档
 
-前端目标规格采用 Vue 3、TypeScript、Vite、Pinia、Vue Router 和 Axios；顾客端计划使用 Vant，商户端计划使用 Element Plus。当前 `frontend/` 目录已建立，但尚未初始化前端工程。
+前端目标规格采用 Vue 3、TypeScript、Vite、Pinia、Vue Router 和 Axios；顾客端计划使用 Vant，商户端计划使用 Element Plus。当前 `frontend/` 已初始化并完成顾客认证、鉴权、桌位查询和预约创建提交链路，UI 组件库仍未引入。
 
 前端文档入口：
 
