@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
+// storeToRefs 保留 ref 响应性；直接解构 store 属性会丢失响应式连接。
 const { user } = storeToRefs(authStore)
 </script>
 

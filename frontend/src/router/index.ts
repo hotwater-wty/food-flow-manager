@@ -11,6 +11,8 @@ import CustomerOrdersView from '../views/CustomerOrdersView.vue'
 import { useAuthStore } from '../stores/auth'
 import { useAdminAuthStore } from '../stores/admin-auth'
 
+// 模块声明合并为 RouteMeta 增加项目自己的字段，
+// 这样 to.meta.requiresAuth 在 TypeScript 中会被识别为布尔值，而不是任意属性。
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
@@ -18,6 +20,7 @@ declare module 'vue-router' {
   }
 }
 
+// createRouter 只描述路由和守卫；具体鉴权凭证由 Pinia Store 保存。
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -74,7 +77,9 @@ export const router = createRouter({
   ],
 })
 
+// beforeEach 在每次导航确认前运行；返回路由对象表示重定向，true 表示放行。
 router.beforeEach((to) => {
+  // 顾客路由与员工路由分别检查，避免一类 Token 被误当成另一类身份。
   if (to.meta.requiresAuth && !useAuthStore().isAuthenticated) {
     return { name: 'customer-login', query: { redirect: to.fullPath } }
   }

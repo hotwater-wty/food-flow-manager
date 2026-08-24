@@ -28,13 +28,16 @@ const peopleError = computed(() => {
 })
 const formError = computed(() => peopleError.value || timeError.value || (!selectedTable.value ? '请选择桌位' : ''))
 const canPrepare = computed(() => !isLoading.value && tables.value.length > 0 && formError.value === '')
+// computed 将多个校验条件组合成一个按钮可用性，模板不需要重复判断。
 
 function formatReserveTime(value: string) {
+  // datetime-local 使用 T 分隔，后端契约要求空格和秒数。
   const normalized = value.replace('T', ' ')
   return normalized.length === 16 ? `${normalized}:00` : normalized
 }
 
 async function handleSubmit() {
+  // 前端先挡住明显非法输入，但最终并发和业务校验仍由后端负责。
   if (!canPrepare.value || selectedTable.value === null) return
 
   errorMessage.value = ''
@@ -54,6 +57,7 @@ async function handleSubmit() {
 }
 
 async function loadTables() {
+  // 页面挂载时读取真实空闲桌位，并将异常转换为可展示文案。
   isLoading.value = true
   errorMessage.value = ''
   try {

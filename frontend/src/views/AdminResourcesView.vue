@@ -8,41 +8,163 @@ import {
 } from '../services/admin-resources'
 import type { DishCategoryData, DishData, EmployeeData, ReservationAdminData, TableVO } from '../types/api'
 
+// 联合字面量类型限制 Tab 只能是这五个字符串，切换时不会传入任意文本。
 type Tab = 'tables' | 'categories' | 'dishes' | 'reservations' | 'employees'
 const tab = ref<Tab>('tables')
-const pageNo = ref(1); const total = ref(0); const isLoading = ref(false); const errorMessage = ref(''); const feedback = ref('')
-const tables = ref<TableVO[]>([]); const categories = ref<DishCategoryData[]>([]); const dishes = ref<DishData[]>([]); const reservations = ref<ReservationAdminData[]>([]); const employees = ref<EmployeeData[]>([])
+// 每个 ref 只负责一个可变值；列表状态使用数组泛型约束元素结构。
+const pageNo = ref(1)
+const total = ref(0)
+const isLoading = ref(false)
+const errorMessage = ref('')
+const feedback = ref('')
+const tables = ref<TableVO[]>([])
+const categories = ref<DishCategoryData[]>([])
+const dishes = ref<DishData[]>([])
+const reservations = ref<ReservationAdminData[]>([])
+const employees = ref<EmployeeData[]>([])
 const editingId = ref<number | null>(null)
 const tableForm = ref({ tableNo: '', capacity: 4, locationDesc: '' })
 const categoryForm = ref({ name: '', sort: 0 })
 const dishForm = ref({ categoryId: 1, name: '', description: '', price: 0, image: 'https://example.com/dish.jpg', status: 0 })
 const employeeForm = ref({ phone: '', password: '', name: '' })
 
+// 这些纯函数只负责把后端数字状态转换成可读文案，不修改状态。
 const statusText = (status: number) => ({ 0: '空闲', 1: '已预约', 2: '等待中', 3: '用餐中', 4: '禁用' } as Record<number, string>)[status] ?? '未知'
 const reservationText = (status: number) => ({ 0: '待到店', 1: '已到店', 2: '已取消', 3: '已超时' } as Record<number, string>)[status] ?? '未知'
 const dishText = (status: number) => ({ 0: '停售', 1: '启售', 2: '售罄' } as Record<number, string>)[status] ?? '未知'
 const employeeText = (status: number) => ({ 1: '正常', 2: '禁用', 3: '离职' } as Record<number, string>)[status] ?? '未知'
 
 async function load() {
-  isLoading.value = true; errorMessage.value = ''
+  // Tab 决定请求哪个资源；每次只更新当前资源的 records，避免混淆不同数组。
+  isLoading.value = true
+  errorMessage.value = ''
   try {
-    if (tab.value === 'tables') { const r = await getAdminTables(pageNo.value); tables.value = r.records; total.value = r.total }
-    if (tab.value === 'categories') { const r = await getAdminCategories(pageNo.value); categories.value = r.records; total.value = r.total }
-    if (tab.value === 'dishes') { const r = await getAdminDishes(pageNo.value); dishes.value = r.records; total.value = r.total }
-    if (tab.value === 'reservations') { const r = await getAdminReservations(pageNo.value); reservations.value = r.records; total.value = r.total }
-    if (tab.value === 'employees') { const r = await getEmployees(pageNo.value); employees.value = r.records; total.value = r.total }
-  } catch (e) { errorMessage.value = e instanceof Error ? e.message : '资料查询失败' } finally { isLoading.value = false }
+    // if 分支根据当前 Tab 选择一个真实接口；每个接口返回相同的分页外壳。
+    if (tab.value === 'tables') {
+      const result = await getAdminTables(pageNo.value)
+      tables.value = result.records
+      total.value = result.total
+    }
+    if (tab.value === 'categories') {
+      const result = await getAdminCategories(pageNo.value)
+      categories.value = result.records
+      total.value = result.total
+    }
+    if (tab.value === 'dishes') {
+      const result = await getAdminDishes(pageNo.value)
+      dishes.value = result.records
+      total.value = result.total
+    }
+    if (tab.value === 'reservations') {
+      const result = await getAdminReservations(pageNo.value)
+      reservations.value = result.records
+      total.value = result.total
+    }
+    if (tab.value === 'employees') {
+      const result = await getEmployees(pageNo.value)
+      employees.value = result.records
+      total.value = result.total
+    }
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '资料查询失败'
+  } finally {
+    isLoading.value = false
+  }
 }
-function switchTab(next: Tab) { tab.value = next; pageNo.value = 1; editingId.value = null; load() }
-function resetForms() { editingId.value = null; tableForm.value = { tableNo: '', capacity: 4, locationDesc: '' }; categoryForm.value = { name: '', sort: 0 }; dishForm.value = { categoryId: 1, name: '', description: '', price: 0, image: 'https://example.com/dish.jpg', status: 0 }; employeeForm.value = { phone: '', password: '', name: '' } }
-async function saveTable() { try { editingId.value ? await updateTable(editingId.value, tableForm.value) : await createTable(tableForm.value); feedback.value = '桌位已保存'; resetForms(); await load() } catch (e) { errorMessage.value = e instanceof Error ? e.message : '桌位保存失败' } }
-async function saveCategory() { try { editingId.value ? await updateCategory(editingId.value, categoryForm.value) : await createCategory(categoryForm.value); feedback.value = '分类已保存'; resetForms(); await load() } catch (e) { errorMessage.value = e instanceof Error ? e.message : '分类保存失败' } }
-async function saveDish() { try { const { categoryId, name, description, price, image, status } = dishForm.value; if (editingId.value) await updateDish(editingId.value, { categoryId, name, description, price, image }); else await createDish({ categoryId, name, description, price, image, status }); feedback.value = '菜品已保存'; resetForms(); await load() } catch (e) { errorMessage.value = e instanceof Error ? e.message : '菜品保存失败' } }
-async function saveEmployee() { try { await createEmployee(employeeForm.value); feedback.value = '员工已创建'; resetForms(); await load() } catch (e) { errorMessage.value = e instanceof Error ? e.message : '员工创建失败' } }
-async function run(action: () => Promise<unknown>, message: string) { try { await action(); feedback.value = message; await load() } catch (e) { errorMessage.value = e instanceof Error ? e.message : '操作失败' } }
-function editTable(item: TableVO) { editingId.value = item.tableId; tableForm.value = { tableNo: item.tableNo, capacity: item.capacity, locationDesc: item.locationDesc } }
-function editCategory(item: DishCategoryData) { editingId.value = item.id; categoryForm.value = { name: item.name, sort: item.sort } }
-function editDish(item: DishData) { editingId.value = item.id; dishForm.value = { categoryId: item.categoryId, name: item.name, description: item.description ?? '', price: item.price, image: item.image ?? '', status: item.status } }
+// 切换资源时重置页码和编辑态，再启动异步加载；不阻塞点击事件。
+function switchTab(next: Tab) {
+  tab.value = next
+  pageNo.value = 1
+  editingId.value = null
+  // 不 await 是有意的：点击事件立即结束，加载状态由 load 内部管理。
+  void load()
+}
+// 清空表单相当于把“编辑模式”恢复为“新增模式”。
+function resetForms() {
+  editingId.value = null
+  tableForm.value = { tableNo: '', capacity: 4, locationDesc: '' }
+  categoryForm.value = { name: '', sort: 0 }
+  dishForm.value = { categoryId: 1, name: '', description: '', price: 0, image: 'https://example.com/dish.jpg', status: 0 }
+  employeeForm.value = { phone: '', password: '', name: '' }
+}
+// editingId 有值时走 PUT，没有值时走 POST；三元表达式表达两种提交路径。
+async function saveTable() {
+  try {
+    if (editingId.value !== null) await updateTable(editingId.value, tableForm.value)
+    else await createTable(tableForm.value)
+    feedback.value = '桌位已保存'
+    resetForms()
+    await load()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '桌位保存失败'
+  }
+}
+
+async function saveCategory() {
+  try {
+    if (editingId.value !== null) await updateCategory(editingId.value, categoryForm.value)
+    else await createCategory(categoryForm.value)
+    feedback.value = '分类已保存'
+    resetForms()
+    await load()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '分类保存失败'
+  }
+}
+
+async function saveDish() {
+  try {
+    // 解构只是读取表单快照；更新接口不接受创建时的 status 字段。
+    const { categoryId, name, description, price, image, status } = dishForm.value
+    if (editingId.value !== null) await updateDish(editingId.value, { categoryId, name, description, price, image })
+    else await createDish({ categoryId, name, description, price, image, status })
+    feedback.value = '菜品已保存'
+    resetForms()
+    await load()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '菜品保存失败'
+  }
+}
+
+async function saveEmployee() {
+  try {
+    await createEmployee(employeeForm.value)
+    feedback.value = '员工已创建'
+    resetForms()
+    await load()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '员工创建失败'
+  }
+}
+// 所有资料操作共用这个包装器：执行、成功提示、重新加载和异常展示保持一致。
+async function run(action: () => Promise<unknown>, message: string) {
+  try {
+    // () => Promise<unknown> 是回调类型：调用方决定具体 HTTP 动作，run 统一处理结果。
+    await action()
+    feedback.value = message
+    await load()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '操作失败'
+  }
+}
+// 编辑函数把列表对象复制到表单 ref，避免表单输入直接修改列表数据。
+function editTable(item: TableVO) {
+  editingId.value = item.tableId
+  tableForm.value = { tableNo: item.tableNo, capacity: item.capacity, locationDesc: item.locationDesc }
+}
+
+function editCategory(item: DishCategoryData) {
+  editingId.value = item.id
+  categoryForm.value = { name: item.name, sort: item.sort }
+}
+
+function editDish(item: DishData) {
+  editingId.value = item.id
+  // ?? 把后端允许为空的描述/图片转换为表单需要的字符串。
+  dishForm.value = { categoryId: item.categoryId, name: item.name, description: item.description ?? '', price: item.price, image: item.image ?? '', status: item.status }
+}
+
+// 组件首次挂载时读取默认的桌位 Tab。
 onMounted(load)
 </script>
 <template>

@@ -13,12 +13,17 @@ const router = useRouter()
 const route = useRoute()
 
 async function submit() {
+  // 提交前锁定按钮并清掉旧错误，防止用户重复发送登录请求。
   isSubmitting.value = true
   errorMessage.value = ''
   try {
+    // await 等待登录完成后再写入 Store，随后根据 redirect 或默认工作台导航。
     useAdminAuthStore().login(await loginEmployee({ phone: phone.value, password: password.value }))
     await router.push(typeof route.query.redirect === 'string' ? route.query.redirect : '/admin/orders')
-  } catch (error) { errorMessage.value = error instanceof Error ? error.message : '员工登录失败' }
+  } catch (error) {
+    // unknown 错误先用 instanceof 判断，再给模板一个稳定字符串。
+    errorMessage.value = error instanceof Error ? error.message : '员工登录失败'
+  }
   finally { isSubmitting.value = false }
 }
 </script>

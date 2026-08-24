@@ -5,6 +5,7 @@ import { getAvailableTables } from '../services/table'
 import { getCurrentSession, openSession } from '../services/session'
 import type { DiningSessionData, TableVO } from '../types/api'
 
+// 页面状态分为服务端当前会话、可选桌位和请求反馈三组，互不混用。
 const tables = ref<TableVO[]>([])
 const currentSession = ref<DiningSessionData | null>(null)
 const selectedTableId = ref<number | null>(null)
@@ -13,16 +14,21 @@ const isOpening = ref(false)
 const errorMessage = ref('')
 
 function sessionStatusLabel(status: number) {
+  // 会话状态和桌位状态是两套状态机，这里只转换 sessionStatus。
+  // as Record<number, string> 告诉 TypeScript 这是数字索引的字典；?? 提供未知状态兜底。
   return ({ 0: '等待中', 1: '用餐中', 2: '已完成', 3: '已取消' } as Record<number, string>)[status] ?? '未知状态'
 }
 
 async function loadPage() {
+  // 当前会话和可用桌位可并行读取；页面以服务端结果恢复，而不是依赖本地缓存。
   isLoading.value = true
   errorMessage.value = ''
   try {
+    // Promise.all 并行等待两个独立 GET；任一请求失败都会进入 catch。
     const [session, availableTables] = await Promise.all([getCurrentSession(), getAvailableTables()])
     currentSession.value = session
     tables.value = availableTables
+    // 仅在没有选择时设置默认桌位，避免刷新数据覆盖用户当前选择。
     if (selectedTableId.value === null && availableTables.length > 0) selectedTableId.value = availableTables[0].tableId
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '开台信息查询失败，请稍后重试'
@@ -32,6 +38,7 @@ async function loadPage() {
 }
 
 async function handleOpenSession() {
+  // selectedTableId 是模拟二维码解析结果；isOpening 防止重复开台。
   if (selectedTableId.value === null || isOpening.value) return
   isOpening.value = true
   errorMessage.value = ''

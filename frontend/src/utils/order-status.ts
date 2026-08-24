@@ -8,5 +8,7 @@ const orderStatusLabels: Record<number, string> = {
 }
 
 export function getOrderStatusLabel(status: number) {
+  // ?? 只在映射结果为 null/undefined 时使用兜底文案，0 等有效数字不会误判。
+  // 函数不修改状态表，只把后端数字转换为模板可读文本。
   return orderStatusLabels[status] ?? '未知状态'
 }

@@ -6,6 +6,7 @@ import { checkInReservation } from '../services/session'
 import type { DiningSessionData, ReservationData } from '../types/api'
 import { canCancelReservation, getReservationStatusLabel } from '../utils/status'
 
+// 列表使用数组泛型，明确每个元素都满足后端 ReservationData 结构。
 const reservations = ref<ReservationData[]>([])
 const selectedReservation = ref<ReservationData | null>(null)
 const isLoading = ref(true)
@@ -16,9 +17,11 @@ const sessionResult = ref<DiningSessionData | null>(null)
 const errorMessage = ref('')
 
 async function loadReservations() {
+  // 列表刷新是取消和到店开台成功后的共同收敛点。
   isLoading.value = true
   errorMessage.value = ''
   try {
+    // await 的结果才是数组；赋值给 ref.value 后，v-for 会重新渲染。
     reservations.value = await getReservations()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '预约列表查询失败，请稍后重试'
@@ -28,6 +31,8 @@ async function loadReservations() {
 }
 
 async function showDetail(reservation: ReservationData) {
+  // 重复点击同一预约只收起详情；首次点击才发起详情请求。
+  // 可选链 ?. 在 selectedReservation 为 null 时安全返回 undefined。
   if (selectedReservation.value?.reservationId === reservation.reservationId) {
     selectedReservation.value = null
     return
@@ -37,6 +42,7 @@ async function showDetail(reservation: ReservationData) {
   detailLoadingId.value = reservation.reservationId
   errorMessage.value = ''
   try {
+    // 详情请求期间只锁定当前按钮，不阻塞整张列表。
     selectedReservation.value = await getReservationDetail(reservation.reservationId)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '预约详情查询失败，请稍后重试'
@@ -46,8 +52,10 @@ async function showDetail(reservation: ReservationData) {
 }
 
 async function handleCancel(reservation: ReservationData) {
+  // canCancelReservation 是前端提示规则，confirm 再把破坏性操作交给用户确认。
   if (!canCancelReservation(reservation.status) || !window.confirm(`确认取消预约 ${reservation.reservationNo} 吗？`)) return
 
+  // 用 ID 记录当前请求对象，模板可精确显示“取消中...”状态。
   cancelLoadingId.value = reservation.reservationId
   errorMessage.value = ''
   try {
@@ -62,6 +70,8 @@ async function handleCancel(reservation: ReservationData) {
 }
 
 async function handleCheckIn(reservation: ReservationData) {
+  // tableId 必须来自预约记录，不能让用户选择另一张桌位破坏后端匹配约束。
+  // 早返回把非法状态和重复点击拦在网络请求之前。
   if (reservation.status !== 0 || checkInLoadingId.value !== null) return
   checkInLoadingId.value = reservation.reservationId
   errorMessage.value = ''

@@ -11,9 +11,11 @@ const loading = ref(true)
 const errorMessage = ref('')
 const feedback = ref('')
 const actionId = ref<number | null>(null)
+// Record 是状态码到文案的对象类型；未知 key 用 ?? 显示兜底文字。
 const sessionLabel = (status: number) => ({ 0: '等待中', 1: '用餐中', 2: '已完成', 3: '已取消' } as Record<number, string>)[status] ?? '未知状态'
 
 async function load() {
+  // 分页响应中的 records 是本页数据，total 用来计算翻页边界。
   loading.value = true
   errorMessage.value = ''
   try {
@@ -22,28 +24,40 @@ async function load() {
     total.value = result.total
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '会话查询失败'
-  } finally { loading.value = false }
+  } finally {
+    // finally 无论请求成功或失败都会执行，保证加载指示器能够关闭。
+    loading.value = false
+  }
 }
 
 async function showDetail(sessionId: number) {
+  // 详情读取是纯查询，成功后只更新页面反馈，不改变列表状态。
   try {
     const detail = await getAdminSessionDetail(sessionId)
     feedback.value = `会话 ${detail.sessionNo}，桌位 ${detail.tableNo}，状态 ${sessionLabel(detail.sessionStatus)}`
-  } catch (error) { errorMessage.value = error instanceof Error ? error.message : '会话详情查询失败' }
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '会话详情查询失败'
+  }
 }
 
 async function action(session: DiningSessionData, type: 'cancel' | 'close') {
+  // actionId 作为互斥锁，保证同一时间只有一个会话写操作。
   if (actionId.value !== null) return
   actionId.value = session.sessionId
   errorMessage.value = ''
   try {
+    // 联合字面量类型只允许调用方传入 cancel 或 close 两种动作。
     if (type === 'cancel') await cancelAdminSession(session.sessionId)
     else await closeAdminSession(session.sessionId)
     await load()
-  } catch (error) { errorMessage.value = error instanceof Error ? error.message : '会话操作失败' }
-  finally { actionId.value = null }
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '会话操作失败'
+  } finally {
+    actionId.value = null
+  }
 }
 
+// 首次进入工作台时自动拉取第一页。
 onMounted(load)
 </script>
 

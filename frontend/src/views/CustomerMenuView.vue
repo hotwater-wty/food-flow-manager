@@ -6,6 +6,7 @@ import { getCurrentSession } from '../services/session'
 import { createOrder } from '../services/order'
 import type { DishCategoryData, DishData, DiningSessionData, OrderCreateData } from '../types/api'
 
+// categories/dishes 保存后端目录；cart 只保存 dishId -> quantity 的页面草稿。
 const categories = ref<DishCategoryData[]>([])
 const dishes = ref<DishData[]>([])
 const dishCatalog = ref<Record<number, DishData>>({})
@@ -19,19 +20,26 @@ const isSubmitting = ref(false)
 const orderResult = ref<OrderCreateData | null>(null)
 const selectedDish = ref<DishData | null>(null)
 
+// computed 会追踪 cart 和 dishCatalog；任一变化时自动重新生成提交/展示列表。
+// Object.keys 返回字符串数组，map(Number) 将对象键恢复成后端需要的数字 ID。
 const cartItems = computed(() => Object.keys(cart.value).map(Number).map((dishId) => dishCatalog.value[dishId]).filter((dish): dish is DishData => dish !== undefined))
+// reduce 从 0 开始累加数量；这两个 computed 会在 cart.value 改变时自动重新计算。
 const cartCount = computed(() => Object.values(cart.value).reduce((total, quantity) => total + quantity, 0))
 const cartTotal = computed(() => cartItems.value.reduce((total, dish) => total + dish.price * (cart.value[dish.id] ?? 0), 0))
 
 function formatPrice(cents: number) {
+  // 金额只在 UI 层从“分”转换为“元”，内部仍使用整数计算。
   return `¥${(cents / 100).toFixed(2)}`
 }
 
 function addToCart(dish: DishData) {
+  // ?? 0 处理首次加入；对象 key 使用稳定 dish.id。
+  // 先取旧数量，空值用 0；再写回对象属性触发 Vue 对对象的响应式更新。
   cart.value[dish.id] = (cart.value[dish.id] ?? 0) + 1
 }
 
 function decreaseFromCart(dish: DishData) {
+  // 数量降到 0 时删除 key，使 cartItems 不再包含该商品。
   const nextQuantity = (cart.value[dish.id] ?? 0) - 1
   if (nextQuantity <= 0) {
     delete cart.value[dish.id]
@@ -41,12 +49,14 @@ function decreaseFromCart(dish: DishData) {
 }
 
 async function selectCategory(categoryId: number | null) {
+  // 分类切换是一次新的查询；加载期间用 isFiltering 禁用/提示，而不清空旧数据。
   selectedCategoryId.value = categoryId
   isFiltering.value = true
   errorMessage.value = ''
   try {
     const result = await getDishes(categoryId === null ? undefined : categoryId)
     dishes.value = result
+    // forEach 逐项把新列表合并进目录，购物车中已有商品仍能找到价格和名称。
     result.forEach((dish) => { dishCatalog.value[dish.id] = dish })
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '菜品查询失败，请稍后重试'
@@ -56,6 +66,7 @@ async function selectCategory(categoryId: number | null) {
 }
 
 async function loadMenu() {
+  // Promise.all 并行加载分类、菜品和当前会话，三者都成功后统一更新页面。
   isLoading.value = true
   errorMessage.value = ''
   try {
@@ -72,11 +83,14 @@ async function loadMenu() {
 }
 
 async function handleCreateOrder() {
+  // 三个前置条件分别保证有会话、有商品、没有重复提交。
   if (currentSession.value === null || cartItems.value.length === 0 || isSubmitting.value) return
   isSubmitting.value = true
   errorMessage.value = ''
   orderResult.value = null
   try {
+    // cartItems 被映射成后端 OrderItemDTO，只发送 ID 和数量，不信任前端金额。
+    // map 只构造后端允许的字段；价格由服务端根据 dishId 重新读取。
     orderResult.value = await createOrder(currentSession.value.sessionId, {
       items: cartItems.value.map((dish) => ({ dishId: dish.id, quantity: cart.value[dish.id] ?? 0 })),
     })
@@ -89,7 +103,13 @@ async function handleCreateOrder() {
 }
 
 async function showDishDetail(dish: DishData) {
-  try { selectedDish.value = await getDishDetail(dish.id) } catch (error) { errorMessage.value = error instanceof Error ? error.message : '菜品详情查询失败' }
+  // 详情请求不替换菜单列表，只更新 selectedDish 展示补充信息。
+  try {
+    // 详情是独立的 ref，不替换当前菜单数组，关闭/切换分类不会丢购物车。
+    selectedDish.value = await getDishDetail(dish.id)
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '菜品详情查询失败'
+  }
 }
 
 onMounted(loadMenu)

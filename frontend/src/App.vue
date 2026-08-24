@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// RouterLink 负责声明式导航；RouterView 根据当前 URL 渲染匹配的页面组件。
 import { RouterLink, RouterView } from 'vue-router'
 </script>
 

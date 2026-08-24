@@ -5,25 +5,33 @@ import { storeToRefs } from 'pinia'
 import { loginUser, registerUser } from '../services/user-auth'
 import { useAuthStore } from '../stores/auth'
 
+// ref 返回带 .value 的响应式引用；模板中会自动解包，脚本中必须显式读写 .value。
 const phone = ref('')
 const password = ref('')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 const nickname = ref('')
+// 一个布尔状态控制同一表单的两种提交分支，避免复制两套页面。
 const isRegistering = ref(false)
 const authStore = useAuthStore()
+// storeToRefs 保留 Store 字段的响应式连接，登录成功后模板会自动更新。
 const { isAuthenticated, user } = storeToRefs(authStore)
 
 async function handleSubmit() {
+  // 表单事件使用 preventDefault，避免浏览器刷新；isRegistering 决定调用哪个接口。
   errorMessage.value = ''
   isSubmitting.value = true
 
   try {
     if (isRegistering.value) {
+      // 注册分支只发送表单资料；服务层会把后端 Result 转成异常或数据。
+      // 注册成功不自动登录，先切回登录模式，明确两个后端动作的边界。
       await registerUser({ phone: phone.value, password: password.value, nickname: nickname.value })
       isRegistering.value = false
       errorMessage.value = '注册成功，请使用新账号登录'
     } else {
+      // 登录分支等待服务层返回 Token，再由 Store 统一持久化。
+      // 登录成功才把 Token 交给 Store，Store 负责持久化和后续请求鉴权。
       const loginData = await loginUser({ phone: phone.value, password: password.value })
       authStore.login(loginData)
     }

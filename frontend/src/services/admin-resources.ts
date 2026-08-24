@@ -6,11 +6,16 @@ import type {
 import { http } from './http'
 
 async function unwrap<T>(request: Promise<{ data: Result<T> }>, message: string): Promise<T> {
+  // 泛型 T 让同一个解包函数同时适用于桌位、菜品、分类等不同响应类型。
   const result = (await request).data
+  // 先等待 HTTP 请求，再读取业务 Result；两层 data 分别属于 Axios 和后端。
   if (result.code !== 1 || result.data === null) throw new Error(result.msg || message)
   return result.data
 }
 
+// 下面的箭头函数只是把固定路径和参数绑定到通用 unwrap 上，调用方得到的是 Promise<T>。
+// 每个箭头函数只绑定一个资源的 URL 和返回类型，真正的 Result 判定复用 unwrap。
+// 默认参数 pageNo = 1 让首次加载不必显式传页码。
 export const getAdminTables = (pageNo = 1) => unwrap(http.get<Result<PageResult<TableVO>>>('/admin/tables', { params: { pageNo, pageSize: 10 } }), '桌位查询失败')
 export const getAdminTable = (id: number) => unwrap(http.get<Result<TableVO>>(`/admin/tables/${id}`), '桌位详情查询失败')
 export const createTable = (data: TableRequest) => unwrap(http.post<Result<null>>('/admin/tables', data), '新增桌位失败')
@@ -18,6 +23,7 @@ export const updateTable = (id: number, data: TableRequest) => unwrap(http.put<R
 export const deleteTable = (id: number) => unwrap(http.delete<Result<null>>(`/admin/tables/${id}`), '删除桌位失败')
 export const setTableEnabled = (id: number, enabled: boolean) => unwrap(http.post<Result<null>>(`/admin/tables/${id}/${enabled ? 'enable' : 'disable'}`), '桌位状态更新失败')
 
+// 分类、菜品、预约和员工沿用相同的分页与 CRUD 形状；URL 不同，服务层类型不同。
 export const getAdminCategories = (pageNo = 1) => unwrap(http.get<Result<PageResult<DishCategoryData>>>('/admin/dish-categories', { params: { pageNo, pageSize: 10 } }), '分类查询失败')
 export const getAdminCategory = (id: number) => unwrap(http.get<Result<DishCategoryData>>(`/admin/dish-categories/${id}`), '分类详情查询失败')
 export const createCategory = (data: DishCategoryRequest) => unwrap(http.post<Result<DishCategoryData>>('/admin/dish-categories', data), '新增分类失败')

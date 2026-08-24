@@ -5,6 +5,7 @@ import { getOrderDetail, getOrders } from '../services/order-query'
 import type { OrderData, OrderDetailData } from '../types/api'
 import { getOrderStatusLabel } from '../utils/order-status'
 
+// 列表和当前展开详情分开存储，避免详情响应覆盖摘要列表。
 const orders = ref<OrderData[]>([])
 const selectedOrder = ref<OrderDetailData | null>(null)
 const isLoading = ref(true)
@@ -12,10 +13,12 @@ const detailLoadingId = ref<number | null>(null)
 const errorMessage = ref('')
 
 function formatPrice(cents: number) {
+  // 列表和详情共用同一金额转换规则，避免两处显示不一致。
   return `¥${(cents / 100).toFixed(2)}`
 }
 
 async function loadOrders() {
+  // 页面首次挂载和后续刷新都经过同一加载函数。
   isLoading.value = true
   errorMessage.value = ''
   try {
@@ -28,6 +31,8 @@ async function loadOrders() {
 }
 
 async function showDetail(order: OrderData) {
+  // selectedOrder 是独立 ref：列表保留摘要，详情按需加载。
+  // 可选链用于处理首次点击时 selectedOrder 仍是 null 的情况。
   if (selectedOrder.value?.orderId === order.orderId) {
     selectedOrder.value = null
     return
@@ -35,6 +40,7 @@ async function showDetail(order: OrderData) {
   detailLoadingId.value = order.orderId
   errorMessage.value = ''
   try {
+    // 只有点击具体订单才查询明细，降低列表首次加载的响应体大小。
     selectedOrder.value = await getOrderDetail(order.orderId)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '订单详情查询失败，请稍后重试'

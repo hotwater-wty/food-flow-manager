@@ -1,16 +1,21 @@
 // 前端 API 类型边界：字段与后端 DTO/VO 对齐，避免页面自行猜测响应结构。
 export interface Result<T> {
+  // 泛型 T 表示同一响应外壳可以包裹不同业务数据。
   code: 0 | 1
+  // 字面量联合类型 0 | 1 限制成功码和失败码，避免传入任意数字。
   msg: string
+  // 失败响应允许 data 为 null，所以调用方必须先判空再使用数据。
   data: T | null
 }
 
 export interface UserLoginRequest {
+  // Request 类型描述发送给后端的 JSON 字段，而不是响应字段。
   phone: string
   password: string
 }
 
 export interface UserLoginData {
+  // 登录成功返回 Token 和展示用身份资料；Token 不会进入 AuthUser 类型。
   userId: number
   phone: string
   nickname: string
@@ -31,6 +36,7 @@ export interface EmployeeLoginData {
 }
 
 export interface TableVO {
+  // VO 是 View Object，字段形状对应后端返回给页面的桌位对象。
   tableId: number
   tableNo: string
   capacity: number
@@ -40,6 +46,7 @@ export interface TableVO {
 }
 
 export interface ReservationRequest {
+  // 预约请求只包含用户提交的最小输入，编号和状态由后端生成。
   tableId: number
   peopleCount: number
   reserveTime: string
@@ -50,6 +57,7 @@ export interface SubmitTokenRequest {
 }
 
 export interface SubmitTokenData {
+  // 一次性令牌的有效期由服务端决定，前端不能自行延长。
   token: string
   expiresInSeconds: number
 }
@@ -67,6 +75,7 @@ export interface ReservationCreateData {
 export type ReservationData = ReservationCreateData
 
 export interface DiningSessionData {
+  // 会话对象同时携带会话状态和桌位状态，页面展示时不能混用两套状态码。
   sessionId: number
   sessionNo: string
   tableId: number
@@ -83,6 +92,7 @@ export interface DishCategoryData {
 }
 
 export interface DishData {
+  // price 保持后端整数“分”，金额格式化只在页面展示边界进行。
   id: number
   categoryId: number
   name: string
@@ -93,6 +103,7 @@ export interface DishData {
 }
 
 export interface OrderItemRequest {
+  // 订单明细是提交给后端的商品 ID 与数量，金额由后端重新计算。
   dishId: number
   quantity: number
   remark?: string
@@ -146,6 +157,7 @@ export interface OrderDetailData extends OrderData {
 }
 
 export interface PageResult<T> {
+  // 分页结构的 records 是当前页数据，total 是所有页总数。
   total: number
   pageNo: number
   pageSize: number
@@ -161,10 +173,12 @@ export interface DiningSessionCloseData extends DiningSessionData {
   closeEmployeeId: number | null
 }
 
+// 管理端写请求使用独立类型，避免把后端返回对象直接当成表单数据。
 export interface TableRequest { tableNo: string; capacity: number; locationDesc?: string }
 export interface DishCategoryRequest { name: string; sort: number }
 export interface DishCreateRequest { categoryId: number; name: string; description: string; price: number; image: string; status: number }
 export interface DishUpdateRequest { categoryId: number; name: string; description: string; price: number; image: string }
 export interface EmployeeCreateRequest { phone: string; password: string; name: string }
+// extends 空接口表达“当前与顾客预约结构相同”，未来可独立增加管理字段。
 export interface ReservationAdminData extends ReservationData {}
 export interface EmployeeData { employeeId: number; phone: string; name: string; role: number; status: number }
