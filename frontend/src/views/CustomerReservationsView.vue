@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { cancelReservation, getReservationDetail, getReservations } from '../services/reservation'
-import type { ReservationData } from '../types/api'
+import { checkInReservation } from '../services/session'
+import type { DiningSessionData, ReservationData } from '../types/api'
 import { canCancelReservation, getReservationStatusLabel } from '../utils/status'
 
 const reservations = ref<ReservationData[]>([])
@@ -9,6 +10,8 @@ const selectedReservation = ref<ReservationData | null>(null)
 const isLoading = ref(true)
 const detailLoadingId = ref<number | null>(null)
 const cancelLoadingId = ref<number | null>(null)
+const checkInLoadingId = ref<number | null>(null)
+const sessionResult = ref<DiningSessionData | null>(null)
 const errorMessage = ref('')
 
 async function loadReservations() {
@@ -57,6 +60,21 @@ async function handleCancel(reservation: ReservationData) {
   }
 }
 
+async function handleCheckIn(reservation: ReservationData) {
+  if (reservation.status !== 0 || checkInLoadingId.value !== null) return
+  checkInLoadingId.value = reservation.reservationId
+  errorMessage.value = ''
+  try {
+    sessionResult.value = await checkInReservation(reservation.reservationId, reservation.tableId)
+    selectedReservation.value = null
+    await loadReservations()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '预约到店开台失败，请稍后重试'
+  } finally {
+    checkInLoadingId.value = null
+  }
+}
+
 onMounted(loadReservations)
 </script>
 
@@ -71,6 +89,14 @@ onMounted(loadReservations)
     <p v-if="errorMessage" class="feedback feedback-error" role="alert">{{ errorMessage }}</p>
     <p v-if="isLoading" class="feedback" role="status">正在查询预约...</p>
     <p v-else-if="reservations.length === 0" class="feedback" role="status">当前没有预约记录。</p>
+
+    <div v-if="sessionResult" class="session-result">
+      <p class="feedback feedback-success" role="status">预约到店开台成功，会话编号：{{ sessionResult.sessionNo }}</p>
+      <dl class="status-list">
+        <div><dt>桌位</dt><dd>{{ sessionResult.tableNo }}</dd></div>
+        <div><dt>会话状态</dt><dd>{{ sessionResult.sessionStatus === 0 ? '等待中' : '用餐中' }}</dd></div>
+      </dl>
+    </div>
 
     <div v-else class="reservation-list" role="list" aria-label="我的预约列表">
       <article v-for="reservation in reservations" :key="reservation.reservationId" class="reservation-card">
@@ -88,6 +114,9 @@ onMounted(loadReservations)
           </button>
           <button v-if="canCancelReservation(reservation.status)" type="button" class="danger-button" :disabled="cancelLoadingId === reservation.reservationId" @click="handleCancel(reservation)">
             {{ cancelLoadingId === reservation.reservationId ? '取消中...' : '取消预约' }}
+          </button>
+          <button v-if="reservation.status === 0" type="button" class="primary-outline-button" :disabled="checkInLoadingId === reservation.reservationId" @click="handleCheckIn(reservation)">
+            {{ checkInLoadingId === reservation.reservationId ? '开台中...' : '到店开台' }}
           </button>
         </div>
         <dl v-if="selectedReservation?.reservationId === reservation.reservationId" class="reservation-detail">
