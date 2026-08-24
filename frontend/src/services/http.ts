@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { router } from '../router'
 import { useAuthStore } from '../stores/auth'
+import { useAdminAuthStore } from '../stores/admin-auth'
 
 export const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -8,7 +9,8 @@ export const http = axios.create({
 })
 
 http.interceptors.request.use((config) => {
-  const token = useAuthStore().token
+  const isAdminRequest = config.url?.startsWith('/admin') === true
+  const token = isAdminRequest ? useAdminAuthStore().token : useAuthStore().token
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -19,9 +21,13 @@ http.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      useAuthStore().logout()
-      if (router.currentRoute.value.name !== 'customer-login') {
-        await router.push({ name: 'customer-login' })
+      const isAdminRoute = router.currentRoute.value.path.startsWith('/admin')
+      if (isAdminRoute) {
+        useAdminAuthStore().logout()
+        if (router.currentRoute.value.name !== 'admin-login') await router.push({ name: 'admin-login' })
+      } else {
+        useAuthStore().logout()
+        if (router.currentRoute.value.name !== 'customer-login') await router.push({ name: 'customer-login' })
       }
     }
     return Promise.reject(error)

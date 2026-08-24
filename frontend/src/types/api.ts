@@ -17,6 +17,15 @@ export interface UserLoginData {
   token: string
 }
 
+export interface EmployeeLoginData {
+  employeeId: number
+  phone: string
+  name: string
+  role: number
+  status: number
+  token: string
+}
+
 export interface TableVO {
   tableId: number
   tableNo: string
@@ -130,4 +139,20 @@ export interface OrderItemData {
 
 export interface OrderDetailData extends OrderData {
   items: OrderItemData[]
+}
+
+export interface PageResult<T> {
+  total: number
+  pageNo: number
+  pageSize: number
+  records: T[]
+}
+
+export interface AdminOrderData extends OrderData {
+  sessionId: number
+}
+
+export interface DiningSessionCloseData extends DiningSessionData {
+  closeTime: string | null
+  closeEmployeeId: number | null
 }

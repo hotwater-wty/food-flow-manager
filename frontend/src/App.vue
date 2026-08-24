@@ -14,6 +14,8 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/customer/session">模拟开台</RouterLink>
       <RouterLink to="/customer/menu">菜单</RouterLink>
       <RouterLink to="/customer/orders">我的订单</RouterLink>
+      <RouterLink to="/admin/orders">管理订单</RouterLink>
+      <RouterLink to="/admin/sessions">管理会话</RouterLink>
     </nav>
   </header>
   <main class="app-main">
