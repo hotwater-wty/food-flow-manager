@@ -103,7 +103,7 @@ onMounted(loadReservations)
         <div class="reservation-card-heading">
           <div>
             <strong>{{ reservation.reservationNo }}</strong>
-            <span>{{ reservation.tableNo }} · {{ reservation.peopleCount }} 人</span>
+            <span>{{ reservation.tableNo || `桌位 ${reservation.tableId}` }} · {{ reservation.peopleCount }} 人</span>
           </div>
           <span class="reservation-status">{{ getReservationStatusLabel(reservation.status) }}</span>
         </div>

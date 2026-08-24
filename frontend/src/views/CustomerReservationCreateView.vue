@@ -78,7 +78,7 @@ onMounted(loadTables)
     <div v-if="reservationResult" class="reservation-result">
       <p class="feedback feedback-success" role="status">预约创建成功，编号：{{ reservationResult.reservationNo }}</p>
       <dl class="status-list">
-        <div><dt>桌位</dt><dd>{{ reservationResult.tableNo }}</dd></div>
+        <div><dt>桌位</dt><dd>{{ reservationResult.tableNo || `桌位 ${reservationResult.tableId}` }}</dd></div>
         <div><dt>人数</dt><dd>{{ reservationResult.peopleCount }} 人</dd></div>
         <div><dt>预约时间</dt><dd>{{ reservationResult.reserveTime }}</dd></div>
       </dl>

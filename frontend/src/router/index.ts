@@ -69,6 +69,7 @@ export const router = createRouter({
     { path: '/admin/login', name: 'admin-login', component: () => import('../views/AdminLoginView.vue') },
     { path: '/admin/orders', name: 'admin-orders', component: () => import('../views/AdminOrderWorkbenchView.vue'), meta: { requiresAdminAuth: true } },
     { path: '/admin/sessions', name: 'admin-sessions', component: () => import('../views/AdminSessionWorkbenchView.vue'), meta: { requiresAdminAuth: true } },
+    { path: '/admin/resources', name: 'admin-resources', component: () => import('../views/AdminResourcesView.vue'), meta: { requiresAdminAuth: true } },
   ],
 })
 

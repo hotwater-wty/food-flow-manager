@@ -16,6 +16,7 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/customer/orders">我的订单</RouterLink>
       <RouterLink to="/admin/orders">管理订单</RouterLink>
       <RouterLink to="/admin/sessions">管理会话</RouterLink>
+      <RouterLink to="/admin/resources">资料维护</RouterLink>
     </nav>
   </header>
   <main class="app-main">

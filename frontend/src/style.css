@@ -114,6 +114,12 @@ code { background: #edf4f1; border-radius: 4px; color: #176b5b; padding: 2px 6px
 .admin-toolbar label { color: #35433f; display: grid; font-size: .9rem; font-weight: 600; gap: 8px; }
 .admin-toolbar select { border: 1px solid #c9d8d3; border-radius: 4px; font: inherit; padding: 9px 12px; }
 .pagination-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+.resource-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.resource-form { border: 1px solid #dce5e2; display: grid; gap: 12px; margin-top: 20px; padding: 18px; }
+.resource-form h2 { font-size: 1.1rem; margin: 0; }
+.resource-form input, .resource-form select { border: 1px solid #c9d8d3; border-radius: 4px; font: inherit; padding: 10px 12px; }
+.resource-list { display: grid; gap: 12px; margin-top: 24px; }
+.resource-list .reservation-card { display: grid; gap: 10px; }
 @media (max-width: 760px) { .menu-layout { grid-template-columns: 1fr; } .cart-panel { border-left: 0; border-top: 1px solid #e5ece9; padding-left: 0; padding-top: 24px; } }
 @media (max-width: 560px) {
   .status-list div { align-items: flex-start; flex-direction: column; gap: 4px; }
