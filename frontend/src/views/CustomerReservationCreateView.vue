@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { getAvailableTables } from '../services/table'
-import type { TableVO } from '../types/api'
+import { createReservation } from '../services/reservation'
+import type { ReservationCreateData, TableVO } from '../types/api'
 
 const tables = ref<TableVO[]>([])
 const selectedTableId = ref<number | null>(null)
@@ -9,6 +10,8 @@ const peopleCount = ref(1)
 const reserveTime = ref('')
 const isLoading = ref(true)
 const errorMessage = ref('')
+const isSubmitting = ref(false)
+const reservationResult = ref<ReservationCreateData | null>(null)
 
 const selectedTable = computed(() => tables.value.find((table) => table.tableId === selectedTableId.value) ?? null)
 const timeError = computed(() => {
@@ -26,7 +29,27 @@ const formError = computed(() => peopleError.value || timeError.value || (!selec
 const canPrepare = computed(() => !isLoading.value && tables.value.length > 0 && formError.value === '')
 
 function formatReserveTime(value: string) {
-  return value.replace('T', ' ') + ':00'
+  const normalized = value.replace('T', ' ')
+  return normalized.length === 16 ? `${normalized}:00` : normalized
+}
+
+async function handleSubmit() {
+  if (!canPrepare.value || selectedTable.value === null) return
+
+  errorMessage.value = ''
+  reservationResult.value = null
+  isSubmitting.value = true
+  try {
+    reservationResult.value = await createReservation({
+      tableId: selectedTable.value.tableId,
+      peopleCount: peopleCount.value,
+      reserveTime: formatReserveTime(reserveTime.value),
+    })
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '创建预约失败，请稍后重试'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 async function loadTables() {
@@ -49,7 +72,16 @@ onMounted(loadTables)
     <div class="reservation-heading">
       <p class="eyebrow">顾客预约</p>
       <h1>选择桌位与预约时间</h1>
-      <p>先准备预约信息，本轮不会提交预约记录。</p>
+      <p>选择空闲桌位并提交真实预约。</p>
+    </div>
+
+    <div v-if="reservationResult" class="reservation-result">
+      <p class="feedback feedback-success" role="status">预约创建成功，编号：{{ reservationResult.reservationNo }}</p>
+      <dl class="status-list">
+        <div><dt>桌位</dt><dd>{{ reservationResult.tableNo }}</dd></div>
+        <div><dt>人数</dt><dd>{{ reservationResult.peopleCount }} 人</dd></div>
+        <div><dt>预约时间</dt><dd>{{ reservationResult.reserveTime }}</dd></div>
+      </dl>
     </div>
 
     <p v-if="isLoading" class="feedback" role="status">正在查询空闲桌位...</p>
@@ -75,7 +107,7 @@ onMounted(loadTables)
         </div>
       </div>
 
-      <form class="reservation-form" @submit.prevent>
+      <form class="reservation-form" @submit.prevent="handleSubmit">
         <label>
           预约人数
           <input v-model.number="peopleCount" type="number" min="1" :max="selectedTable?.capacity" required />
@@ -88,7 +120,9 @@ onMounted(loadTables)
         <p v-else class="feedback feedback-success" role="status">
           信息有效，可以进入下一步提交。预约时间：{{ formatReserveTime(reserveTime) }}
         </p>
-        <button type="submit" :disabled="!canPrepare">准备提交</button>
+        <button type="submit" :disabled="!canPrepare || isSubmitting">
+          {{ isSubmitting ? '提交中...' : '创建预约' }}
+        </button>
       </form>
     </div>
   </section>

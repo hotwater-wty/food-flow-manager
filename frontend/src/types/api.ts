@@ -31,3 +31,22 @@ export interface ReservationRequest {
   peopleCount: number
   reserveTime: string
 }
+
+export interface SubmitTokenRequest {
+  scene: string
+}
+
+export interface SubmitTokenData {
+  token: string
+  expiresInSeconds: number
+}
+
+export interface ReservationCreateData {
+  reservationId: number
+  reservationNo: string
+  tableId: number
+  tableNo: string
+  peopleCount: number
+  reserveTime: string
+  status: number
+}
