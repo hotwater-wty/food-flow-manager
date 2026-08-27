@@ -49,3 +49,23 @@
   --tabbar-height: 56px;
   --sidebar-width: 224px;
 }
+
+/* Element Plus 主题桥接:把组件库的设计变量映射到项目令牌。 */
+/* 生效前提:element-plus/dist/index.css 必须先于本文件加载—— */
+/* 两边都是 :root 上的同名变量,后加载者按 CSS 层叠规则胜出。 */
+:root {
+  --el-color-primary: var(--color-brand);
+  /* light-3/5/7/8/9 是主色与白色按 30%/50%/70%/80%/90% 混合的浅色阶, */
+  /* 组件的悬停、边框、弱背景会用到;dark-2 是加深 20% 的按压色。 */
+  --el-color-primary-light-3: #d9907a;
+  --el-color-primary-light-5: #e4b0a0;
+  --el-color-primary-light-7: #eed0c7;
+  --el-color-primary-light-8: #f1dcd5;
+  --el-color-primary-light-9: var(--color-brand-soft);
+  --el-color-primary-dark-2: var(--color-brand-strong);
+  --el-color-success: var(--color-success);
+  --el-color-danger: var(--color-danger);
+  --el-color-error: var(--color-danger);
+  --el-border-radius-base: var(--radius-sm);
+  --el-font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Inter, ui-sans-serif, system-ui, sans-serif;
+}

@@ -1,62 +1,136 @@
 <script setup lang="ts">
-// 管理订单工作台：分页读取订单，并按照后端状态机推进订单状态。
+// 管理订单工作台:二期 R2 试点,用 Element Plus 的表格/分页/标签/抽屉重构首版卡片列表。
+// 业务逻辑与首版一致:分页读取订单、按后端状态机推进状态、点击详情查看菜品明细;
+// 变化只在展示层——表格替代卡片列表,详情从行内展开改为右侧抽屉。
 import { onMounted, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh } from '@element-plus/icons-vue'
 import { getAdminOrderDetail, getAdminOrders, updateOrderStatus } from '../services/admin-order'
 import type { AdminOrderData, OrderDetailData } from '../types/api'
 import { getOrderStatusLabel } from '../utils/order-status'
 
+// 页大小与后端约定一致;服务层固定传 pageSize=10。
+const PAGE_SIZE = 10
+
 const orders = ref<AdminOrderData[]>([])
-const selectedOrder = ref<OrderDetailData | null>(null)
-// 分页、筛选、加载锁和错误信息分别由独立 ref 管理，模板可精确绑定每种状态。
 const pageNo = ref(1)
 const total = ref(0)
-const status = ref<number | undefined>()
 const loading = ref(true)
-const actionId = ref<number | null>(null)
 const errorMessage = ref('')
-// 后端金额是整数分；只在展示边界转换为两位小数。
-const formatPrice = (cents: number) => `¥${(cents / 100).toFixed(2)}`
 
-// 列表请求更新 records 和 total，模板据此决定空状态和分页按钮。
+// 状态筛选用空字符串表示"全部":el-option 的 value 不接受 undefined,
+// 服务层调用前再把 '' 翻译回 undefined(不携带筛选参数)。
+const statusFilter = ref<number | ''>('')
+const statusOptions: Array<{ label: string; value: number | '' }> = [
+  { label: '全部状态', value: '' },
+  { label: '已下单', value: 1 },
+  { label: '制作中', value: 2 },
+  { label: '已上齐', value: 3 },
+  { label: '已完成', value: 4 },
+  { label: '已取消', value: 5 },
+]
+
+// 详情抽屉:drawerVisible 控制开合,detailLoading 区分"加载中"与"已加载"。
+const drawerVisible = ref(false)
+const detailLoading = ref(false)
+const detailData = ref<OrderDetailData | null>(null)
+
+// 写操作锁:记录正在推进的订单 ID,并让整页其他推进按钮暂时禁用,避免并发写请求。
+const actionId = ref<number | null>(null)
+
+// 后端金额是整数分;只在展示边界转换为两位小数。
+const formatPrice = (cents: number) => `¥${(cents / 100).toFixed(2)}`
+// 后端时间形如 2026-08-24T22:18:56,展示时把 T 换成空格。
+const formatTime = (value: string) => value.replace('T', ' ')
+
+// 状态映射为 Tag 颜色:进行中黄色系、完成绿色、取消灰色,颜色和文字同时呈现。
+function orderTagType(status: number): 'primary' | 'warning' | 'success' | 'info' {
+  if (status === 4) return 'success'
+  if (status === 5) return 'info'
+  if (status === 2 || status === 3) return 'warning'
+  return 'primary'
+}
+
+// 推进按钮文案由当前状态推导;只允许相邻状态,跳级会被后端拒绝。
+function advanceLabel(status: number) {
+  if (status === 1) return '开始制作'
+  if (status === 2) return '标记已上齐'
+  return '完成订单'
+}
+
+// 列表请求更新 records 和 total;分页组件据此渲染页码。
 async function load() {
   loading.value = true
   errorMessage.value = ''
   try {
-    // await 将 PageResult 解析为普通对象，再分别取当前页 records 与总数 total。
-    const result = await getAdminOrders(pageNo.value, status.value)
+    // '' 表示全部;此时不传 status,由后端返回所有状态。
+    const status = statusFilter.value === '' ? undefined : statusFilter.value
+    const result = await getAdminOrders(pageNo.value, status)
     orders.value = result.records
     total.value = result.total
   } catch (error) {
     // unknown 错误经过 instanceof Error 类型收窄后才能读取 message。
     errorMessage.value = error instanceof Error ? error.message : '管理订单查询失败'
   } finally {
-    // 无论成功失败都解除加载状态，避免按钮永久 disabled。
+    // 无论成功失败都解除加载状态,避免按钮永久 disabled。
     loading.value = false
   }
 }
 
-// 同一订单再次点击时只收起本地详情，不重复请求网络。
-async function detail(order: AdminOrderData) {
-  if (selectedOrder.value?.orderId === order.orderId) {
-    selectedOrder.value = null
-    return
-  }
+// 筛选变化:回到第一页再查询。这里不绑定 v-model 到分页组件,
+// 显式调用 load,避免"改 model 触发组件事件"的联动歧义。
+function handleFilterChange() {
+  pageNo.value = 1
+  load()
+}
+
+// 用户点击页码时由分页组件回调;同步 pageNo 后复用同一个 load。
+function handlePageChange(page: number) {
+  pageNo.value = page
+  load()
+}
+
+// 打开详情抽屉;每次都重新请求,保证看到最新金额与明细。
+async function openDetail(order: AdminOrderData) {
+  drawerVisible.value = true
+  detailLoading.value = true
+  detailData.value = null
   try {
-    selectedOrder.value = await getAdminOrderDetail(order.orderId)
+    detailData.value = await getAdminOrderDetail(order.orderId)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '订单详情查询失败'
+    drawerVisible.value = false
+  } finally {
+    detailLoading.value = false
   }
 }
 
-// 状态推进采用当前状态 + 1，后端仍会拒绝跳级或非法状态。
+// 状态推进采用当前状态 + 1,后端仍会拒绝跳级或非法状态。
 async function advance(order: AdminOrderData) {
-  // actionId 非空表示已有写请求；早返回避免并发推进多个订单。
+  // actionId 非空表示已有写请求;早返回避免并发推进多个订单。
   if (order.status >= 4 || actionId.value !== null) return
+  // "完成订单"是终态操作,用确认弹窗拦截误触;用户取消时 confirm 会 reject。
+  if (order.status === 3) {
+    try {
+      await ElMessageBox.confirm(`确认完成订单 ${order.orderNo}?完成后订单进入终态,不能再推进。`, '完成订单', {
+        confirmButtonText: '确认完成',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+    } catch {
+      return
+    }
+  }
   actionId.value = order.orderId
   errorMessage.value = ''
   try {
-    // 前端只计算相邻目标状态，后端状态机仍是最终裁判。
+    // 前端只计算相邻目标状态,后端状态机仍是最终裁判。
     await updateOrderStatus(order.orderId, order.status + 1)
+    ElMessage.success(`订单 ${order.orderNo} 已推进至「${getOrderStatusLabel(order.status + 1)}」`)
+    // 抽屉正展示该订单时,用已确认的新状态同步本地详情,避免展示过期状态。
+    if (drawerVisible.value && detailData.value?.orderId === order.orderId) {
+      detailData.value = { ...detailData.value, status: order.status + 1 }
+    }
     await load()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '订单状态更新失败'
@@ -65,7 +139,125 @@ async function advance(order: AdminOrderData) {
   }
 }
 
-// onMounted 接收函数引用；组件插入 DOM 后由 Vue 自动调用一次。
+// onMounted 接收函数引用;组件插入 DOM 后由 Vue 自动调用一次。
 onMounted(load)
 </script>
-<template><section class="reservation-view"><div class="reservation-heading"><p class="eyebrow">管理端订单</p><h1>订单工作台</h1><p>查看订单并按后端状态机推进制作流程。</p></div><div class="admin-toolbar"><label>状态<select v-model="status" @change="pageNo = 1; load()"><option :value="undefined">全部</option><option :value="1">已下单</option><option :value="2">制作中</option><option :value="3">已上齐</option><option :value="4">已完成</option><option :value="5">已取消</option></select></label></div><p v-if="errorMessage" class="feedback feedback-error" role="alert">{{ errorMessage }}</p><p v-if="loading" class="feedback" role="status">正在查询订单...</p><p v-else-if="orders.length === 0" class="feedback" role="status">当前没有订单。</p><div v-else class="reservation-list"><article v-for="order in orders" :key="order.orderId" class="reservation-card"><div class="reservation-card-heading"><div><strong>{{ order.orderNo }}</strong><span>{{ order.tableNo }} · {{ order.createTime }}</span></div><span class="reservation-status">{{ getOrderStatusLabel(order.status) }}</span></div><p class="reservation-time">{{ formatPrice(order.totalAmount) }}</p><div class="reservation-actions"><button class="secondary-button" type="button" @click="detail(order)">{{ selectedOrder?.orderId === order.orderId ? '收起详情' : '详情' }}</button><button v-if="order.status >= 1 && order.status <= 3" class="primary-outline-button" type="button" :disabled="actionId === order.orderId" @click="advance(order)">{{ actionId === order.orderId ? '更新中...' : order.status === 1 ? '开始制作' : order.status === 2 ? '标记已上齐' : '完成订单' }}</button></div><dl v-if="selectedOrder?.orderId === order.orderId" class="reservation-detail"><div v-for="item in selectedOrder.items" :key="item.dishId"><dt>{{ item.dishName }} × {{ item.quantity }}</dt><dd>{{ formatPrice(item.amount) }}</dd></div></dl></article></div><p class="feedback">第 {{ pageNo }} 页，共 {{ total }} 条</p><div class="pagination-actions"><button class="secondary-button" type="button" :disabled="pageNo <= 1 || loading" @click="pageNo--; load()">上一页</button><button class="secondary-button" type="button" :disabled="pageNo * 10 >= total || loading" @click="pageNo++; load()">下一页</button></div></section></template>
+
+<template>
+  <section class="admin-page">
+    <div class="admin-page-heading">
+      <h1>订单工作台</h1>
+      <p>查看订单并按后端状态机推进制作流程。</p>
+    </div>
+
+    <div class="admin-toolbar">
+      <el-select v-model="statusFilter" class="status-select" placeholder="全部状态" @change="handleFilterChange">
+        <el-option v-for="option in statusOptions" :key="option.label" :label="option.label" :value="option.value" />
+      </el-select>
+      <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+    </div>
+
+    <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
+
+    <el-table v-loading="loading" :data="orders" stripe>
+      <el-table-column prop="orderNo" label="订单编号" min-width="190" show-overflow-tooltip />
+      <el-table-column prop="tableNo" label="桌位" width="80" />
+      <el-table-column label="下单时间" min-width="165">
+        <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
+      </el-table-column>
+      <el-table-column label="状态" width="95">
+        <template #default="{ row }">
+          <el-tag :type="orderTagType(row.status)" disable-transitions>{{ getOrderStatusLabel(row.status) }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="金额" width="100" align="right">
+        <template #default="{ row }">{{ formatPrice(row.totalAmount) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="190" fixed="right">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+          <el-button
+            v-if="row.status >= 1 && row.status <= 3"
+            link
+            type="primary"
+            :disabled="actionId !== null"
+            :loading="actionId === row.orderId"
+            @click="advance(row)"
+          >
+            {{ advanceLabel(row.status) }}
+          </el-button>
+        </template>
+      </el-table-column>
+      <template #empty>
+        <el-empty description="当前没有订单" :image-size="72" />
+      </template>
+    </el-table>
+
+    <div class="admin-pagination">
+      <el-pagination
+        :current-page="pageNo"
+        :page-size="PAGE_SIZE"
+        :total="total"
+        layout="total, prev, pager, next"
+        background
+        @current-change="handlePageChange"
+      />
+    </div>
+
+    <el-drawer v-model="drawerVisible" size="400px">
+      <template #header>
+        <div class="order-drawer-header">
+          <strong>{{ detailData?.orderNo ?? '订单详情' }}</strong>
+          <el-tag v-if="detailData" :type="orderTagType(detailData.status)" disable-transitions>
+            {{ getOrderStatusLabel(detailData.status) }}
+          </el-tag>
+        </div>
+      </template>
+
+      <div v-loading="detailLoading" class="order-drawer-body">
+        <el-descriptions v-if="detailData" :column="1" border size="small">
+          <el-descriptions-item label="桌位">{{ detailData.tableNo }}</el-descriptions-item>
+          <el-descriptions-item label="下单时间">{{ formatTime(detailData.createTime) }}</el-descriptions-item>
+          <el-descriptions-item label="订单金额">{{ formatPrice(detailData.totalAmount) }}</el-descriptions-item>
+        </el-descriptions>
+
+        <el-table v-if="detailData" :data="detailData.items" size="small">
+          <el-table-column prop="dishName" label="菜品" min-width="110" show-overflow-tooltip />
+          <el-table-column prop="quantity" label="数量" width="60" align="center" />
+          <el-table-column label="小计" width="90" align="right">
+            <template #default="{ row }">{{ formatPrice(row.amount) }}</template>
+          </el-table-column>
+        </el-table>
+
+        <ul v-if="detailData?.items.some((item) => item.remark)" class="order-drawer-remarks">
+          <li v-for="item in detailData.items.filter((i) => i.remark)" :key="item.dishId">
+            {{ item.dishName }}:{{ item.remark }}
+          </li>
+        </ul>
+      </div>
+    </el-drawer>
+  </section>
+</template>
+
+<style scoped>
+/* 抽屉是本页面私有结构,样式用 scoped 与其他管理页隔离。 */
+.order-drawer-header {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+.order-drawer-body {
+  display: grid;
+  gap: var(--space-4);
+  min-height: 120px;
+}
+.order-drawer-remarks {
+  color: var(--color-text-secondary);
+  display: grid;
+  font-size: 0.85rem;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+</style>

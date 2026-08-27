@@ -139,9 +139,15 @@ code { background: var(--color-brand-soft); border-radius: var(--radius-sm); col
 .order-result { display: grid; gap: 18px; margin-top: 24px; }
 
 /* ---- 管理端工作台 ---- */
-.admin-toolbar { display: flex; gap: 16px; margin-top: 24px; }
+/* R2 起管理端页面逐步改用 Element Plus 组件,这里只保留跨页面复用的页面骨架样式。 */
+.admin-page { display: grid; gap: var(--space-4); }
+.admin-page-heading h1 { color: var(--color-text); font-size: 1.4rem; margin: 0; }
+.admin-page-heading p { color: var(--color-text-secondary); margin: 4px 0 0; }
+.admin-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin-top: 0; }
 .admin-toolbar label { color: var(--color-text-secondary); display: grid; font-size: .9rem; font-weight: 600; gap: 8px; }
 .admin-toolbar select { border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); font: inherit; padding: 9px 12px; }
+.admin-toolbar .status-select { width: 160px; }
+.admin-pagination { display: flex; justify-content: flex-end; }
 .pagination-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
 .resource-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
 .resource-form { border: 1px solid var(--color-border); display: grid; gap: 12px; margin-top: 20px; padding: 18px; }

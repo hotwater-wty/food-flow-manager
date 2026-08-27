@@ -36,11 +36,12 @@
 - 顺带修复:管理端登出按钮、首页过期文案(改为顾客入口页)、顾客登录 `?redirect` 回跳。
 - 验收:`vue-tsc --noEmit` 与 `vite build` 通过;浏览器 1440x900 与 390x844 双视口走查通过(路由可达、布局正确、守卫/回跳/登出/404 生效,详见 `../records/reviews/前端二期R1布局骨架验收记录.md`)。
 
-### R2 Element Plus 引入 + 订单工作台试点(待启动)
+### R2 Element Plus 引入 + 订单工作台试点(已完成,2026-08-27)
 
-- 安装 `element-plus`、`@element-plus/icons-vue`,`--el-color-primary` 系覆盖为陶土橙。
-- 订单工作台改版:ElTable + ElPagination + 状态 ElTag + ElSelect 筛选 + ElDrawer 详情;`window.confirm` → ElMessageBox。
-- 验收:type-check/build + 接真实后端浏览器走查。
+- 安装 `element-plus@2.14.5`、`@element-plus/icons-vue@2.3.2`(pnpm 11.19.0,lockfile 同步);`main.ts` 全量引入并配置中文语言包。
+- `tokens.css` 增加 Element Plus 主题桥接段:`--el-color-primary` 系映射为陶土橙色阶,success/danger 映射语义令牌,圆角与字体对齐项目规范。
+- 订单工作台改版:ElTable(六列+状态 ElTag+固定操作列)、ElPagination(中文"共 N 条")、ElSelect 筛选(空字符串哨兵表示"全部")、ElDrawer 详情(订单信息 ElDescriptions+菜品明细表+备注列表)、刷新按钮(图标包);终态"完成订单"用 ElMessageBox.confirm 拦截误触,推进成功用 ElMessage 提示;时间展示把 ISO 的 T 换为空格。
+- 验收:`vue-tsc --noEmit` 与 `vite build` 通过(全量引入后主包 gzip 约 322KB,优化后置);浏览器真实数据走查通过:表格渲染、筛选(含空状态 ElEmpty)、详情抽屉(含备注)、完整状态推进链(已下单→制作中→已上齐→已完成,终态确认弹窗)、移动 390 视口表格横滚+固定操作列。验收数据已清理(会话关闭、桌位释放)。详见 [`../records/reviews/前端二期R2订单工作台试点验收记录.md`](../records/reviews/前端二期R2订单工作台试点验收记录.md)。
 
 ### R3 管理端其余页 + 资料维护拆分(待启动)
 
