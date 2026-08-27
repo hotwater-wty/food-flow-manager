@@ -13,9 +13,13 @@ const adminAuthStore = useAdminAuthStore()
 // storeToRefs 保持 Store 字段的响应式连接;员工登录/退出后顶栏会自动更新。
 const { user } = storeToRefs(adminAuthStore)
 
+// 店长专属菜单项由 computed 按角色过滤:店员登录时看不到员工管理入口。
+// 路由守卫是第二道防线,即使直接输入 URL 也会被拦下。
+const isManager = computed(() => user.value?.role === 2)
+
 // 菜单用数据驱动而不是把链接硬编码进模板,新增页面只需在这里加一项。
-// R3 拆分资料维护后,"资源维护"项会被桌位/分类/菜品/预约/员工五个子项替换。
-const menuGroups = [
+// R3 起资料维护展开为五个子项。
+const menuGroups = computed(() => [
   {
     label: '经营工作台',
     items: [
@@ -25,9 +29,15 @@ const menuGroups = [
   },
   {
     label: '资料维护',
-    items: [{ label: '资源维护', to: '/admin/resources' }],
+    items: [
+      ...(isManager.value ? [{ label: '桌位维护', to: '/admin/resources/tables' }] : []),
+      { label: '菜品分类', to: '/admin/resources/categories' },
+      { label: '菜品维护', to: '/admin/resources/dishes' },
+      { label: '预约管理', to: '/admin/resources/reservations' },
+      ...(isManager.value ? [{ label: '员工管理', to: '/admin/resources/employees' }] : []),
+    ],
   },
-]
+])
 
 // role 是后端枚举(1=店员,2=店长),显示层负责翻译成中文标签。
 const roleLabel = computed(() => (user.value?.role === 2 ? '店长' : '店员'))

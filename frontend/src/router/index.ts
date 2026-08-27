@@ -18,11 +18,12 @@ import { useAdminAuthStore } from '../stores/admin-auth'
 
 // 模块声明合并为 RouteMeta 增加项目自己的字段,
 // 这样 to.meta.requiresAuth 在 TypeScript 中会被识别为布尔值,而不是任意属性。
-// title 供布局顶栏显示当前页名(目前只有管理端布局使用)。
+// title 供布局顶栏显示当前页名;requiresManager 标记店长专属页面(员工管理与桌位删除同源)。
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
     requiresAdminAuth?: boolean
+    requiresManager?: boolean
     title?: string
   }
 }
@@ -81,6 +82,7 @@ export const router = createRouter({
     },
 
     // 管理端:子路由拼接在"/admin"之后,布局由 AdminLayout 提供。
+    // R3 起资料维护拆为五个子路由页;requiresManager 的页面店员不可见且直接访问会被拦截。
     {
       path: '/admin',
       component: AdminLayout,
@@ -97,11 +99,37 @@ export const router = createRouter({
           component: () => import('../views/AdminSessionWorkbenchView.vue'),
           meta: { requiresAdminAuth: true, title: '会话与桌台' },
         },
+        // 旧"资源维护"单页地址重定向到桌位页,保住一期存下的书签和记忆链接。
+        { path: 'resources', redirect: { name: 'admin-resources-tables' } },
         {
-          path: 'resources',
-          name: 'admin-resources',
-          component: () => import('../views/AdminResourcesView.vue'),
-          meta: { requiresAdminAuth: true, title: '资源维护' },
+          path: 'resources/tables',
+          name: 'admin-resources-tables',
+          component: () => import('../views/admin/TablesManageView.vue'),
+          meta: { requiresAdminAuth: true, requiresManager: true, title: '桌位维护' },
+        },
+        {
+          path: 'resources/categories',
+          name: 'admin-resources-categories',
+          component: () => import('../views/admin/CategoriesManageView.vue'),
+          meta: { requiresAdminAuth: true, title: '菜品分类' },
+        },
+        {
+          path: 'resources/dishes',
+          name: 'admin-resources-dishes',
+          component: () => import('../views/admin/DishesManageView.vue'),
+          meta: { requiresAdminAuth: true, title: '菜品维护' },
+        },
+        {
+          path: 'resources/reservations',
+          name: 'admin-resources-reservations',
+          component: () => import('../views/admin/ReservationsManageView.vue'),
+          meta: { requiresAdminAuth: true, title: '预约管理' },
+        },
+        {
+          path: 'resources/employees',
+          name: 'admin-resources-employees',
+          component: () => import('../views/admin/EmployeesManageView.vue'),
+          meta: { requiresAdminAuth: true, requiresManager: true, title: '员工管理' },
         },
       ],
     },
@@ -121,8 +149,13 @@ router.beforeEach((to) => {
   if (to.meta.requiresAuth && !useAuthStore().isAuthenticated) {
     return { name: 'customer-login', query: { redirect: to.fullPath } }
   }
-  if (to.meta.requiresAdminAuth && !useAdminAuthStore().isAuthenticated) {
+  const adminStore = useAdminAuthStore()
+  if (to.meta.requiresAdminAuth && !adminStore.isAuthenticated) {
     return { name: 'admin-login', query: { redirect: to.fullPath } }
+  }
+  // 店长专属页面:店员访问时回到订单工作台;后端拦截器仍是最终防线,这里拦的是界面层。
+  if (to.meta.requiresManager && adminStore.user?.role !== 2) {
+    return { name: 'admin-orders' }
   }
   return true
 })

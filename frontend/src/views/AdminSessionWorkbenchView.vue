@@ -1,54 +1,85 @@
 <script setup lang="ts">
-// 管理会话工作台：展示会话状态，并提供详情、取消等待和清台动作。
+// 管理会话工作台:二期 R3 用 Element Plus 重构。
+// 与首版的差异:1) 补上后端早已支持的状态筛选;2) "详情"从拼接一行反馈文本
+// 改为右侧抽屉真正渲染会话数据;3) 取消等待/清台两个写操作增加确认弹窗。
 import { onMounted, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh } from '@element-plus/icons-vue'
 import { cancelAdminSession, closeAdminSession, getAdminSessionDetail, getAdminSessions } from '../services/admin-session'
 import type { DiningSessionData } from '../types/api'
+import { getSessionStatusLabel, getTableStatusLabel } from '../utils/status'
+import { usePagedList } from '../composables/use-pagedList'
 
-const sessions = ref<DiningSessionData[]>([])
-const pageNo = ref(1)
-const total = ref(0)
-const loading = ref(true)
-const errorMessage = ref('')
-const feedback = ref('')
+// 状态筛选:空字符串表示"全部"(el-option 的 value 不接受 undefined)。
+const statusFilter = ref<number | ''>('')
+const statusOptions: Array<{ label: string; value: number | '' }> = [
+  { label: '全部状态', value: '' },
+  { label: '等待中', value: 0 },
+  { label: '用餐中', value: 1 },
+  { label: '已完成', value: 2 },
+  { label: '已取消', value: 3 },
+]
+
+// usePagedList 把"页码+总数+加载锁+错误信息"的重复状态机收敛为一个组合式函数;
+// 闭包捕获 statusFilter,筛选值变化后重新 load 即携带新的查询参数。
+const { records, pageNo, total, loading, errorMessage, load, handlePageChange, reloadFromFirstPage } =
+  usePagedList<DiningSessionData>((page) =>
+    getAdminSessions(page, statusFilter.value === '' ? undefined : statusFilter.value),
+  )
+
+// 详情抽屉:每次打开都重新请求,展示最新会话与桌位状态。
+const drawerVisible = ref(false)
+const detailLoading = ref(false)
+const detailData = ref<DiningSessionData | null>(null)
+
+// 写操作互斥锁:记录正在操作的会话 ID,并禁用其余行的操作按钮。
 const actionId = ref<number | null>(null)
-// Record 是状态码到文案的对象类型；未知 key 用 ?? 显示兜底文字。
-const sessionLabel = (status: number) => ({ 0: '等待中', 1: '用餐中', 2: '已完成', 3: '已取消' } as Record<number, string>)[status] ?? '未知状态'
 
-async function load() {
-  // 分页响应中的 records 是本页数据，total 用来计算翻页边界。
-  loading.value = true
-  errorMessage.value = ''
-  try {
-    const result = await getAdminSessions(pageNo.value)
-    sessions.value = result.records
-    total.value = result.total
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '会话查询失败'
-  } finally {
-    // finally 无论请求成功或失败都会执行，保证加载指示器能够关闭。
-    loading.value = false
-  }
+// 会话状态映射 Tag 颜色:等待黄、用餐主色、完成绿、取消灰。
+function sessionTagType(status: number): 'primary' | 'warning' | 'success' | 'info' {
+  if (status === 2) return 'success'
+  if (status === 3) return 'info'
+  if (status === 0) return 'warning'
+  return 'primary'
 }
 
-async function showDetail(sessionId: number) {
-  // 详情读取是纯查询，成功后只更新页面反馈，不改变列表状态。
+async function openDetail(session: DiningSessionData) {
+  drawerVisible.value = true
+  detailLoading.value = true
+  detailData.value = null
   try {
-    const detail = await getAdminSessionDetail(sessionId)
-    feedback.value = `会话 ${detail.sessionNo}，桌位 ${detail.tableNo}，状态 ${sessionLabel(detail.sessionStatus)}`
+    detailData.value = await getAdminSessionDetail(session.sessionId)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '会话详情查询失败'
+    drawerVisible.value = false
+  } finally {
+    detailLoading.value = false
   }
 }
 
 async function action(session: DiningSessionData, type: 'cancel' | 'close') {
-  // actionId 作为互斥锁，保证同一时间只有一个会话写操作。
+  // actionId 非空表示已有写请求;早返回避免并发操作多个会话。
   if (actionId.value !== null) return
+  // 两个动作都会改变会话走向,统一用确认弹窗拦截误触;用户取消时 confirm 会 reject。
+  const tip =
+    type === 'cancel'
+      ? `确认取消等待中的会话 ${session.sessionNo}?取消后顾客需要重新开台。`
+      : `确认为桌位 ${session.tableNo} 清台?清台要求会话处于用餐中且不存在已下单/制作中的订单。`
+  try {
+    await ElMessageBox.confirm(tip, type === 'cancel' ? '取消等待' : '清台', {
+      confirmButtonText: type === 'cancel' ? '确认取消' : '确认清台',
+      cancelButtonText: '再想想',
+      type: 'warning',
+    })
+  } catch {
+    return
+  }
   actionId.value = session.sessionId
   errorMessage.value = ''
   try {
-    // 联合字面量类型只允许调用方传入 cancel 或 close 两种动作。
     if (type === 'cancel') await cancelAdminSession(session.sessionId)
     else await closeAdminSession(session.sessionId)
+    ElMessage.success(type === 'cancel' ? `会话 ${session.sessionNo} 已取消` : `桌位 ${session.tableNo} 已清台`)
     await load()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '会话操作失败'
@@ -62,19 +93,95 @@ onMounted(load)
 </script>
 
 <template>
-  <section class="reservation-view">
-    <div class="reservation-heading"><p class="eyebrow">管理端会话</p><h1>会话工作台</h1><p>查看堂食会话，取消等待中的会话或完成清台。</p></div>
-    <p v-if="errorMessage" class="feedback feedback-error" role="alert">{{ errorMessage }}</p>
-    <p v-if="feedback" class="feedback feedback-success" role="status">{{ feedback }}</p>
-    <p v-if="loading" class="feedback" role="status">正在查询会话...</p>
-    <p v-else-if="sessions.length === 0" class="feedback" role="status">当前没有堂食会话。</p>
-    <div v-else class="reservation-list">
-      <article v-for="session in sessions" :key="session.sessionId" class="reservation-card">
-        <div class="reservation-card-heading"><div><strong>{{ session.sessionNo }}</strong><span>{{ session.tableNo }}</span></div><span class="reservation-status">{{ sessionLabel(session.sessionStatus) }}</span></div>
-        <div class="reservation-actions"><button class="secondary-button" type="button" @click="showDetail(session.sessionId)">详情</button><button v-if="session.sessionStatus === 0" class="danger-button" type="button" :disabled="actionId === session.sessionId" @click="action(session, 'cancel')">取消等待</button><button v-if="session.sessionStatus === 1" class="primary-outline-button" type="button" :disabled="actionId === session.sessionId" @click="action(session, 'close')">清台</button></div>
-      </article>
+  <section class="admin-page">
+    <div class="admin-page-heading">
+      <h1>会话工作台</h1>
+      <p>查看堂食会话,取消等待中的会话或完成清台。</p>
     </div>
-    <p class="feedback">第 {{ pageNo }} 页，共 {{ total }} 条</p>
-    <div class="pagination-actions"><button class="secondary-button" type="button" :disabled="pageNo <= 1 || loading" @click="pageNo--; load()">上一页</button><button class="secondary-button" type="button" :disabled="pageNo * 10 >= total || loading" @click="pageNo++; load()">下一页</button></div>
+
+    <div class="admin-toolbar">
+      <el-select v-model="statusFilter" class="status-select" placeholder="全部状态" @change="reloadFromFirstPage">
+        <el-option v-for="option in statusOptions" :key="option.label" :label="option.label" :value="option.value" />
+      </el-select>
+      <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+    </div>
+
+    <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
+
+    <el-table v-loading="loading" :data="records" stripe>
+      <el-table-column prop="sessionNo" label="会话编号" min-width="190" show-overflow-tooltip />
+      <el-table-column prop="tableNo" label="桌位" width="80" />
+      <el-table-column label="会话状态" width="100">
+        <template #default="{ row }">
+          <el-tag :type="sessionTagType(row.sessionStatus)" disable-transitions>{{ getSessionStatusLabel(row.sessionStatus) }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="桌位状态" width="100">
+        <template #default="{ row }">{{ getTableStatusLabel(row.tableStatus) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="170" fixed="right">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+          <el-button
+            v-if="row.sessionStatus === 0"
+            link
+            type="danger"
+            :disabled="actionId !== null"
+            :loading="actionId === row.sessionId"
+            @click="action(row, 'cancel')"
+          >
+            取消等待
+          </el-button>
+          <el-button
+            v-if="row.sessionStatus === 1"
+            link
+            type="primary"
+            :disabled="actionId !== null"
+            :loading="actionId === row.sessionId"
+            @click="action(row, 'close')"
+          >
+            清台
+          </el-button>
+        </template>
+      </el-table-column>
+      <template #empty>
+        <el-empty description="当前没有堂食会话" :image-size="72" />
+      </template>
+    </el-table>
+
+    <div class="admin-pagination">
+      <el-pagination
+        :current-page="pageNo"
+        :page-size="10"
+        :total="total"
+        layout="total, prev, pager, next"
+        background
+        @current-change="handlePageChange"
+      />
+    </div>
+
+    <el-drawer v-model="drawerVisible" size="380px">
+      <template #header>
+        <strong>{{ detailData?.sessionNo ?? '会话详情' }}</strong>
+      </template>
+      <div v-loading="detailLoading" class="session-drawer-body">
+        <el-descriptions v-if="detailData" :column="1" border size="small">
+          <el-descriptions-item label="桌位">{{ detailData.tableNo }}</el-descriptions-item>
+          <el-descriptions-item label="会话状态">{{ getSessionStatusLabel(detailData.sessionStatus) }}</el-descriptions-item>
+          <el-descriptions-item label="桌位状态">{{ getTableStatusLabel(detailData.tableStatus) }}</el-descriptions-item>
+        </el-descriptions>
+        <p v-else class="session-drawer-hint">正在读取会话数据...</p>
+      </div>
+    </el-drawer>
   </section>
 </template>
+
+<style scoped>
+.session-drawer-body {
+  min-height: 140px;
+}
+.session-drawer-hint {
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+</style>

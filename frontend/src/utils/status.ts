@@ -1,4 +1,7 @@
-// 顾客预约状态映射和可执行操作规则。
+// 状态码到展示文案的集中映射;枚举值以后端接口规范文档为准。
+// 页面只调用这些纯函数,不在模板里散落魔法数字。
+
+// ---- 顾客预约(0-3) ----
 const reservationStatusLabels: Record<number, string> = {
   0: '待到店',
   1: '已到店',
@@ -12,6 +15,57 @@ export function getReservationStatusLabel(status: number) {
 }
 
 export function canCancelReservation(status: number) {
-  // 操作规则集中在工具函数，模板只表达 v-if，不直接散落状态数字。
+  // 操作规则集中在工具函数,模板只表达 v-if,不直接散落状态数字。
   return status === 0
+}
+
+// ---- 堂食会话(0-3) ----
+const sessionStatusLabels: Record<number, string> = {
+  0: '等待中',
+  1: '用餐中',
+  2: '已完成',
+  3: '已取消',
+}
+
+export function getSessionStatusLabel(status: number) {
+  return sessionStatusLabels[status] ?? '未知状态'
+}
+
+// ---- 桌位(0-4) ----
+const tableStatusLabels: Record<number, string> = {
+  0: '空闲',
+  1: '已预约',
+  2: '等待中',
+  3: '用餐中',
+  4: '禁用',
+}
+
+export function getTableStatusLabel(status: number) {
+  return tableStatusLabels[status] ?? '未知状态'
+}
+
+// ---- 菜品(0-2) ----
+const dishStatusLabels: Record<number, string> = {
+  0: '停售',
+  1: '启售',
+  2: '售罄',
+}
+
+export function getDishStatusLabel(status: number) {
+  return dishStatusLabels[status] ?? '未知状态'
+}
+
+// ---- 员工(状态 1-3,角色 1-2) ----
+const employeeStatusLabels: Record<number, string> = {
+  1: '正常',
+  2: '禁用',
+  3: '离职',
+}
+
+export function getEmployeeStatusLabel(status: number) {
+  return employeeStatusLabels[status] ?? '未知状态'
+}
+
+export function getEmployeeRoleLabel(role: number) {
+  return role === 2 ? '店长' : '店员'
 }

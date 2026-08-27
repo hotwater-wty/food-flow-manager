@@ -43,12 +43,14 @@
 - 订单工作台改版:ElTable(六列+状态 ElTag+固定操作列)、ElPagination(中文"共 N 条")、ElSelect 筛选(空字符串哨兵表示"全部")、ElDrawer 详情(订单信息 ElDescriptions+菜品明细表+备注列表)、刷新按钮(图标包);终态"完成订单"用 ElMessageBox.confirm 拦截误触,推进成功用 ElMessage 提示;时间展示把 ISO 的 T 换为空格。
 - 验收:`vue-tsc --noEmit` 与 `vite build` 通过(全量引入后主包 gzip 约 322KB,优化后置);浏览器真实数据走查通过:表格渲染、筛选(含空状态 ElEmpty)、详情抽屉(含备注)、完整状态推进链(已下单→制作中→已上齐→已完成,终态确认弹窗)、移动 390 视口表格横滚+固定操作列。验收数据已清理(会话关闭、桌位释放)。详见 [`../records/reviews/前端二期R2订单工作台试点验收记录.md`](../records/reviews/前端二期R2订单工作台试点验收记录.md)。
 
-### R3 管理端其余页 + 资料维护拆分(待启动)
+### R3 管理端其余页 + 资料维护拆分(已完成,2026-08-27)
 
-- 会话工作台:补状态筛选(services 层最小扩展查询参数,不改 URL 语义)、详情抽屉真正渲染数据。
-- 资料维护拆为 5 个子路由页 `/admin/resources/{tables|categories|dishes|reservations|employees}`:ElTable + ElDialog 表单、ElImage 菜品图;侧边栏菜单升级为两级树。
-- 角色显隐:STAFF 隐藏员工管理与删除类按钮。
-- 验收:STAFF/MANAGER 双账号对比走查。
+- 新建 `src/composables/use-pagedList.ts`:把各资源页重复的"页码+总数+加载锁+错误信息"分页状态机收敛为组合式函数;`utils/status.ts` 扩展为全量状态字典(会话/桌位/菜品/员工角色与状态),消除三个视图里的重复映射表。
+- 服务层 `getAdminSessions` 支持 status 筛选参数(`status !== undefined` 时携带,修复原 `status ?` 对 0 值的漏传)。
+- 会话工作台 EP 改版:状态筛选下拉、表格(会话/桌位双状态列)、详情抽屉真正渲染数据(替代原"拼接一行反馈文本")、取消等待/清台带确认弹窗。
+- 资料维护拆为五个子路由页 `/admin/resources/{tables|categories|dishes|reservations|employees}`(旧 `/admin/resources` 重定向到桌位页):统一 ElTable+ElPagination+ElDialog 表单(声明式校验 rules)+删除/启停确认弹窗;菜品页新增 ElImage 图片渲染(带失败占位)、分类下拉选择(替代手填 ID)、价格"元↔分"边界换算;预约页详情改抽屉。原 186 行五合一 `AdminResourcesView.vue` 删除,详情按钮从"调用后提示已读取"改为真实渲染。
+- 角色显隐:`RouteMeta.requiresManager` + 路由守卫(店员访问店长页重定向回订单页);侧栏菜单 computed 按角色过滤,店员看不到"桌位维护/员工管理"入口。后端拦截器仍是最终防线。
+- 验收:`vue-tsc --noEmit` 与 `vite build` 通过;店长/店员双账号浏览器走查通过(店员菜单缺省两项+URL 直达被拦、店长七项菜单齐全、员工页两账号渲染、会话筛选含空状态、详情抽屉、桌位新增弹窗校验与真实创建、删除确认链)。验收数据已清理(测试桌位与店员账号已删)。详见 [`../records/reviews/前端二期R3管理端拆分验收记录.md`](../records/reviews/前端二期R3管理端拆分验收记录.md)。
 
 ### R4 Vant 引入 + 顾客端全部页面(待启动)
 
