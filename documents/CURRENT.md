@@ -1,10 +1,10 @@
 # 当前文档状态
 
-> 更新日期：2026-08-24
+> 更新日期:2026-08-27
 
 ## 当前主线
 
-后端 V1/V2 核心业务和工程增强已完成并冻结扩张；根目录 `frontend/` 已完成 Vue 3 + TypeScript + Vite 工程初始化，并已接入顾客注册/登录、预约/开台、菜单详情、前端购物车、订单创建/列表/详情，以及员工认证、管理端订单/会话工作台和第二批桌位、分类、菜品、预约、员工资料维护工作台。管理端使用独立员工 JWT。原有前端计划、真实数据闭环、API 冒烟、浏览器路由保护、文档和代码注释已完成，本阶段前端开发结束。
+后端 V1/V2 核心业务和工程增强已完成并冻结扩张;前端首版业务闭环(阶段 0-6)已于 2026-08-24 收口。2026-08-27 完成首版后端覆盖审查(54 个业务端点已接入 53 个,唯一未接的 `/api/admin/auth/register` 与 `/api/admin/employees` 功能重复,判定非缺口),并启动**前端二期:布局重构与视觉统一**——R1 已完成:设计令牌落地(陶土橙暖色系)、管理端/顾客端双布局(左侧菜单树+顶栏员工信息 / 顶栏+底部导航)、路由嵌套化、404 兜底、管理端登出与顾客登录回跳等可用性修复。后续切片(Element Plus 管理端试点、资料维护拆分、Vant 顾客端、文档收口)按 [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) 逐片推进,每片完成即停点等用户验收。管理端使用独立员工 JWT。
 
 ## 当前权威资料
 
@@ -16,7 +16,8 @@
 | 前端页面与交互状态 | [`frontend/03-页面地图与交互状态.md`](frontend/03-页面地图与交互状态.md) | 路由、权限和异常状态 |
 | 前端接口契约 | [`frontend/05-前端工程与接口契约.md`](frontend/05-前端工程与接口契约.md) | 请求、鉴权和数据约定 |
 | 前端开发顺序与验收 | [`frontend/06-纵向切片开发计划.md`](frontend/06-纵向切片开发计划.md) | 每个切片均须可验证 |
-| 前端学习型开发总计划 | [`planning/frontend-development-plan.md`](planning/frontend-development-plan.md) | 分块编码、知识补足和阶段检查点 |
+| 前端学习型开发总计划 | [`planning/frontend-development-plan.md`](planning/frontend-development-plan.md) | 一期计划,已收口 |
+| 前端二期:布局与视觉统一 | [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) | 当前执行中的切片计划 |
 | AI 协作边界 | [`frontend/07-AI协作与验收规则.md`](frontend/07-AI协作与验收规则.md) | 任务边界、证据和人工控制点 |
 
 ## 归档判断

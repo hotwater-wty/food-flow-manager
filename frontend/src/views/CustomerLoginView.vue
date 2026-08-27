@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // 顾客认证页：在登录和注册两种模式间切换，写操作完成后更新认证上下文。
 import { ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { loginUser, registerUser } from '../services/user-auth'
 import { useAuthStore } from '../stores/auth'
@@ -16,6 +17,9 @@ const isRegistering = ref(false)
 const authStore = useAuthStore()
 // storeToRefs 保留 Store 字段的响应式连接，登录成功后模板会自动更新。
 const { isAuthenticated, user } = storeToRefs(authStore)
+// 路由守卫拦截未登录访问时会带上 redirect 查询参数，登录成功后按它回跳。
+const router = useRouter()
+const route = useRoute()
 
 async function handleSubmit() {
   // 表单事件使用 preventDefault，避免浏览器刷新；isRegistering 决定调用哪个接口。
@@ -34,6 +38,9 @@ async function handleSubmit() {
       // 登录成功才把 Token 交给 Store，Store 负责持久化和后续请求鉴权。
       const loginData = await loginUser({ phone: phone.value, password: password.value })
       authStore.login(loginData)
+      // 登录页已脱离顾客端布局，登录成功后必须主动跳转：
+      // 优先回跳守卫带来的 redirect，没有则进入默认的点餐页。
+      await router.push(typeof route.query.redirect === 'string' ? route.query.redirect : '/customer/menu')
     }
     password.value = ''
   } catch (error) {
@@ -66,7 +73,10 @@ async function handleSubmit() {
           <dd>{{ user.userId }}</dd>
         </div>
       </dl>
-      <button class="secondary-button" type="button" @click="authStore.logout">退出登录</button>
+      <div class="auth-session-actions">
+        <RouterLink class="secondary-button" to="/customer/menu">进入点餐</RouterLink>
+        <button class="secondary-button" type="button" @click="authStore.logout">退出登录</button>
+      </div>
     </div>
 
     <form v-else class="auth-form" @submit.prevent="handleSubmit">

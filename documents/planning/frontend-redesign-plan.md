@@ -1,0 +1,72 @@
+# 前端二期计划:布局重构与视觉统一
+
+> 立项日期:2026-08-27
+> 上游文档:[`frontend-development-plan.md`](frontend-development-plan.md)(一期已收口)、[`../frontend/04-视觉设计与组件规则.md`](../frontend/04-视觉设计与组件规则.md)
+> 分工决策:AI 为主实现,用户浏览器验收 + 阅读代码;每片完成后输出"改了什么 / 为什么这样组织 / 涉及知识点 / 建议补的课程"。
+
+## 1. 背景:一期收口审查结论
+
+2026-08-27 对前端首版做了一次后端覆盖审查,结论:
+
+- **接口覆盖属实**:后端 17 个控制器、54 个业务端点,前端已接入 53 个。唯一未接的 `POST /api/admin/auth/register` 与已接入的 `POST /api/admin/employees` 功能重复(同为店长权限、同用一套注册 DTO),判定非缺口。后端不存在支付、统计、库存、文件上传等前端漏做的模块。
+- **能力已接、界面未露出的质量缺口**(本阶段顺带修复):
+  1. 管理端会话详情、资料维护各资源的"详情"只调接口不渲染数据;
+  2. 管理端会话列表(状态/桌位/预约过滤)、顾客订单列表(状态过滤)的筛选能力未露出;
+  3. 店员(STAFF)角色不控制界面,店长专属操作(员工管理、删除桌位)对店员可见,点击后收到 403 空响应体,报错体验差;
+  4. 菜品图片字段采集了但从未渲染;
+  5. 管理端无登出按钮、无 404 路由、首页文案为脚手架期过期内容、顾客登录不支持 `?redirect` 回跳、破坏性操作用原生 `window.confirm`。
+- **文档与代码偏差**:`04-视觉设计与组件规则` 的目标(管理端左侧导航+顶部员工信息+详情抽屉、顾客端移动优先+底部购物车、Vant + Element Plus、陶土橙令牌)从未落地;`03-页面地图` 路由与实际不一致;`guides/开发流程手册` 有过期句;验收清单中的 `pnpm lint` 命令不存在。
+
+## 2. 已确认决策
+
+| 决策项 | 结论 |
+| --- | --- |
+| 组件库 | 管理端 Element Plus,顾客端 Vant(首期全量引入,构建体积优化后置) |
+| 画风 | 暖色餐饮风:陶土橙 `#C85A3F` 主色、顾客端暖白 `#FAF8F4`、管理端浅灰 `#F5F6F8`,以 `04-视觉设计与组件规则` 既定令牌为基准;open-design 的 Airbnb/Editorial 类 DESIGN.md 仅作参考调优 |
+| 布局 | 双布局:管理端桌面工作台(左侧菜单树+顶栏右上角员工信息/登出);顾客端移动优先(顶栏品牌+右上角账户入口+底部导航);登录页与 404 独立无布局;现有 URL 全部不变 |
+
+## 3. 切片清单(每片一个可验收检查点,完成后 git 提交并停点等用户确认)
+
+### R1 立项 + 双布局骨架 + 路由重构(已完成,2026-08-27)
+
+- 新建本计划文档;`CURRENT.md` 声明二期启动。
+- 新建 `src/styles/tokens.css`(色彩/间距/圆角/布局尺寸 CSS 变量),`style.css` 全量迁移到令牌并切换为陶土橙配色,中文字体优先。
+- 新建 `src/layouts/AdminLayout.vue`(左侧两级菜单树 + 顶栏页名/员工姓名/角色标签/登出,窄屏折叠为横向菜单)、`src/layouts/CustomerLayout.vue`(顶栏 + 底部四项导航);`App.vue` 瘦身为纯路由出口。
+- 路由改嵌套结构;新增 404 兜底路由与 `NotFoundView`。
+- 顺带修复:管理端登出按钮、首页过期文案(改为顾客入口页)、顾客登录 `?redirect` 回跳。
+- 验收:`vue-tsc --noEmit` 与 `vite build` 通过;浏览器 1440x900 与 390x844 双视口走查通过(路由可达、布局正确、守卫/回跳/登出/404 生效,详见 `../records/reviews/前端二期R1布局骨架验收记录.md`)。
+
+### R2 Element Plus 引入 + 订单工作台试点(待启动)
+
+- 安装 `element-plus`、`@element-plus/icons-vue`,`--el-color-primary` 系覆盖为陶土橙。
+- 订单工作台改版:ElTable + ElPagination + 状态 ElTag + ElSelect 筛选 + ElDrawer 详情;`window.confirm` → ElMessageBox。
+- 验收:type-check/build + 接真实后端浏览器走查。
+
+### R3 管理端其余页 + 资料维护拆分(待启动)
+
+- 会话工作台:补状态筛选(services 层最小扩展查询参数,不改 URL 语义)、详情抽屉真正渲染数据。
+- 资料维护拆为 5 个子路由页 `/admin/resources/{tables|categories|dishes|reservations|employees}`:ElTable + ElDialog 表单、ElImage 菜品图;侧边栏菜单升级为两级树。
+- 角色显隐:STAFF 隐藏员工管理与删除类按钮。
+- 验收:STAFF/MANAGER 双账号对比走查。
+
+### R4 Vant 引入 + 顾客端全部页面(待启动)
+
+- 安装 `vant`;底部 VanTabbar;菜单页 VanTabs/VanStepper/底部 VanSubmitBar 购物车栏;预约 VanForm;列表 VanList/VanTag;账户页改为真实账户中心。
+- `index.html` title/lang 修正;清理无用 assets。
+- 验收:390x844 为主走查全流程(登录→开台→点餐→下单→订单)。
+
+### R5 收尾 + 文档同步(待启动)
+
+- 两端两视口全局走查;同步文档:03-页面地图重写、04-视觉设计更新为已落地事实、一期计划与开发流程手册修正、二期复盘记录、`CURRENT.md` 收口。
+- 验收:`vue-tsc --noEmit && vite build && node scripts/smoke-api.mjs` + 文档评审。
+
+## 4. 范围与边界
+
+- 允许修改:`frontend/src/**`、`frontend/index.html`、`frontend/package.json`(+lockfile)、`documents/**`、根 `README.md` 前端章节。
+- 新增依赖仅限:`element-plus`、`@element-plus/icons-vue`、`vant`。
+- 禁止:修改 `backend/**`、Docker、数据库脚本;不新增业务功能;接口 URL 语义不变。
+- 已知风险:组件库样式与现有全局 CSS 冲突(逐页迁移控制);confirm→Dialog、详情改抽屉属交互变化需逐一验收;全量引入使 bundle 增大(可接受,优化后置);资料页拆分是最大单项改动(单独成片便于回滚)。
+
+## 5. 验收证据索引
+
+- R1:`vue-tsc --noEmit` 退出码 0;`vite build` 成功(dist 产物正常);docker compose 后端 `{"status":"UP"}`;浏览器双视口走查(顾客端首页/登录/守卫回跳/点餐页、404、管理端守卫/登录/菜单树导航/资源页/登出、移动端侧栏折叠)全部通过。

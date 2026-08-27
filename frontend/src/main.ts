@@ -1,6 +1,8 @@
 // 应用入口：创建 Pinia、恢复两类认证状态，再挂载 Vue 根组件。
 // 这个文件只负责组装基础设施，不承载具体页面业务。
 import { createApp } from 'vue'
+// 先引设计令牌再引全局样式,保证 style.css 里的 var(--xxx) 有定义。
+import './styles/tokens.css'
 import './style.css'
 import App from './App.vue'
 import { router } from './router'

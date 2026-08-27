@@ -1,0 +1,51 @@
+/* 设计令牌:全站唯一定义颜色、间距、圆角、布局尺寸的地方。 */
+/* 取值来自 documents/frontend/04-视觉设计与组件规则.md 的既定决策: */
+/* 品牌强调色为低饱和陶土橙,顾客端暖白背景,管理端浅灰工作台背景, */
+/* 间距 4px 基线,圆角不超过 8px。页面样式只引用 var(--xxx),不再手写色值。 */
+:root {
+  /* 品牌色 */
+  --color-brand: #c85a3f;
+  --color-brand-strong: #a84a33;
+  --color-brand-soft: #f7e8e1;
+  --color-brand-ring: rgba(200, 90, 63, 0.22);
+
+  /* 背景与表面 */
+  --color-bg-customer: #faf8f4;
+  --color-bg-admin: #f5f6f8;
+  --color-surface: #ffffff;
+
+  /* 文字 */
+  --color-text: #252525;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9aa0a6;
+
+  /* 边框 */
+  --color-border: #e5e7eb;
+  --color-border-soft: #edeae4;
+  --color-border-strong: #d1c9c2;
+
+  /* 状态色:语义与品牌色分离,成功保持绿色、危险保持红色 */
+  --color-success: #227a5b;
+  --color-success-soft: #eaf4ef;
+  --color-danger: #b42318;
+  --color-danger-soft: #fbeeed;
+
+  /* 间距:4px 基线的常用刻度 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* 圆角:最大 8px */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* 布局尺寸 */
+  --content-max-width: 960px;
+  --topbar-height: 56px;
+  --tabbar-height: 56px;
+  --sidebar-width: 224px;
+}
