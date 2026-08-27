@@ -1,6 +1,7 @@
 # 前端二期计划:布局重构与视觉统一
 
 > 立项日期:2026-08-27
+> 状态:**已收口**——R1-R5 全部完成,复盘见 [`../records/reviews/前端二期阶段复盘.md`](../records/reviews/前端二期阶段复盘.md);本文件转为历史记录,后置候选不自动开工
 > 上游文档:[`frontend-development-plan.md`](frontend-development-plan.md)(一期已收口)、[`../frontend/04-视觉设计与组件规则.md`](../frontend/04-视觉设计与组件规则.md)
 > 分工决策:AI 为主实现,用户浏览器验收 + 阅读代码;每片完成后输出"改了什么 / 为什么这样组织 / 涉及知识点 / 建议补的课程"。
 
@@ -65,10 +66,11 @@
 - 验收中发现并修复两个缺陷:1) 预约页模板残留内联 TS 断言表达式导致组件渲染中断;2) VanField 校验器绑定在无 v-model 的字段上拿不到表单值(时间校验恒失败)。
 - 验收:`vue-tsc --noEmit` 与 `vite build` 通过;390x844 全流程浏览器走查通过:首页/Tabbar 图标、菜单页(提示条→开台→返回→加购 2 份→SubmitBar 合计 ¥24.68→下单成功面板)、我的订单(6 笔+明细展开)、账户中心(头像/服务入口/退出)、我的预约列表、预约创建完整链(选桌→填时间→创建成功含编号)。验收数据已清理(会话已清台、测试预约已取消)。详见 [`../records/reviews/前端二期R4顾客端Vant验收记录.md`](../records/reviews/前端二期R4顾客端Vant验收记录.md)。
 
-### R5 收尾 + 文档同步(待启动)
+### R5 收尾 + 文档同步(已完成,2026-08-27)
 
-- 两端两视口全局走查;同步文档:03-页面地图重写、04-视觉设计更新为已落地事实、一期计划与开发流程手册修正、二期复盘记录、`CURRENT.md` 收口。
-- 验收:`vue-tsc --noEmit && vite build && node scripts/smoke-api.mjs` + 文档评审。
+- 两端双视口全局走查(命令+浏览器),走查中修复四类问题:`type-check` 脚本改为真验证 `vue-tsc -b` 并修复暴露的 4 个类型错误;VanTabbar 高亮改为路由推导(修"选中态恒为首页");新增 `utils/format.ts` 统一四处 ISO 时间展示;菜品页分类选项挂载预载(修首屏"分类 N"兜底文案)。
+- 文档同步:03 页面地图按实际路由重写、04 视觉设计补落地现状节、开发流程手册清过期句、一期计划标注二期收口、`CURRENT.md` 收口;新建 [`../records/reviews/前端二期R5收尾文档同步验收记录.md`](../records/reviews/前端二期R5收尾文档同步验收记录.md) 与 [`../records/reviews/前端二期阶段复盘.md`](../records/reviews/前端二期阶段复盘.md)。
+- 验收:`vue-tsc -b && vite build && node scripts/smoke-api.mjs` 全部通过(主包 gzip 约 351KB);两端双视口走查通过,本轮无业务数据写入。
 
 ## 4. 范围与边界
 
@@ -79,4 +81,6 @@
 
 ## 5. 验收证据索引
 
-- R1:`vue-tsc --noEmit` 退出码 0;`vite build` 成功(dist 产物正常);docker compose 后端 `{"status":"UP"}`;浏览器双视口走查(顾客端首页/登录/守卫回跳/点餐页、404、管理端守卫/登录/菜单树导航/资源页/登出、移动端侧栏折叠)全部通过。
+- R1:`vue-tsc --noEmit` 退出码 0(当时尚未发现该命令为空验证);`vite build` 成功(dist 产物正常);docker compose 后端 `{"status":"UP"}`;浏览器双视口走查(顾客端首页/登录/守卫回跳/点餐页、404、管理端守卫/登录/菜单树导航/资源页/登出、移动端侧栏折叠)全部通过。
+- R2/R3/R4:详见各自验收记录(`records/reviews/`)中的命令输出与浏览器路径;其中"type-check 通过"结论由 R5 的 `vue-tsc -b` 回溯确认后仍然成立(4 个新报错已修复,不涉及其它页面行为)。
+- R5:`vue-tsc -b` / `vite build` / `scripts/smoke-api.mjs` 三条全通过;浏览器 390x844 与 1440x900 全局走查通过;证据见 [`../records/reviews/前端二期R5收尾文档同步验收记录.md`](../records/reviews/前端二期R5收尾文档同步验收记录.md)。

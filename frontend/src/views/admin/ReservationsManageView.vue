@@ -7,6 +7,7 @@ import { Refresh } from '@element-plus/icons-vue'
 import { cancelAdminReservation, getAdminReservationDetail, getAdminReservations } from '../../services/admin-resources'
 import type { ReservationAdminData } from '../../types/api'
 import { canCancelReservation, getReservationStatusLabel } from '../../utils/status'
+import { formatDateTime } from '../../utils/format'
 import { usePagedList } from '../../composables/use-pagedList'
 
 const PAGE_SIZE = 10
@@ -87,7 +88,9 @@ onMounted(load)
       <el-table-column label="人数" width="70" align="center">
         <template #default="{ row }">{{ row.peopleCount }}</template>
       </el-table-column>
-      <el-table-column prop="reserveTime" label="预约时间" min-width="160" />
+      <el-table-column label="预约时间" min-width="160">
+        <template #default="{ row }">{{ formatDateTime(row.reserveTime) }}</template>
+      </el-table-column>
       <el-table-column label="状态" width="95">
         <template #default="{ row }">
           <el-tag :type="reservationTagType(row.status)" disable-transitions>{{ getReservationStatusLabel(row.status) }}</el-tag>
@@ -132,7 +135,7 @@ onMounted(load)
         <el-descriptions v-if="detailData" :column="1" border size="small">
           <el-descriptions-item label="桌位">{{ detailData.tableNo || `桌位 ${detailData.tableId}` }}</el-descriptions-item>
           <el-descriptions-item label="人数">{{ detailData.peopleCount }} 人</el-descriptions-item>
-          <el-descriptions-item label="预约时间">{{ detailData.reserveTime }}</el-descriptions-item>
+          <el-descriptions-item label="预约时间">{{ formatDateTime(detailData.reserveTime) }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ getReservationStatusLabel(detailData.status) }}</el-descriptions-item>
         </el-descriptions>
         <p v-else class="reservation-drawer-hint">正在读取预约数据...</p>

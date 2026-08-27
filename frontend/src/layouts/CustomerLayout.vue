@@ -2,7 +2,8 @@
 // 顾客端布局:真实场景是顾客用手机扫桌码打开 H5,因此按移动优先设计——
 // 顶栏只放品牌和右上角账户入口,业务主导航用 Vant Tabbar 固定在底部。
 // 菜单点餐页自带的底部购物车栏(VanSubmitBar)会盖在 Tabbar 之上,由该页面自己管理。
-import { RouterLink, RouterView } from 'vue-router'
+import { computed } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '../stores/auth'
 
@@ -10,15 +11,24 @@ const authStore = useAuthStore()
 // 登录态驱动顶栏右上角:未登录显示"登录 / 注册",已登录显示昵称入口。
 const { isAuthenticated, user } = storeToRefs(authStore)
 
-// exactOnly 标记"首页":vue-router 中"/"是所有顾客页的父路由记录,
-// 普通的 active 规则会让"首页"在任何顾客页面都高亮,所以它只按精确匹配高亮。
-// Tabbar 图标用 Vant 内置的字体图标名(字符串);换自定义图标时改 icon 前缀配置即可。
+// exactOnly 标记"首页":"/"是所有顾客页的父路径,必须精确匹配;
+// 其余项用前缀匹配,覆盖如 /customer/reservations/create 这类子路径。
 const tabItems = [
   { label: '首页', to: '/', icon: 'wap-home-o', exactOnly: true },
   { label: '点餐', to: '/customer/menu', icon: 'goods-collect-o' },
   { label: '预约', to: '/customer/reservations', icon: 'calendar-o' },
   { label: '订单', to: '/customer/orders', icon: 'orders-o' },
 ]
+
+const route = useRoute()
+// 高亮完全由当前路由推导,再单向绑定给 van-tabbar 的 model-value:
+// 不让组件自己维护选中态,刷新或地址直达时高亮也不会错位;
+// 账户中心等不在导航里的页面返回 -1,四个 Tab 全部不点亮。
+const activeTabIndex = computed(() => {
+  return tabItems.findIndex((item) =>
+    item.exactOnly ? route.path === item.to : route.path.startsWith(item.to),
+  )
+})
 </script>
 
 <template>
@@ -39,14 +49,13 @@ const tabItems = [
     </main>
 
     <!-- placeholder 固定占位:Tabbar 是 fixed 定位,用它把内容区底部撑出等高空间,避免最后一段被遮住。 -->
-    <van-tabbar placeholder>
-      <!-- 首页项手动控制高亮:父路由 active 规则会让它常亮,改为仅精确匹配时点亮。 -->
+    <van-tabbar placeholder :model-value="activeTabIndex">
+      <!-- 高亮由 activeTabIndex(路由推导)控制;点击时 to 负责跳转,路由变化后再回推高亮。 -->
       <van-tabbar-item
         v-for="item in tabItems"
         :key="item.to"
         :to="item.to"
         :icon="item.icon"
-        :class="item.exactOnly ? 'customer-tab-exact' : undefined"
       >
         {{ item.label }}
       </van-tabbar-item>
@@ -94,9 +103,5 @@ const tabItems = [
   padding: var(--space-4) var(--space-4) var(--space-6);
   width: 100%;
 }
-/* Tabbar 主色已由 tokens.css 的 --van-primary-color 接管,这里只修正首页项的高亮规则:
-   默认 RouterLink active 会让"/"在任何顾客页命中,强制非精确匹配时回到未激活配色。 */
-.customer-tab-exact:not(.van-tabbar-item--active) {
-  color: var(--color-text-secondary);
-}
+/* Tabbar 主色已由 tokens.css 的 --van-primary-color 接管,无需额外高亮修正。 */
 </style>

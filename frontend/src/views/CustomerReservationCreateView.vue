@@ -8,6 +8,7 @@ import { showSuccessToast } from 'vant'
 import { getAvailableTables } from '../services/table'
 import { createReservation } from '../services/reservation'
 import type { ReservationCreateData, TableVO } from '../types/api'
+import { formatDateTime } from '../utils/format'
 
 const tables = ref<TableVO[]>([])
 const selectedTableId = ref<number | null>(null)
@@ -30,9 +31,6 @@ const timeValidator = (value: string) => {
   if (!value) return '请选择预约时间'
   return new Date(value).getTime() > Date.now() ? true : '预约时间必须晚于当前时间'
 }
-
-// 时间字段展示值:datetime-local 的值("2026-08-27T18:30")转成可读格式。
-const reserveTimeLabel = computed(() => (reserveTime.value ? reserveTime.value.replace('T', ' ') : '请选择预约时间'))
 
 function formatReserveTime(value: string) {
   // datetime-local 使用 T 分隔,后端契约要求空格和秒数。
@@ -85,7 +83,7 @@ onMounted(loadTables)
         <van-cell title="预约编号" :value="reservationResult.reservationNo" />
         <van-cell title="桌位" :value="reservationResult.tableNo || `桌位 ${reservationResult.tableId}`" />
         <van-cell title="人数" :value="`${reservationResult.peopleCount} 人`" />
-        <van-cell title="预约时间" :value="reservationResult.reserveTime" />
+        <van-cell title="预约时间" :value="formatDateTime(reservationResult.reserveTime)" />
       </van-cell-group>
       <div class="reserve-result-actions">
         <van-button block type="primary" plain @click="reservationResult = null">再约一桌</van-button>

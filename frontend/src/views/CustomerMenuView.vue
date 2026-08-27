@@ -30,8 +30,7 @@ const selectedDish = ref<DishData | null>(null)
 // computed 会追踪 cart 和 dishCatalog;任一变化时自动重新生成提交/展示列表。
 // Object.keys 返回字符串数组,map(Number) 将对象键恢复成后端需要的数字 ID。
 const cartItems = computed(() => Object.keys(cart.value).map(Number).map((dishId) => dishCatalog.value[dishId]).filter((dish): dish is DishData => dish !== undefined))
-// reduce 从 0 开始累加数量;这两个 computed 会在 cart.value 改变时自动重新计算。
-const cartCount = computed(() => Object.values(cart.value).reduce((total, quantity) => total + quantity, 0))
+// reduce 从 0 开始累加数量;该 computed 会在 cart.value 改变时自动重新计算。
 const cartTotal = computed(() => cartItems.value.reduce((total, dish) => total + dish.price * (cart.value[dish.id] ?? 0), 0))
 // 购物车栏明细文案:"菜名 × 2"逐项拼接,空车时显示引导语。
 const cartSummary = computed(() =>

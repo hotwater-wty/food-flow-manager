@@ -147,7 +147,12 @@ async function toggleStatus(item: DishData) {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  void load()
+  // 分类选项在页面挂载时就预载:表格的分类列靠它把 categoryId 翻译成名称,
+  // 不能等打开表单弹窗才加载,否则首屏显示的是"分类 N"兜底文案。
+  void loadCategoryOptions()
+})
 </script>
 
 <template>

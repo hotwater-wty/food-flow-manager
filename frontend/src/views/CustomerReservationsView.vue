@@ -7,6 +7,7 @@ import { cancelReservation, getReservationDetail, getReservations } from '../ser
 import { checkInReservation } from '../services/session'
 import type { DiningSessionData, ReservationData } from '../types/api'
 import { canCancelReservation, getReservationStatusLabel } from '../utils/status'
+import { formatDateTime } from '../utils/format'
 
 // 列表使用数组泛型,明确每个元素都满足后端 ReservationData 结构。
 const reservations = ref<ReservationData[]>([])
@@ -127,7 +128,7 @@ onMounted(loadReservations)
             {{ getReservationStatusLabel(reservation.status) }}
           </van-tag>
         </div>
-        <p class="my-reservations-time">预约时间:{{ reservation.reserveTime }}</p>
+        <p class="my-reservations-time">预约时间:{{ formatDateTime(reservation.reserveTime) }}</p>
         <div class="my-reservations-actions">
           <van-button size="small" plain @click="showDetail(reservation)" :loading="detailLoadingId === reservation.reservationId">
             {{ selectedReservation?.reservationId === reservation.reservationId ? '收起详情' : '查看详情' }}

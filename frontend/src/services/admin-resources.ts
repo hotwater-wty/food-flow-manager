@@ -3,6 +3,8 @@ import type {
   DishCategoryData, DishCategoryRequest, DishData, DishCreateRequest, DishUpdateRequest,
   EmployeeCreateRequest, EmployeeData, PageResult, ReservationAdminData, Result, TableRequest, TableVO,
 } from '../types/api'
+// 桌位维护页把请求/实体类型从服务层一起引入,这里做类型再导出。
+export type { TableRequest, TableVO }
 import { http } from './http'
 
 async function unwrap<T>(request: Promise<{ data: Result<T> }>, message: string): Promise<T> {
