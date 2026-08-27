@@ -1,12 +1,14 @@
 <script setup lang="ts">
-// 顾客预约页：展示预约状态，并把待到店预约连接到预约开台动作。
+// 顾客预约页:展示预约状态,并把待到店预约连接到预约开台动作。
+// R4 改用 Vant:列表用卡片+状态 Tag,详情用弹层,取消改用 Dialog 确认(替代原生 confirm)。
 import { onMounted, ref } from 'vue'
+import { showFailToast, showSuccessToast, showConfirmDialog } from 'vant'
 import { cancelReservation, getReservationDetail, getReservations } from '../services/reservation'
 import { checkInReservation } from '../services/session'
 import type { DiningSessionData, ReservationData } from '../types/api'
 import { canCancelReservation, getReservationStatusLabel } from '../utils/status'
 
-// 列表使用数组泛型，明确每个元素都满足后端 ReservationData 结构。
+// 列表使用数组泛型,明确每个元素都满足后端 ReservationData 结构。
 const reservations = ref<ReservationData[]>([])
 const selectedReservation = ref<ReservationData | null>(null)
 const isLoading = ref(true)
@@ -16,71 +18,88 @@ const checkInLoadingId = ref<number | null>(null)
 const sessionResult = ref<DiningSessionData | null>(null)
 const errorMessage = ref('')
 
+// 预约状态对应的 Tag 类型:待到店橙、已到店蓝、取消灰、超时红。
+function reservationTagType(status: number): 'primary' | 'warning' | 'default' | 'danger' {
+  if (status === 1) return 'primary'
+  if (status === 2) return 'default'
+  if (status === 3) return 'danger'
+  return 'warning'
+}
+
 async function loadReservations() {
   // 列表刷新是取消和到店开台成功后的共同收敛点。
   isLoading.value = true
   errorMessage.value = ''
   try {
-    // await 的结果才是数组；赋值给 ref.value 后，v-for 会重新渲染。
     reservations.value = await getReservations()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '预约列表查询失败，请稍后重试'
+    errorMessage.value = error instanceof Error ? error.message : '预约列表查询失败,请稍后重试'
   } finally {
     isLoading.value = false
   }
 }
 
+// 详情改为弹层开关;重复点击同一预约只收起。
 async function showDetail(reservation: ReservationData) {
-  // 重复点击同一预约只收起详情；首次点击才发起详情请求。
-  // 可选链 ?. 在 selectedReservation 为 null 时安全返回 undefined。
   if (selectedReservation.value?.reservationId === reservation.reservationId) {
     selectedReservation.value = null
     return
   }
-
   selectedReservation.value = null
   detailLoadingId.value = reservation.reservationId
   errorMessage.value = ''
   try {
-    // 详情请求期间只锁定当前按钮，不阻塞整张列表。
     selectedReservation.value = await getReservationDetail(reservation.reservationId)
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '预约详情查询失败，请稍后重试'
+    errorMessage.value = error instanceof Error ? error.message : '预约详情查询失败,请稍后重试'
   } finally {
     detailLoadingId.value = null
   }
 }
 
 async function handleCancel(reservation: ReservationData) {
-  // canCancelReservation 是前端提示规则，confirm 再把破坏性操作交给用户确认。
-  if (!canCancelReservation(reservation.status) || !window.confirm(`确认取消预约 ${reservation.reservationNo} 吗？`)) return
-
-  // 用 ID 记录当前请求对象，模板可精确显示“取消中...”状态。
+  // showConfirmDialog 是 Promise 风格:确认 resolve、取消 reject,链式表达"确认后才发请求"。
+  if (!canCancelReservation(reservation.status)) return
+  try {
+    await showConfirmDialog({
+      title: '取消预约',
+      message: `确认取消预约 ${reservation.reservationNo} 吗?`,
+      confirmButtonText: '确认取消',
+      cancelButtonText: '再想想',
+    })
+  } catch {
+    return
+  }
   cancelLoadingId.value = reservation.reservationId
   errorMessage.value = ''
   try {
     await cancelReservation(reservation.reservationId)
     selectedReservation.value = null
+    showSuccessToast('预约已取消')
     await loadReservations()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '取消预约失败，请稍后重试'
+    const message = error instanceof Error ? error.message : '取消预约失败,请稍后重试'
+    errorMessage.value = message
+    showFailToast(message)
   } finally {
     cancelLoadingId.value = null
   }
 }
 
 async function handleCheckIn(reservation: ReservationData) {
-  // tableId 必须来自预约记录，不能让用户选择另一张桌位破坏后端匹配约束。
-  // 早返回把非法状态和重复点击拦在网络请求之前。
+  // tableId 必须来自预约记录,不能让用户选择另一张桌位破坏后端匹配约束。
   if (reservation.status !== 0 || checkInLoadingId.value !== null) return
   checkInLoadingId.value = reservation.reservationId
   errorMessage.value = ''
   try {
     sessionResult.value = await checkInReservation(reservation.reservationId, reservation.tableId)
     selectedReservation.value = null
+    showSuccessToast('到店开台成功')
     await loadReservations()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '预约到店开台失败，请稍后重试'
+    const message = error instanceof Error ? error.message : '预约到店开台失败,请稍后重试'
+    errorMessage.value = message
+    showFailToast(message)
   } finally {
     checkInLoadingId.value = null
   }
@@ -90,53 +109,135 @@ onMounted(loadReservations)
 </script>
 
 <template>
-  <section class="reservation-view">
-    <div class="reservation-heading">
-      <p class="eyebrow">顾客预约</p>
-      <h1>我的预约</h1>
-      <p>查看预约状态，或取消尚未到店的预约。</p>
-    </div>
+  <section class="my-reservations">
+    <p v-if="errorMessage" class="my-reservations-error" role="alert">{{ errorMessage }}</p>
+    <van-loading v-if="isLoading" class="my-reservations-loading" size="24px" vertical>正在查询预约...</van-loading>
+    <van-empty v-else-if="reservations.length === 0" description="当前没有预约记录">
+      <van-button round type="primary" size="small" to="/customer/reservations/create">去预约</van-button>
+    </van-empty>
 
-    <p v-if="errorMessage" class="feedback feedback-error" role="alert">{{ errorMessage }}</p>
-    <p v-if="isLoading" class="feedback" role="status">正在查询预约...</p>
-    <p v-else-if="reservations.length === 0" class="feedback" role="status">当前没有预约记录。</p>
-
-    <div v-if="sessionResult" class="session-result">
-      <p class="feedback feedback-success" role="status">预约到店开台成功，会话编号：{{ sessionResult.sessionNo }}</p>
-      <dl class="status-list">
-        <div><dt>桌位</dt><dd>{{ sessionResult.tableNo }}</dd></div>
-        <div><dt>会话状态</dt><dd>{{ sessionResult.sessionStatus === 0 ? '等待中' : '用餐中' }}</dd></div>
-      </dl>
-    </div>
-
-    <div v-else class="reservation-list" role="list" aria-label="我的预约列表">
-      <article v-for="reservation in reservations" :key="reservation.reservationId" class="reservation-card">
-        <div class="reservation-card-heading">
+    <div v-else class="my-reservations-list" role="list" aria-label="我的预约列表">
+      <article v-for="reservation in reservations" :key="reservation.reservationId" class="my-reservations-card">
+        <div class="my-reservations-card-head">
           <div>
             <strong>{{ reservation.reservationNo }}</strong>
             <span>{{ reservation.tableNo || `桌位 ${reservation.tableId}` }} · {{ reservation.peopleCount }} 人</span>
           </div>
-          <span class="reservation-status">{{ getReservationStatusLabel(reservation.status) }}</span>
+          <van-tag :type="reservationTagType(reservation.status)" round>
+            {{ getReservationStatusLabel(reservation.status) }}
+          </van-tag>
         </div>
-        <p class="reservation-time">预约时间：{{ reservation.reserveTime }}</p>
-        <div class="reservation-actions">
-          <button type="button" class="secondary-button" :disabled="detailLoadingId === reservation.reservationId" @click="showDetail(reservation)">
-            {{ detailLoadingId === reservation.reservationId ? '加载中...' : selectedReservation?.reservationId === reservation.reservationId ? '收起详情' : '查看详情' }}
-          </button>
-          <button v-if="canCancelReservation(reservation.status)" type="button" class="danger-button" :disabled="cancelLoadingId === reservation.reservationId" @click="handleCancel(reservation)">
-            {{ cancelLoadingId === reservation.reservationId ? '取消中...' : '取消预约' }}
-          </button>
-          <button v-if="reservation.status === 0" type="button" class="primary-outline-button" :disabled="checkInLoadingId === reservation.reservationId" @click="handleCheckIn(reservation)">
-            {{ checkInLoadingId === reservation.reservationId ? '开台中...' : '到店开台' }}
-          </button>
+        <p class="my-reservations-time">预约时间:{{ reservation.reserveTime }}</p>
+        <div class="my-reservations-actions">
+          <van-button size="small" plain @click="showDetail(reservation)" :loading="detailLoadingId === reservation.reservationId">
+            {{ selectedReservation?.reservationId === reservation.reservationId ? '收起详情' : '查看详情' }}
+          </van-button>
+          <van-button
+            v-if="canCancelReservation(reservation.status)"
+            size="small"
+            plain
+            type="danger"
+            :loading="cancelLoadingId === reservation.reservationId"
+            @click="handleCancel(reservation)"
+          >
+            取消预约
+          </van-button>
+          <van-button
+            v-if="reservation.status === 0"
+            size="small"
+            type="primary"
+            :loading="checkInLoadingId === reservation.reservationId"
+            loading-text="开台中..."
+            @click="handleCheckIn(reservation)"
+          >
+            到店开台
+          </van-button>
         </div>
-        <dl v-if="selectedReservation?.reservationId === reservation.reservationId" class="reservation-detail">
-          <div><dt>预约编号</dt><dd>{{ selectedReservation.reservationNo }}</dd></div>
-          <div><dt>桌位</dt><dd>{{ selectedReservation.tableNo }}</dd></div>
-          <div><dt>人数</dt><dd>{{ selectedReservation.peopleCount }} 人</dd></div>
-          <div><dt>状态</dt><dd>{{ getReservationStatusLabel(selectedReservation.status) }}</dd></div>
-        </dl>
+        <van-cell-group v-if="selectedReservation?.reservationId === reservation.reservationId" inset class="my-reservations-detail">
+          <van-cell title="预约编号" :value="selectedReservation.reservationNo" />
+          <van-cell title="桌位" :value="selectedReservation.tableNo || `桌位 ${selectedReservation.tableId}`" />
+          <van-cell title="人数" :value="`${selectedReservation.peopleCount} 人`" />
+          <van-cell title="状态" :value="getReservationStatusLabel(selectedReservation.status)" />
+        </van-cell-group>
       </article>
     </div>
+
+    <!-- 到店开台成功的结果面板:置顶显示会话信息,关闭后回到列表。 -->
+    <van-dialog
+      :show="sessionResult !== null"
+      title="到店开台成功"
+      show-cancel-button
+      confirm-button-text="去点餐"
+      cancel-button-text="关闭"
+      @confirm="sessionResult = null; $router === undefined"
+      @update:show="(value: boolean) => { if (!value) sessionResult = null }"
+    >
+      <div v-if="sessionResult" class="my-reservations-session">
+        <van-cell title="会话编号" :value="sessionResult.sessionNo" />
+        <van-cell title="桌位" :value="sessionResult.tableNo" />
+        <van-cell title="会话状态" :value="sessionResult.sessionStatus === 0 ? '等待中' : '用餐中'" />
+      </div>
+    </van-dialog>
   </section>
 </template>
+
+<style scoped>
+.my-reservations {
+  display: grid;
+  gap: var(--space-3);
+}
+.my-reservations-error {
+  background: var(--color-danger-soft);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+}
+.my-reservations-loading {
+  display: flex;
+  justify-content: center;
+  margin: var(--space-8) 0;
+}
+.my-reservations-list {
+  display: grid;
+  gap: var(--space-3);
+}
+.my-reservations-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px rgba(37, 37, 37, 0.04);
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+.my-reservations-card-head {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+.my-reservations-card-head strong {
+  display: block;
+  font-size: 0.95rem;
+}
+.my-reservations-card-head span {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+.my-reservations-time {
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  margin: 0;
+}
+.my-reservations-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.my-reservations-detail {
+  margin: var(--space-1) 0 0;
+}
+.my-reservations-session {
+  padding: var(--space-3) 0;
+}
+</style>

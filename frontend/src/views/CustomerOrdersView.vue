@@ -1,11 +1,12 @@
 <script setup lang="ts">
-// 顾客订单页：先加载摘要列表，用户展开某项时再请求详情明细。
+// 顾客订单页:先加载摘要列表,用户展开某项时再请求详情明细。
+// R4 改用 Vant:订单卡片+状态 Tag,详情展开为菜品明细单元格组。
 import { onMounted, ref } from 'vue'
 import { getOrderDetail, getOrders } from '../services/order-query'
 import type { OrderData, OrderDetailData } from '../types/api'
 import { getOrderStatusLabel } from '../utils/order-status'
 
-// 列表和当前展开详情分开存储，避免详情响应覆盖摘要列表。
+// 列表和当前展开详情分开存储,避免详情响应覆盖摘要列表。
 const orders = ref<OrderData[]>([])
 const selectedOrder = ref<OrderDetailData | null>(null)
 const isLoading = ref(true)
@@ -13,26 +14,35 @@ const detailLoadingId = ref<number | null>(null)
 const errorMessage = ref('')
 
 function formatPrice(cents: number) {
-  // 列表和详情共用同一金额转换规则，避免两处显示不一致。
+  // 列表和详情共用同一金额转换规则,避免两处显示不一致。
   return `¥${(cents / 100).toFixed(2)}`
 }
 
+// 订单状态对应的 Tag 类型:进行中暖色、完成绿、取消灰。
+function orderTagType(status: number): 'primary' | 'warning' | 'success' | 'default' {
+  if (status === 4) return 'success'
+  if (status === 5) return 'default'
+  if (status === 2 || status === 3) return 'warning'
+  return 'primary'
+}
+
+// 展示时间:后端 ISO 的 T 换成空格。
+const formatTime = (value: string) => value.replace('T', ' ')
+
 async function loadOrders() {
-  // 页面首次挂载和后续刷新都经过同一加载函数。
   isLoading.value = true
   errorMessage.value = ''
   try {
     orders.value = await getOrders()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '订单列表查询失败，请稍后重试'
+    errorMessage.value = error instanceof Error ? error.message : '订单列表查询失败,请稍后重试'
   } finally {
     isLoading.value = false
   }
 }
 
 async function showDetail(order: OrderData) {
-  // selectedOrder 是独立 ref：列表保留摘要，详情按需加载。
-  // 可选链用于处理首次点击时 selectedOrder 仍是 null 的情况。
+  // selectedOrder 是独立 ref:列表保留摘要,详情按需加载;再次点击收起。
   if (selectedOrder.value?.orderId === order.orderId) {
     selectedOrder.value = null
     return
@@ -40,10 +50,10 @@ async function showDetail(order: OrderData) {
   detailLoadingId.value = order.orderId
   errorMessage.value = ''
   try {
-    // 只有点击具体订单才查询明细，降低列表首次加载的响应体大小。
+    // 只有点击具体订单才查询明细,降低列表首次加载的响应体大小。
     selectedOrder.value = await getOrderDetail(order.orderId)
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '订单详情查询失败，请稍后重试'
+    errorMessage.value = error instanceof Error ? error.message : '订单详情查询失败,请稍后重试'
   } finally {
     detailLoadingId.value = null
   }
@@ -53,35 +63,101 @@ onMounted(loadOrders)
 </script>
 
 <template>
-  <section class="reservation-view">
-    <div class="reservation-heading">
-      <p class="eyebrow">顾客点餐</p>
-      <h1>我的订单</h1>
-      <p>查看堂食订单状态和菜品明细。</p>
-    </div>
+  <section class="my-orders">
+    <p v-if="errorMessage" class="my-orders-error" role="alert">{{ errorMessage }}</p>
+    <van-loading v-if="isLoading" class="my-orders-loading" size="24px" vertical>正在查询订单...</van-loading>
+    <van-empty v-else-if="orders.length === 0" description="当前没有订单记录">
+      <van-button round type="primary" size="small" to="/customer/menu">去点餐</van-button>
+    </van-empty>
 
-    <p v-if="errorMessage" class="feedback feedback-error" role="alert">{{ errorMessage }}</p>
-    <p v-if="isLoading" class="feedback" role="status">正在查询订单...</p>
-    <p v-else-if="orders.length === 0" class="feedback" role="status">当前没有订单记录。</p>
-
-    <div v-else class="reservation-list" role="list" aria-label="我的订单列表">
-      <article v-for="order in orders" :key="order.orderId" class="reservation-card">
-        <div class="reservation-card-heading">
+    <div v-else class="my-orders-list" role="list" aria-label="我的订单列表">
+      <article v-for="order in orders" :key="order.orderId" class="my-orders-card">
+        <div class="my-orders-card-head">
           <div>
             <strong>{{ order.orderNo }}</strong>
-            <span>{{ order.tableNo }} · {{ order.createTime }}</span>
+            <span>{{ order.tableNo }} · {{ formatTime(order.createTime) }}</span>
           </div>
-          <span class="reservation-status">{{ getOrderStatusLabel(order.status) }}</span>
+          <van-tag :type="orderTagType(order.status)" round>{{ getOrderStatusLabel(order.status) }}</van-tag>
         </div>
-        <p class="reservation-time">订单金额：{{ formatPrice(order.totalAmount) }}</p>
-        <button type="button" class="secondary-button" :disabled="detailLoadingId === order.orderId" @click="showDetail(order)">
-          {{ detailLoadingId === order.orderId ? '加载中...' : selectedOrder?.orderId === order.orderId ? '收起详情' : '查看详情' }}
-        </button>
-        <dl v-if="selectedOrder?.orderId === order.orderId" class="reservation-detail">
-          <div v-for="item in selectedOrder.items" :key="item.dishId"><dt>{{ item.dishName }} × {{ item.quantity }}</dt><dd>{{ formatPrice(item.amount) }}</dd></div>
-          <div><dt>订单总额</dt><dd>{{ formatPrice(selectedOrder.totalAmount) }}</dd></div>
-        </dl>
+        <p class="my-orders-amount">订单金额:<strong>{{ formatPrice(order.totalAmount) }}</strong></p>
+        <van-button size="small" plain :loading="detailLoadingId === order.orderId" @click="showDetail(order)">
+          {{ selectedOrder?.orderId === order.orderId ? '收起明细' : '查看明细' }}
+        </van-button>
+
+        <van-cell-group v-if="selectedOrder?.orderId === order.orderId" inset class="my-orders-detail">
+          <van-cell
+            v-for="item in selectedOrder.items"
+            :key="item.dishId"
+            :title="`${item.dishName} × ${item.quantity}`"
+            :value="formatPrice(item.amount)"
+          />
+          <van-cell title="订单总额" :value="formatPrice(selectedOrder.totalAmount)" class="my-orders-total" />
+        </van-cell-group>
       </article>
     </div>
   </section>
 </template>
+
+<style scoped>
+.my-orders {
+  display: grid;
+  gap: var(--space-3);
+}
+.my-orders-error {
+  background: var(--color-danger-soft);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+}
+.my-orders-loading {
+  display: flex;
+  justify-content: center;
+  margin: var(--space-8) 0;
+}
+.my-orders-list {
+  display: grid;
+  gap: var(--space-3);
+}
+.my-orders-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px rgba(37, 37, 37, 0.04);
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  padding: var(--space-4);
+}
+.my-orders-card-head {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-2);
+  justify-content: space-between;
+  width: 100%;
+}
+.my-orders-card-head strong {
+  display: block;
+  font-size: 0.95rem;
+}
+.my-orders-card-head span {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+.my-orders-amount {
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  margin: 0;
+}
+.my-orders-amount strong {
+  color: var(--color-brand);
+  font-size: 1rem;
+}
+.my-orders-detail {
+  margin: var(--space-1) 0 0;
+  width: 100%;
+}
+.my-orders-total :deep(.van-cell__value) {
+  color: var(--color-brand);
+  font-weight: 700;
+}
+</style>

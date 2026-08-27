@@ -52,11 +52,18 @@
 - 角色显隐:`RouteMeta.requiresManager` + 路由守卫(店员访问店长页重定向回订单页);侧栏菜单 computed 按角色过滤,店员看不到"桌位维护/员工管理"入口。后端拦截器仍是最终防线。
 - 验收:`vue-tsc --noEmit` 与 `vite build` 通过;店长/店员双账号浏览器走查通过(店员菜单缺省两项+URL 直达被拦、店长七项菜单齐全、员工页两账号渲染、会话筛选含空状态、详情抽屉、桌位新增弹窗校验与真实创建、删除确认链)。验收数据已清理(测试桌位与店员账号已删)。详见 [`../records/reviews/前端二期R3管理端拆分验收记录.md`](../records/reviews/前端二期R3管理端拆分验收记录.md)。
 
-### R4 Vant 引入 + 顾客端全部页面(待启动)
+### R4 Vant 引入 + 顾客端全部页面(已完成,2026-08-27)
 
-- 安装 `vant`;底部 VanTabbar;菜单页 VanTabs/VanStepper/底部 VanSubmitBar 购物车栏;预约 VanForm;列表 VanList/VanTag;账户页改为真实账户中心。
-- `index.html` title/lang 修正;清理无用 assets。
-- 验收:390x844 为主走查全流程(登录→开台→点餐→下单→订单)。
+- 安装 `vant@4.10.0`(全量引入);`main.ts` 注册 Vant 插件;`tokens.css` 增加 Vant 主题桥接(`--van-primary-color` 等映射项目令牌)。图标用 Vant 内置字体图标名(字符串),未引入独立图标包(`@vant/icons` 是字体配置包、`@vant/icons-vue` 不存在)。
+- `index.html` 修正 `lang="zh-CN"`、标题"膳畅管家"、`viewport-fit=cover` 与 `theme-color`;清理无引用的 `hero.png/vite.svg/vue.svg/icons.svg`。
+- CustomerLayout:底部导航改 VanTabbar(四 Tab 带图标,`placeholder` 占位,"首页"精确匹配高亮)。
+- 菜单点餐页:VanTabs 分类、菜品卡片(VanImage 失败占位+VanStepper 圆形加减+`@click.stop` 防误触详情)、底部 VanSubmitBar 购物车栏(`bottom=50` 叠在 Tabbar 之上,明细+合计+下单)、无会话 VanNoticeBar 提示(点击跳开台)、菜品详情 VanActionSheet 半屏、下单结果面板。
+- 预约创建页:桌位卡片选择+VanForm/VanField rules 校验(人数容量/时间未来)+原生 datetime-local 内嵌 Field、结果面板。
+- 会话页:会话恢复面板与桌位卡片+开台按钮、Toast 反馈。
+- 我的预约/我的订单:卡片+VanTag 状态、详情内嵌 cell-group、showConfirmDialog 替代原生 confirm、空状态 VanEmpty 带引导按钮。
+- 账户页:从"认证验证页"升级为账户中心(头像昵称卡+服务入口 cell+用户 ID+退出登录确认)。
+- 验收中发现并修复两个缺陷:1) 预约页模板残留内联 TS 断言表达式导致组件渲染中断;2) VanField 校验器绑定在无 v-model 的字段上拿不到表单值(时间校验恒失败)。
+- 验收:`vue-tsc --noEmit` 与 `vite build` 通过;390x844 全流程浏览器走查通过:首页/Tabbar 图标、菜单页(提示条→开台→返回→加购 2 份→SubmitBar 合计 ¥24.68→下单成功面板)、我的订单(6 笔+明细展开)、账户中心(头像/服务入口/退出)、我的预约列表、预约创建完整链(选桌→填时间→创建成功含编号)。验收数据已清理(会话已清台、测试预约已取消)。详见 [`../records/reviews/前端二期R4顾客端Vant验收记录.md`](../records/reviews/前端二期R4顾客端Vant验收记录.md)。
 
 ### R5 收尾 + 文档同步(待启动)
 
