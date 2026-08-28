@@ -92,7 +92,7 @@ onMounted(load)
 
     <div class="admin-toolbar">
       <el-button type="primary" :icon="Plus" @click="openCreate">新增员工</el-button>
-      <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+      <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
     </div>
 
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
@@ -129,7 +129,7 @@ onMounted(load)
             :type="row.status === 1 ? 'warning' : 'success'"
             :disabled="actionId !== null"
             :loading="actionId === row.employeeId"
-            @click="toggleEnabled(row)"
+            @click="toggleEnabled(row as EmployeeData)"
           >
             {{ row.status === 1 ? '禁用' : '启用' }}
           </el-button>

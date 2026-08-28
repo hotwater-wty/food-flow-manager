@@ -1,14 +1,13 @@
-// 顾客端应用入口:创建 Pinia、恢复顾客认证状态,注册 Vant,再挂载 Vue 根组件。
-// 拆分后本应用只装 Vant;商户端的 Element Plus 在 apps/admin。
+// 顾客端应用入口:创建 Pinia、恢复顾客认证状态,再挂载 Vue 根组件。
+// F1 起模板组件按需引入(unplugin-vue-components + VantResolver):
+// 不再 app.use(Vant) 全量注册;函数式 API(showToast 系)的使用不受影响。
+// 注:Vant 函数式组件的样式依赖保留全量 CSS 引入,收益与复杂度权衡后按整体引入处理。
 import { createApp } from 'vue'
-// Vant:全量引入,服务顾客端移动交互。样式导入顺序:先库后令牌,
-// tokens.css 里的 --van-* 覆盖才能在同等优先级下生效。
+// 先引库样式再引令牌,tokens.css 里的 --van-* 覆盖才能在同等优先级下生效。
 import 'vant/lib/index.css'
 // 先引设计令牌再引全局样式,保证 style.css 里的 var(--xxx) 有定义。
 import './styles/tokens.css'
 import './style.css'
-// Vant 函数式组件(toast/dialog)依赖的样式与上下文;use 后 showToast 等 API 可全局使用。
-import Vant from 'vant'
 import App from './App.vue'
 import { router } from './router'
 import { createPinia } from 'pinia'
@@ -26,5 +25,4 @@ useAuthStore(pinia).restore()
 createApp(App)
   .use(pinia)
   .use(router)
-  .use(Vant)
   .mount('#app')

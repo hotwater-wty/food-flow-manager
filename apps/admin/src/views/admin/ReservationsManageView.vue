@@ -69,7 +69,7 @@ onMounted(load)
     </div>
 
     <div class="admin-toolbar">
-      <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+      <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
     </div>
 
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
@@ -92,14 +92,14 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="操作" width="140" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+          <el-button link type="primary" @click="openDetail(row as ReservationAdminData)">详情</el-button>
           <el-button
             v-if="canCancelReservation(row.status)"
             link
             type="danger"
             :disabled="actionId !== null"
             :loading="actionId === row.reservationId"
-            @click="cancel(row)"
+            @click="cancel(row as ReservationAdminData)"
           >
             取消预约
           </el-button>

@@ -67,7 +67,7 @@ onMounted(load)
     </div>
 
     <div class="admin-toolbar">
-      <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+      <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
       <label class="auto-refresh-toggle">
         <el-switch v-model="autoRefresh" size="small" />
         每 20 秒自动刷新

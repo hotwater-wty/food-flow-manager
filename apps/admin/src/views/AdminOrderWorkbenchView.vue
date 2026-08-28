@@ -117,7 +117,7 @@ onMounted(load)
       <el-select v-model="statusFilter" class="status-select" placeholder="全部状态" @change="reloadFromFirstPage">
         <el-option v-for="option in statusOptions" :key="option.label" :label="option.label" :value="option.value" />
       </el-select>
-      <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+      <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
       <label class="auto-refresh-toggle">
         <el-switch v-model="autoRefresh" size="small" />
         每 20 秒自动刷新
@@ -142,14 +142,14 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="操作" width="190" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+          <el-button link type="primary" @click="openDetail(row as AdminOrderData)">详情</el-button>
           <el-button
             v-if="row.status >= 1 && row.status <= 3"
             link
             type="primary"
             :disabled="actionId !== null"
             :loading="actionId === row.orderId"
-            @click="advance(row)"
+            @click="advance(row as AdminOrderData)"
           >
             {{ advanceLabel(row.status) }}
           </el-button>

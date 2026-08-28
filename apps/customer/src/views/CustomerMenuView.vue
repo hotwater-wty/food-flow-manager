@@ -1,23 +1,25 @@
 <script setup lang="ts">
-// 顾客菜单页:后端菜品是事实,购物车是当前页面内等待提交的临时状态。
+// 顾客菜单页:后端菜品是事实,购物车是跨页面存活的应用状态(见 stores/cart.ts)。
 // R4 改用 Vant:分类用 VanTabs,菜品卡片带 VanStepper 加减数量,
 // 底部用 VanSubmitBar 购物车栏(盖在 Tabbar 之上),菜品详情用 VanActionSheet 半屏弹出。
+// F5 起购物车入 Pinia:切到订单/预约页再回来,已加购内容不丢失。
 import { computed, onMounted, ref } from 'vue'
 import { showFailToast, showSuccessToast } from 'vant'
 import { getDishCategories, getDishDetail, getDishes } from '../services/dish'
 import { getCurrentSession } from '../services/session'
 import { createOrder } from '../services/order'
+import { useCartStore } from '../stores/cart'
 import type { DishCategoryData, DishData, DiningSessionData, OrderCreateData } from '@foodflow/shared/types/api'
 import { formatPrice } from '@foodflow/shared/utils/format'
 
-// categories/dishes 保存后端目录;cart 只保存 dishId -> quantity 的页面草稿。
+const cartStore = useCartStore()
+
+// categories/dishes 保存后端目录;数量映射与派生明细都在 cart store 中。
 const categories = ref<DishCategoryData[]>([])
 const dishes = ref<DishData[]>([])
-const dishCatalog = ref<Record<number, DishData>>({})
 // VanTabs 的 name 绑定数字 ID;0 表示"全部"分类(后端不传 categoryId)。
 const ALL_CATEGORY = 0
 const activeCategory = ref<number>(ALL_CATEGORY)
-const cart = ref<Record<number, number>>({})
 const isLoading = ref(true)
 const isFiltering = ref(false)
 const errorMessage = ref('')
@@ -28,25 +30,15 @@ const orderResult = ref<OrderCreateData | null>(null)
 const detailVisible = ref(false)
 const selectedDish = ref<DishData | null>(null)
 
-// computed 会追踪 cart 和 dishCatalog;任一变化时自动重新生成提交/展示列表。
-// Object.keys 返回字符串数组,map(Number) 将对象键恢复成后端需要的数字 ID。
-const cartItems = computed(() => Object.keys(cart.value).map(Number).map((dishId) => dishCatalog.value[dishId]).filter((dish): dish is DishData => dish !== undefined))
-// reduce 从 0 开始累加数量;该 computed 会在 cart.value 改变时自动重新计算。
-const cartTotal = computed(() => cartItems.value.reduce((total, dish) => total + dish.price * (cart.value[dish.id] ?? 0), 0))
-// 购物车栏明细文案:"菜名 × 2"逐项拼接,空车时显示引导语。
-const cartSummary = computed(() =>
-  cartItems.value.length === 0
-    ? '先选一些菜品吧'
-    : cartItems.value.map((dish) => `${dish.name} × ${cart.value[dish.id]}`).join('、'),
-)
+// 派生量全部来自 cart store;computed 保持对 store 的响应式追踪。
+const cartItems = computed(() => cartStore.items)
+const cartTotal = computed(() => cartStore.totalPrice)
+const cartSummary = computed(() => cartStore.summary)
+const cartQuantities = computed(() => cartStore.quantities)
 
-// VanStepper 的 change 事件把新数量写回 cart;数量归零时删除 key。
+// VanStepper 的 change 事件把新数量写入 store;数量归零时 store 内部移除该 key。
 function onQuantityChange(dish: DishData, quantity: number) {
-  if (quantity <= 0) {
-    delete cart.value[dish.id]
-  } else {
-    cart.value[dish.id] = quantity
-  }
+  cartStore.setQuantity(dish.id, quantity)
 }
 
 // VanTabs 的 click-tab 事件在切换后触发;name 即分类 ID。
@@ -57,8 +49,8 @@ async function onCategoryChange() {
   try {
     const result = await getDishes(activeCategory.value === ALL_CATEGORY ? undefined : activeCategory.value)
     dishes.value = result
-    // forEach 逐项把新列表合并进目录,购物车中已有商品仍能找到价格和名称。
-    result.forEach((dish) => { dishCatalog.value[dish.id] = dish })
+    // 新列表合并进 store 目录,购物车中已有商品仍能找到价格和名称。
+    cartStore.syncCatalog(result)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '菜品查询失败,请稍后重试'
   } finally {
@@ -75,7 +67,7 @@ async function loadMenu() {
     categories.value = categoryData
     dishes.value = dishData
     currentSession.value = session
-    dishData.forEach((dish) => { dishCatalog.value[dish.id] = dish })
+    cartStore.syncCatalog(dishData)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '菜单查询失败,请稍后重试'
   } finally {
@@ -95,12 +87,11 @@ async function handleCreateOrder() {
   errorMessage.value = ''
   orderResult.value = null
   try {
-    // cartItems 被映射成后端 OrderItemDTO,只发送 ID 和数量,不信任前端金额。
-    // map 只构造后端允许的字段;价格由服务端根据 dishId 重新读取。
+    // 只发送 ID 和数量,不信任前端金额;价格由服务端根据 dishId 重新读取。
     orderResult.value = await createOrder(currentSession.value.sessionId, {
-      items: cartItems.value.map((dish) => ({ dishId: dish.id, quantity: cart.value[dish.id] ?? 0 })),
+      items: cartItems.value.map((dish) => ({ dishId: dish.id, quantity: cartQuantities.value[dish.id] ?? 0 })),
     })
-    cart.value = {}
+    cartStore.clear()
     showSuccessToast(`下单成功:${orderResult.value.orderNo}`)
   } catch (error) {
     const message = error instanceof Error ? error.message : '创建订单失败,请稍后重试'
@@ -179,7 +170,7 @@ onMounted(loadMenu)
                 <!-- 点击卡片本身开详情;Stepper 区 stop 阻止冒泡,避免加减时误触详情。 -->
                 <div class="menu-dish-stepper" @click.stop>
                   <van-stepper
-                    :model-value="cart[dish.id] ?? 0"
+                    :model-value="cartQuantities[dish.id] ?? 0"
                     min="0"
                     theme="round"
                     button-size="26"
@@ -258,7 +249,8 @@ onMounted(loadMenu)
   padding: var(--space-3);
 }
 .menu-dish-thumb {
-  background: var(--color-bg-admin);
+  /* 顾客端不再使用 --color-bg-admin(拆分后令牌已删),改用暖白的加深近似。 */
+  background: var(--color-border-soft);
   flex: 0 0 auto;
 }
 .menu-dish-thumb--fallback {

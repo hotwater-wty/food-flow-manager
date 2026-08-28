@@ -1,16 +1,15 @@
-// 商户端应用入口:创建 Pinia、恢复员工认证状态,注册 Element Plus,再挂载 Vue 根组件。
-// 拆分后本应用只装 Element Plus;顾客端的 Vant 在 apps/customer。
+// 商户端应用入口:创建 Pinia、恢复员工认证状态,再挂载 Vue 根组件。
+// F1 起组件按需引入:模板中的 El 组件由 unplugin-vue-components 自动注册并按需带样式,
+// 这里不再 app.use(ElementPlus) 全量注册。函数式 API(ElMessage/ElMessageBox/ElLoading)
+// 不经过模板编译,其样式必须在此显式引入;指令式 v-loading 依赖 ElLoading 样式。
 import { createApp } from 'vue'
-// Element Plus:全量引入(app.use 注册全部组件),省去逐组件按需注册的构建配置;
-// 体积优化留作后续可选任务。组件样式必须先于设计令牌加载,
-// tokens.css 里的 --el-* 覆盖才能在同等优先级下生效。
-import 'element-plus/dist/index.css'
-// 先引设计令牌再引全局样式,保证 style.css 里的 var(--xxx) 有定义。
+import 'element-plus/es/components/message/style/css'
+import 'element-plus/es/components/message-box/style/css'
+import 'element-plus/es/components/loading/style/css'
+// 按需引入后组件样式不再统一先于令牌加载;tokens.css 的 --el-* 变量是 CSS 自定义属性,
+// 只依赖 :root 存在,与样式的加载顺序无关,主题覆盖依然成立。
 import './styles/tokens.css'
 import './style.css'
-import ElementPlus from 'element-plus'
-// 默认语言是英文;引入官方中文语言包,分页"共 N 条"、弹窗按钮等文案才是中文。
-import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import App from './App.vue'
 import { router } from './router'
 import { createPinia } from 'pinia'
@@ -25,8 +24,8 @@ const pinia = createPinia()
 useAdminAuthStore(pinia).restore()
 
 // createApp 创建 Vue 应用实例;use 注册插件;mount 把组件树挂到 index.html 的 #app 节点。
+// locale 通过 ConfigProvider 组件注入(见 App.vue),不再是 app.use 的全局选项。
 createApp(App)
   .use(pinia)
   .use(router)
-  .use(ElementPlus, { locale: zhCn })
   .mount('#app')

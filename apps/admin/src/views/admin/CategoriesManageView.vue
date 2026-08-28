@@ -105,7 +105,7 @@ onMounted(load)
 
     <div class="admin-toolbar">
       <el-button type="primary" :icon="Plus" @click="openCreate">新增分类</el-button>
-      <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+      <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
     </div>
 
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
@@ -123,11 +123,11 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-          <el-button link :type="row.status === 1 ? 'warning' : 'success'" :disabled="actionId !== null" @click="toggleEnabled(row)">
+          <el-button link type="primary" @click="openEdit(row as DishCategoryData)">编辑</el-button>
+          <el-button link :type="row.status === 1 ? 'warning' : 'success'" :disabled="actionId !== null" @click="toggleEnabled(row as DishCategoryData)">
             {{ row.status === 1 ? '禁用' : '启用' }}
           </el-button>
-          <el-button link type="danger" :disabled="actionId !== null" @click="remove(row)">删除</el-button>
+          <el-button link type="danger" :disabled="actionId !== null" @click="remove(row as DishCategoryData)">删除</el-button>
         </template>
       </el-table-column>
       <template #empty>
