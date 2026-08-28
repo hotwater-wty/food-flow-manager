@@ -4,7 +4,7 @@
 
 ## 当前主线
 
-后端 V1/V2 核心业务和工程增强已完成并冻结扩张。前端一期(阶段 0-6,2026-08-24 收口)与**前端二期:布局重构与视觉统一(R1-R5,2026-08-27 收口)**均已完成:双布局骨架与设计令牌落地、管理端 Element Plus 整体改版(订单/会话工作台、资料维护五页拆分、店长/店员角色显隐)、顾客端 Vant 移动化(Tabbar 导航、点餐购物车栏、预约表单校验、账户中心)。**当前进行中:前端三期——体验完善与商户端仪表盘(2026-08-28 立项)**,切片 P3-R1 店长禁用限制、P3-R2 路由过渡、P3-R3 数据刷新机制、P3-R4 共享层整理、P3-R5 商户端仪表盘(含最小统计端点)、P3-R6 双端拆分成本评估,尚未开工任何切片;计划与审查结论详见 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md),二期复盘见 [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) 与 [`records/reviews/前端二期阶段复盘.md`](records/reviews/前端二期阶段复盘.md)。管理端使用独立员工 JWT。
+后端 V1/V2 核心业务和工程增强已完成并冻结扩张(三期新增的只读统计端点除外)。前端一期(阶段 0-6,2026-08-24 收口)、二期(布局重构与视觉统一,R1-R5,2026-08-27 收口)与**三期:体验完善与商户端仪表盘(P3-R1 至 P3-R6,2026-08-28 收口)**均已完成。三期交付:店长禁用限制(前端标灰+后端守卫,`disableEmployee` 拒绝店长与自我禁用)、路由切换过渡(管理端 fade-transform/顾客端轻量 fade)、数据自动刷新(`useAutoRefresh` 组合式函数:20 秒轮询+可见性暂停+聚焦刷新,静默加载不惊扰用户)、共享层整理(`formatPrice`/状态标签映射收敛、工作台统一 `usePagedList`、分类下拉取全量)、商户端仪表盘(`GET /api/admin/statistics/overview` + 经营概览页,零依赖呈现)、双端拆分成本评估(`frontend/08-双端拆分准备评估.md`)。当前无进行中的开发阶段;候选池事项见三期计划第 5 节,不自动开工。进度与复盘详见 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md)。管理端使用独立员工 JWT。
 
 ## 当前权威资料
 
@@ -19,7 +19,8 @@
 | AI 协作边界 | [`frontend/07-AI协作与验收规则.md`](frontend/07-AI协作与验收规则.md) | 任务边界、证据和人工控制点 |
 | 一期开发过程记录 | [`planning/frontend-development-plan.md`](planning/frontend-development-plan.md) | 一期历史记录,已标注收口 |
 | 二期切片计划与审查结论 | [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) | 已收口的历史计划,含首版覆盖审查结论 |
-| **当前阶段计划(前端三期)** | [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md) | 进行中:问题记录审查、切片清单、范围边界与候选池 |
+| 三期计划与问题记录审查 | [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md) | 已收口:切片清单、验收证据索引与候选池 |
+| 双端拆分准备评估 | [`frontend/08-双端拆分准备评估.md`](frontend/08-双端拆分准备评估.md) | 耦合点清单、拆分步骤草案与待决策项 |
 
 ## 归档判断
 
