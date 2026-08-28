@@ -1,0 +1,12 @@
+{
+  "name": "food-flow-manager",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev:admin": "pnpm --filter @foodflow/admin dev",
+    "dev:customer": "pnpm --filter @foodflow/customer dev",
+    "type-check": "pnpm -r type-check",
+    "build": "pnpm -r build",
+    "verify:api": "node apps/admin/scripts/smoke-api.mjs"
+  }
+}
