@@ -4,7 +4,7 @@
 
 ## 当前主线
 
-后端 V1/V2 核心业务和工程增强已完成并冻结扩张(三期新增的只读统计端点除外)。前端一期(纵向业务闭环)、二期(布局重构与视觉统一)、三期(体验完善与商户端仪表盘)均已收口。**前端已于 2026-08-28 拆分为 pnpm workspace 双应用**:`apps/customer`(顾客端,Vant,dev 5174)与 `apps/admin`(商户端,Element Plus,dev 5173),共享契约包 `packages/shared`(types/api + utils);两端独立路由与请求层,旧地址 `/customer/**`、`/admin/**` 自动去前缀重定向,互通链接已全部移除;生产双域名部署(nginx)待单独授权。当前无进行中的开发阶段;候选事项见三期计划第 5 节与各复盘,不自动开工。进度详见 [`planning/frontend-split-plan.md`](planning/frontend-split-plan.md)(拆分)与 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md)(三期)。管理端使用独立员工 JWT。
+后端 V1/V2 核心业务和工程增强已完成并冻结扩张(三期新增的只读统计端点除外)。前端一期(纵向业务闭环)、二期(布局重构与视觉统一)、三期(体验完善与商户端仪表盘)均已收口。**前端已于 2026-08-28 拆分为 pnpm workspace 双应用**:`apps/customer`(顾客端,Vant,dev 5174)与 `apps/admin`(商户端,Element Plus,dev 5173),共享契约包 `packages/shared`(types/api + utils);两端独立路由与请求层,旧地址 `/customer/**`、`/admin/**` 自动去前缀重定向,互通链接已全部移除;生产双域名部署(nginx)待单独授权。**同日完成第二批前端优化**:组件库按需引入与分包(admin JS gzip 约 351→203KB、customer 92KB)、购物车入 Pinia、双端网络错误提示、ESLint 9 + Prettier(workspace 根,`pnpm lint`)、shared 包 vitest 单测(`pnpm test`,9 例)、Playwright E2E 冒烟(`pnpm test:e2e`,双端 10 项断言)。当前无进行中的开发阶段;候选事项见 [`planning/后续发展建议清单.md`](planning/后续发展建议清单.md)(含已核实结论:F4 顾客端分页需后端先行,见 B1),不自动开工。进度详见 [`planning/frontend-split-plan.md`](planning/frontend-split-plan.md)(拆分)与 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md)(三期)。管理端使用独立员工 JWT。
 
 ## 当前权威资料
 

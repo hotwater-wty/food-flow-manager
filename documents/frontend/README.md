@@ -2,11 +2,11 @@
 
 这里记录 `food-flow-manager` 前端补建之前的产品、交互、工程和 AI 协作决策。
 
-> 文档状态：当前目标规格
-> 实现状态：根目录 `frontend/` 已完成 Vue 3 + TypeScript + Vite 初始化，并已接入顾客注册/登录、受保护路由、桌位查询、预约创建提交、预约列表/详情/取消、模拟扫码开台、预约到店开台、菜单/详情、内存购物车、订单创建/列表/详情，以及员工认证、管理端订单/会话和资料维护工作台
+> 文档状态：当前事实(2026-08-28 更新)
+> 实现状态：前端已拆分为 pnpm workspace 双应用——`apps/customer`(顾客端,Vant,dev 5174)与 `apps/admin`(商户端,Element Plus,dev 5173),共享契约包 `packages/shared`;已完成顾客注册/登录、预约/开台、点餐购物车(已入 Pinia)、订单、经营概览仪表盘、订单/会话工作台与资料维护,并通过 E2E 冒烟
 > 当前后端事实入口：[`../architecture/backend/核心接口清单设计.md`](../architecture/backend/核心接口清单设计.md)
 
-正式前端工程位于项目根目录的 `frontend/`，当前源码和依赖配置已存在；实现状态以 `documents/planning/frontend-development-plan.md` 与真实代码为准。
+前端工程位于仓库根目录 `apps/` 与 `packages/shared/`;当前计划见 `documents/planning/`,一期历史记录保留在 `06-纵向切片开发计划.md`。
 
 ## 当前结论
 
@@ -31,7 +31,10 @@
 ## 开发入口
 
 ```bash
-cd frontend
+# 仓库根目录安装与启动(本机无全局 pnpm 时用 npx)
+npx pnpm@11.19.0 install
+npx pnpm@11.19.0 dev:customer   # 顾客端 http://localhost:5174
+npx pnpm@11.19.0 dev:admin      # 商户端 http://localhost:5173
 pnpm install
 pnpm dev
 ```
