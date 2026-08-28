@@ -1,10 +1,10 @@
 # 当前文档状态
 
-> 更新日期:2026-08-27
+> 更新日期:2026-08-28
 
 ## 当前主线
 
-后端 V1/V2 核心业务和工程增强已完成并冻结扩张。前端一期(阶段 0-6,2026-08-24 收口)与**前端二期:布局重构与视觉统一(R1-R5,2026-08-27 收口)**均已完成:双布局骨架与设计令牌落地、管理端 Element Plus 整体改版(订单/会话工作台、资料维护五页拆分、店长/店员角色显隐)、顾客端 Vant 移动化(Tabbar 导航、点餐购物车栏、预约表单校验、账户中心);二期收尾时修正类型检查空验证(`vue-tsc -b` 替换 `--noEmit`)并修复暴露的类型错误与走查缺陷(Tabbar 高亮、ISO 时间口径、菜品分类列首屏翻译)。当前无进行中的开发阶段;启动新工作前先另立计划并核对真实后端契约。进度与复盘详见 [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) 与 [`records/reviews/前端二期阶段复盘.md`](records/reviews/前端二期阶段复盘.md)。管理端使用独立员工 JWT。
+后端 V1/V2 核心业务和工程增强已完成并冻结扩张。前端一期(阶段 0-6,2026-08-24 收口)与**前端二期:布局重构与视觉统一(R1-R5,2026-08-27 收口)**均已完成:双布局骨架与设计令牌落地、管理端 Element Plus 整体改版(订单/会话工作台、资料维护五页拆分、店长/店员角色显隐)、顾客端 Vant 移动化(Tabbar 导航、点餐购物车栏、预约表单校验、账户中心)。**当前进行中:前端三期——体验完善与商户端仪表盘(2026-08-28 立项)**,切片 P3-R1 店长禁用限制、P3-R2 路由过渡、P3-R3 数据刷新机制、P3-R4 共享层整理、P3-R5 商户端仪表盘(含最小统计端点)、P3-R6 双端拆分成本评估,尚未开工任何切片;计划与审查结论详见 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md),二期复盘见 [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) 与 [`records/reviews/前端二期阶段复盘.md`](records/reviews/前端二期阶段复盘.md)。管理端使用独立员工 JWT。
 
 ## 当前权威资料
 
@@ -19,6 +19,7 @@
 | AI 协作边界 | [`frontend/07-AI协作与验收规则.md`](frontend/07-AI协作与验收规则.md) | 任务边界、证据和人工控制点 |
 | 一期开发过程记录 | [`planning/frontend-development-plan.md`](planning/frontend-development-plan.md) | 一期历史记录,已标注收口 |
 | 二期切片计划与审查结论 | [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) | 已收口的历史计划,含首版覆盖审查结论 |
+| **当前阶段计划(前端三期)** | [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md) | 进行中:问题记录审查、切片清单、范围边界与候选池 |
 
 ## 归档判断
 

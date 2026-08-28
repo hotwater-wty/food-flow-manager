@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.constant.JwtClaimConstants;
+import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.enums.EmployeeRoleEnum;
 import com.foodflow.common.enums.EmployeeStatusEnum;
 import com.foodflow.common.enums.LoginTypeEnum;
@@ -180,6 +181,14 @@ public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> i
     @Override
     public void disableEmployee(Long employeeId) {
         Employee employee = getExistingEmployee(employeeId);
+        // 守卫 1：店长是启停操作的唯一执行者，禁用后无人能恢复，直接拒绝（前端按钮同步标灰）。
+        if (employee.getRole() == EmployeeRoleEnum.MANAGER) {
+            throw new BusinessException("店长账号不可禁用");
+        }
+        // 守卫 2：不允许禁用当前登录的账号，避免操作者把自己锁在管理端之外。
+        if (employeeId.equals(LoginContext.getEmployeeId())) {
+            throw new BusinessException("不能禁用当前登录的账号");
+        }
         if (employee.getStatus() == EmployeeStatusEnum.DISABLED) {
             throw new BusinessException("员工账号已禁用");
         }

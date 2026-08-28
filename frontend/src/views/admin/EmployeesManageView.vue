@@ -87,7 +87,7 @@ onMounted(load)
   <section class="admin-page">
     <div class="admin-page-heading">
       <h1>员工管理</h1>
-      <p>创建员工账号并管理启停;禁用的员工无法登录管理端。本页仅店长可用。</p>
+      <p>创建员工账号并管理启停;禁用的员工无法登录管理端。店长账号不可禁用。本页仅店长可用。</p>
     </div>
 
     <div class="admin-toolbar">
@@ -113,7 +113,18 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="操作" width="110" fixed="right">
         <template #default="{ row }">
+          <!-- 店长行不可禁用：按钮标灰并说明原因，后端 disableEmployee 也有角色守卫兜底。 -->
+          <el-tooltip
+            v-if="row.role === 2 && row.status === 1"
+            content="店长账号不可禁用"
+            placement="top"
+          >
+            <span>
+              <el-button link type="warning" disabled>禁用</el-button>
+            </span>
+          </el-tooltip>
           <el-button
+            v-else
             link
             :type="row.status === 1 ? 'warning' : 'success'"
             :disabled="actionId !== null"
