@@ -7,17 +7,13 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { getAdminOrderDetail, getAdminOrders, updateOrderStatus } from '../services/admin-order'
 import type { AdminOrderData, OrderDetailData } from '../types/api'
-import { getOrderStatusLabel } from '../utils/order-status'
+import { getOrderStatusLabel, getOrderTagKind } from '../utils/order-status'
+import { formatDateTime, formatPrice } from '../utils/format'
+import { usePagedList } from '../composables/use-pagedList'
 import { useAutoRefresh } from '../composables/use-autoRefresh'
 
 // 页大小与后端约定一致;服务层固定传 pageSize=10。
 const PAGE_SIZE = 10
-
-const orders = ref<AdminOrderData[]>([])
-const pageNo = ref(1)
-const total = ref(0)
-const loading = ref(true)
-const errorMessage = ref('')
 
 // 状态筛选用空字符串表示"全部":el-option 的 value 不接受 undefined,
 // 服务层调用前再把 '' 翻译回 undefined(不携带筛选参数)。
@@ -31,6 +27,13 @@ const statusOptions: Array<{ label: string; value: number | '' }> = [
   { label: '已取消', value: 5 },
 ]
 
+// 三期 R4 改用 usePagedList:分页状态机与静默加载都交给组合式函数,
+// 闭包捕获 statusFilter,筛选值变化后重新 load 即携带新的查询参数。
+const { records: orders, pageNo, total, loading, errorMessage, load, handlePageChange, reloadFromFirstPage } =
+  usePagedList<AdminOrderData>((page) =>
+    getAdminOrders(page, statusFilter.value === '' ? undefined : statusFilter.value),
+  )
+
 // 详情抽屉:drawerVisible 控制开合,detailLoading 区分"加载中"与"已加载"。
 const drawerVisible = ref(false)
 const detailLoading = ref(false)
@@ -39,65 +42,11 @@ const detailData = ref<OrderDetailData | null>(null)
 // 写操作锁:记录正在推进的订单 ID,并让整页其他推进按钮暂时禁用,避免并发写请求。
 const actionId = ref<number | null>(null)
 
-// 后端金额是整数分;只在展示边界转换为两位小数。
-const formatPrice = (cents: number) => `¥${(cents / 100).toFixed(2)}`
-// 后端时间形如 2026-08-24T22:18:56,展示时把 T 换成空格。
-const formatTime = (value: string) => value.replace('T', ' ')
-
-// 状态映射为 Tag 颜色:进行中黄色系、完成绿色、取消灰色,颜色和文字同时呈现。
-function orderTagType(status: number): 'primary' | 'warning' | 'success' | 'info' {
-  if (status === 4) return 'success'
-  if (status === 5) return 'info'
-  if (status === 2 || status === 3) return 'warning'
-  return 'primary'
-}
-
 // 推进按钮文案由当前状态推导;只允许相邻状态,跳级会被后端拒绝。
 function advanceLabel(status: number) {
   if (status === 1) return '开始制作'
   if (status === 2) return '标记已上齐'
   return '完成订单'
-}
-
-// 列表请求更新 records 和 total;分页组件据此渲染页码。
-// silent 表示自动刷新/聚焦刷新触发的静默加载:不点亮加载遮罩,失败只记录不惊扰用户。
-async function load(options?: { silent?: boolean }) {
-  if (!options?.silent) {
-    loading.value = true
-    errorMessage.value = ''
-  }
-  try {
-    // '' 表示全部;此时不传 status,由后端返回所有状态。
-    const status = statusFilter.value === '' ? undefined : statusFilter.value
-    const result = await getAdminOrders(pageNo.value, status)
-    orders.value = result.records
-    total.value = result.total
-  } catch (error) {
-    // unknown 错误经过 instanceof Error 类型收窄后才能读取 message。
-    if (options?.silent) {
-      console.warn('[订单工作台] 静默刷新失败', error)
-    } else {
-      errorMessage.value = error instanceof Error ? error.message : '管理订单查询失败'
-    }
-  } finally {
-    // 无论成功失败都解除加载状态,避免按钮永久 disabled。
-    if (!options?.silent) {
-      loading.value = false
-    }
-  }
-}
-
-// 筛选变化:回到第一页再查询。这里不绑定 v-model 到分页组件,
-// 显式调用 load,避免"改 model 触发组件事件"的联动歧义。
-function handleFilterChange() {
-  pageNo.value = 1
-  load()
-}
-
-// 用户点击页码时由分页组件回调;同步 pageNo 后复用同一个 load。
-function handlePageChange(page: number) {
-  pageNo.value = page
-  load()
 }
 
 // 打开详情抽屉;每次都重新请求,保证看到最新金额与明细。
@@ -165,7 +114,7 @@ onMounted(load)
     </div>
 
     <div class="admin-toolbar">
-      <el-select v-model="statusFilter" class="status-select" placeholder="全部状态" @change="handleFilterChange">
+      <el-select v-model="statusFilter" class="status-select" placeholder="全部状态" @change="reloadFromFirstPage">
         <el-option v-for="option in statusOptions" :key="option.label" :label="option.label" :value="option.value" />
       </el-select>
       <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
@@ -181,11 +130,11 @@ onMounted(load)
       <el-table-column prop="orderNo" label="订单编号" min-width="190" show-overflow-tooltip />
       <el-table-column prop="tableNo" label="桌位" width="80" />
       <el-table-column label="下单时间" min-width="165">
-        <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
+        <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
       </el-table-column>
       <el-table-column label="状态" width="95">
         <template #default="{ row }">
-          <el-tag :type="orderTagType(row.status)" disable-transitions>{{ getOrderStatusLabel(row.status) }}</el-tag>
+          <el-tag :type="getOrderTagKind(row.status)" disable-transitions>{{ getOrderStatusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="金额" width="100" align="right">
@@ -226,7 +175,7 @@ onMounted(load)
       <template #header>
         <div class="order-drawer-header">
           <strong>{{ detailData?.orderNo ?? '订单详情' }}</strong>
-          <el-tag v-if="detailData" :type="orderTagType(detailData.status)" disable-transitions>
+          <el-tag v-if="detailData" :type="getOrderTagKind(detailData.status)" disable-transitions>
             {{ getOrderStatusLabel(detailData.status) }}
           </el-tag>
         </div>
@@ -235,7 +184,7 @@ onMounted(load)
       <div v-loading="detailLoading" class="order-drawer-body">
         <el-descriptions v-if="detailData" :column="1" border size="small">
           <el-descriptions-item label="桌位">{{ detailData.tableNo }}</el-descriptions-item>
-          <el-descriptions-item label="下单时间">{{ formatTime(detailData.createTime) }}</el-descriptions-item>
+          <el-descriptions-item label="下单时间">{{ formatDateTime(detailData.createTime) }}</el-descriptions-item>
           <el-descriptions-item label="订单金额">{{ formatPrice(detailData.totalAmount) }}</el-descriptions-item>
         </el-descriptions>
 

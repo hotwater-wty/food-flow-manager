@@ -19,6 +19,17 @@ export function canCancelReservation(status: number) {
   return status === 0
 }
 
+// 预约状态对应的标签颜色语义(三期 R4 收敛):待到店橙、已到店主色、取消灰、超时红。
+// Element Plus 标签直接可用;Vant 标签把 info 适配为 default(见顾客预约页)。
+export type ReservationTagKind = 'primary' | 'warning' | 'info' | 'danger'
+
+export function getReservationTagKind(status: number): ReservationTagKind {
+  if (status === 1) return 'primary'
+  if (status === 2) return 'info'
+  if (status === 3) return 'danger'
+  return 'warning'
+}
+
 // ---- 堂食会话(0-3) ----
 const sessionStatusLabels: Record<number, string> = {
   0: '等待中',

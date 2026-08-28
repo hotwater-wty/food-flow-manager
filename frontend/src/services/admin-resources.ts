@@ -26,7 +26,7 @@ export const deleteTable = (id: number) => unwrap(http.delete<Result<null>>(`/ad
 export const setTableEnabled = (id: number, enabled: boolean) => unwrap(http.post<Result<null>>(`/admin/tables/${id}/${enabled ? 'enable' : 'disable'}`), '桌位状态更新失败')
 
 // 分类、菜品、预约和员工沿用相同的分页与 CRUD 形状；URL 不同，服务层类型不同。
-export const getAdminCategories = (pageNo = 1) => unwrap(http.get<Result<PageResult<DishCategoryData>>>('/admin/dish-categories', { params: { pageNo, pageSize: 10 } }), '分类查询失败')
+export const getAdminCategories = (pageNo = 1, pageSize = 10) => unwrap(http.get<Result<PageResult<DishCategoryData>>>('/admin/dish-categories', { params: { pageNo, pageSize } }), '分类查询失败')
 export const getAdminCategory = (id: number) => unwrap(http.get<Result<DishCategoryData>>(`/admin/dish-categories/${id}`), '分类详情查询失败')
 export const createCategory = (data: DishCategoryRequest) => unwrap(http.post<Result<DishCategoryData>>('/admin/dish-categories', data), '新增分类失败')
 export const updateCategory = (id: number, data: DishCategoryRequest) => unwrap(http.put<Result<DishCategoryData>>(`/admin/dish-categories/${id}`, data), '修改分类失败')

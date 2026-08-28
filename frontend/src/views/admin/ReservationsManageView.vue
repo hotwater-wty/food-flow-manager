@@ -6,7 +6,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { cancelAdminReservation, getAdminReservationDetail, getAdminReservations } from '../../services/admin-resources'
 import type { ReservationAdminData } from '../../types/api'
-import { canCancelReservation, getReservationStatusLabel } from '../../utils/status'
+import { canCancelReservation, getReservationStatusLabel, getReservationTagKind } from '../../utils/status'
 import { formatDateTime } from '../../utils/format'
 import { usePagedList } from '../../composables/use-pagedList'
 
@@ -21,12 +21,6 @@ const drawerVisible = ref(false)
 const detailLoading = ref(false)
 const detailData = ref<ReservationAdminData | null>(null)
 
-function reservationTagType(status: number): 'primary' | 'warning' | 'info' | 'danger' {
-  if (status === 1) return 'primary'
-  if (status === 2) return 'info'
-  if (status === 3) return 'danger'
-  return 'warning'
-}
 
 async function openDetail(item: ReservationAdminData) {
   drawerVisible.value = true
@@ -93,7 +87,7 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="状态" width="95">
         <template #default="{ row }">
-          <el-tag :type="reservationTagType(row.status)" disable-transitions>{{ getReservationStatusLabel(row.status) }}</el-tag>
+          <el-tag :type="getReservationTagKind(row.status)" disable-transitions>{{ getReservationStatusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="140" fixed="right">

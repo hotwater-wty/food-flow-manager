@@ -11,6 +11,7 @@ import {
 import type { DishCategoryData, DishData } from '../../types/api'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getDishStatusLabel } from '../../utils/status'
+import { formatPrice } from '../../utils/format'
 import { usePagedList } from '../../composables/use-pagedList'
 
 const PAGE_SIZE = 10
@@ -25,8 +26,8 @@ const categoryOptionsLoaded = ref(false)
 async function loadCategoryOptions() {
   if (categoryOptionsLoaded.value) return
   try {
-    const result = await getAdminCategories(1)
-    // 后端 pageSize 固定 10;学习项目分类数量小,取第一页足够。
+    // 分类是低频维护的小集合:一次取足(200)避免"只取第一页"导致下拉缺项。
+    const result = await getAdminCategories(1, 200)
     categoryOptions.value = result.records
     categoryOptionsLoaded.value = true
   } catch {
@@ -52,7 +53,6 @@ const rules: FormRules = {
 
 const categoryLabel = computed(() => (id: number) => categoryOptions.value.find((c) => c.id === id)?.name ?? `分类 ${id}`)
 
-const formatPrice = (cents: number) => `¥${(cents / 100).toFixed(2)}`
 
 function dishTagType(status: number): 'success' | 'warning' | 'info' {
   if (status === 1) return 'success'

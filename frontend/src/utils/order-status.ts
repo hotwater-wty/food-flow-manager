@@ -12,3 +12,14 @@ export function getOrderStatusLabel(status: number) {
   // 函数不修改状态表，只把后端数字转换为模板可读文本。
   return orderStatusLabels[status] ?? '未知状态'
 }
+
+// 订单状态对应的标签颜色语义(三期 R4 收敛):进行中黄色系、完成绿色、取消灰。
+// Element Plus 标签直接可用;Vant 标签没有 info 色,由视图把 info 适配为 default。
+export type OrderTagKind = 'primary' | 'warning' | 'success' | 'info'
+
+export function getOrderTagKind(status: number): OrderTagKind {
+  if (status === 4) return 'success'
+  if (status === 5) return 'info'
+  if (status === 2 || status === 3) return 'warning'
+  return 'primary'
+}

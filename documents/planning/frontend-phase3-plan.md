@@ -62,7 +62,7 @@
 - 知识重点:`setInterval` 与组件生命周期清理、`visibilitychange`/`focus` 事件、并发请求去重。
 - 验收:type-check 与 build 通过;浏览器双端走查:工作台停放在页面观察自动更新、切走标签页暂停、操作后列表即时反映、聚焦回页面数据刷新。
 
-### P3-R4 共享层整理(拆分准备 + 代码质量)
+### P3-R4 共享层整理(拆分准备 + 代码质量)(已完成,2026-08-28)
 
 - `utils/format.ts` 补齐 `formatPrice`(分→元),替换 5 处视图内重复实现;`formatTime` 就地实现改用已有 `formatDateTime`。
 - 订单/预约状态标签的 tag 类型映射收敛进 `utils/status.ts`,两两去重。
@@ -111,4 +111,5 @@
 - P3-R1:后端编译、`vue-tsc -b`、`vite build`、`git diff --check` 全通过;API 直调禁用店长返回业务错误,店员启停正常;浏览器 DOM 快照断言店长行禁用按钮 `[disabled]`。详见 [`../records/reviews/前端三期R1店长禁用限制验收记录.md`](../records/reviews/前端三期R1店长禁用限制验收记录.md)。
 - P3-R2:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言双端过渡类名均被捕获(管理端 `fade-transform-enter-active`、顾客端 `fade-leave-active`)。详见 [`../records/reviews/前端三期R2路由过渡验收记录.md`](../records/reviews/前端三期R2路由过渡验收记录.md)。
 - P3-R3:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言:新订单在一个轮询周期内自动出现、开关关闭期间外部变更不刷新、重新开启后恢复——全程未点刷新按钮;验收数据已清理。详见 [`../records/reviews/前端三期R3数据刷新机制验收记录.md`](../records/reviews/前端三期R3数据刷新机制验收记录.md)。
+- P3-R4:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器回归确认纯重构行为不变(筛选/空态/分页/下拉/标签/金额时间展示)。详见 [`../records/reviews/前端三期R4共享层整理验收记录.md`](../records/reviews/前端三期R4共享层整理验收记录.md)。
 - (待后续切片完成后登记)

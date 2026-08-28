@@ -6,7 +6,7 @@ import { showFailToast, showSuccessToast, showConfirmDialog } from 'vant'
 import { cancelReservation, getReservationDetail, getReservations } from '../services/reservation'
 import { checkInReservation } from '../services/session'
 import type { DiningSessionData, ReservationData } from '../types/api'
-import { canCancelReservation, getReservationStatusLabel } from '../utils/status'
+import { canCancelReservation, getReservationStatusLabel, getReservationTagKind } from '../utils/status'
 import { formatDateTime } from '../utils/format'
 import { useAutoRefresh } from '../composables/use-autoRefresh'
 
@@ -20,12 +20,11 @@ const checkInLoadingId = ref<number | null>(null)
 const sessionResult = ref<DiningSessionData | null>(null)
 const errorMessage = ref('')
 
-// 预约状态对应的 Tag 类型:待到店橙、已到店蓝、取消灰、超时红。
+// Vant 的 Tag 没有 info 色:把共享映射里的 info 适配为 Vant 的 default,
+// 颜色规则本身集中在 utils/status.ts,与管理端预约页共用。
 function reservationTagType(status: number): 'primary' | 'warning' | 'default' | 'danger' {
-  if (status === 1) return 'primary'
-  if (status === 2) return 'default'
-  if (status === 3) return 'danger'
-  return 'warning'
+  const kind = getReservationTagKind(status)
+  return kind === 'info' ? 'default' : kind
 }
 
 // silent 表示聚焦刷新触发的静默加载;列表刷新仍是取消和到店开台成功后的共同收敛点。

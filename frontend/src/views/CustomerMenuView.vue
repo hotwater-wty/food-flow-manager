@@ -8,6 +8,7 @@ import { getDishCategories, getDishDetail, getDishes } from '../services/dish'
 import { getCurrentSession } from '../services/session'
 import { createOrder } from '../services/order'
 import type { DishCategoryData, DishData, DiningSessionData, OrderCreateData } from '../types/api'
+import { formatPrice } from '../utils/format'
 
 // categories/dishes 保存后端目录;cart 只保存 dishId -> quantity 的页面草稿。
 const categories = ref<DishCategoryData[]>([])
@@ -38,11 +39,6 @@ const cartSummary = computed(() =>
     ? '先选一些菜品吧'
     : cartItems.value.map((dish) => `${dish.name} × ${cart.value[dish.id]}`).join('、'),
 )
-
-function formatPrice(cents: number) {
-  // 金额只在 UI 层从"分"转换为"元",内部仍使用整数计算。
-  return `¥${(cents / 100).toFixed(2)}`
-}
 
 // VanStepper 的 change 事件把新数量写回 cart;数量归零时删除 key。
 function onQuantityChange(dish: DishData, quantity: number) {

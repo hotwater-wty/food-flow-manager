@@ -4,7 +4,8 @@
 import { onMounted, ref } from 'vue'
 import { getOrderDetail, getOrders } from '../services/order-query'
 import type { OrderData, OrderDetailData } from '../types/api'
-import { getOrderStatusLabel } from '../utils/order-status'
+import { getOrderStatusLabel, getOrderTagKind } from '../utils/order-status'
+import { formatDateTime, formatPrice } from '../utils/format'
 import { useAutoRefresh } from '../composables/use-autoRefresh'
 
 // 列表和当前展开详情分开存储,避免详情响应覆盖摘要列表。
@@ -14,21 +15,12 @@ const isLoading = ref(true)
 const detailLoadingId = ref<number | null>(null)
 const errorMessage = ref('')
 
-function formatPrice(cents: number) {
-  // 列表和详情共用同一金额转换规则,避免两处显示不一致。
-  return `¥${(cents / 100).toFixed(2)}`
-}
-
-// 订单状态对应的 Tag 类型:进行中暖色、完成绿、取消灰。
+// Vant 的 Tag 没有 info 色:把共享映射里的 info 适配为 Vant 的 default,
+// 颜色规则本身(进行中暖色、完成绿、取消灰)集中在 utils/order-status.ts。
 function orderTagType(status: number): 'primary' | 'warning' | 'success' | 'default' {
-  if (status === 4) return 'success'
-  if (status === 5) return 'default'
-  if (status === 2 || status === 3) return 'warning'
-  return 'primary'
+  const kind = getOrderTagKind(status)
+  return kind === 'info' ? 'default' : kind
 }
-
-// 展示时间:后端 ISO 的 T 换成空格。
-const formatTime = (value: string) => value.replace('T', ' ')
 
 // silent 表示聚焦刷新触发的静默加载:不点亮加载动画,失败保留当前列表不惊扰用户。
 async function loadOrders(options?: { silent?: boolean }) {
@@ -88,7 +80,7 @@ onMounted(loadOrders)
         <div class="my-orders-card-head">
           <div>
             <strong>{{ order.orderNo }}</strong>
-            <span>{{ order.tableNo }} · {{ formatTime(order.createTime) }}</span>
+            <span>{{ order.tableNo }} · {{ formatDateTime(order.createTime) }}</span>
           </div>
           <van-tag :type="orderTagType(order.status)" round>{{ getOrderStatusLabel(order.status) }}</van-tag>
         </div>
