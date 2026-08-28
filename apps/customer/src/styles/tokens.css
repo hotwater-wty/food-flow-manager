@@ -1,0 +1,89 @@
+/* 设计令牌:全站唯一定义颜色、间距、圆角、布局尺寸的地方。 */
+/* 取值来自 documents/frontend/04-视觉设计与组件规则.md 的既定决策: */
+/* 品牌强调色为低饱和陶土橙,顾客端暖白背景,管理端浅灰工作台背景, */
+/* 间距 4px 基线,圆角不超过 8px。页面样式只引用 var(--xxx),不再手写色值。 */
+:root {
+  /* 品牌色 */
+  --color-brand: #c85a3f;
+  --color-brand-strong: #a84a33;
+  --color-brand-soft: #f7e8e1;
+  --color-brand-ring: rgba(200, 90, 63, 0.22);
+
+  /* 背景与表面 */
+  --color-bg-customer: #faf8f4;
+  --color-bg-admin: #f5f6f8;
+  --color-surface: #ffffff;
+
+  /* 文字 */
+  --color-text: #252525;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9aa0a6;
+
+  /* 边框 */
+  --color-border: #e5e7eb;
+  --color-border-soft: #edeae4;
+  --color-border-strong: #d1c9c2;
+
+  /* 状态色:语义与品牌色分离,成功保持绿色、危险保持红色 */
+  --color-success: #227a5b;
+  --color-success-soft: #eaf4ef;
+  --color-danger: #b42318;
+  --color-danger-soft: #fbeeed;
+
+  /* 间距:4px 基线的常用刻度 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* 圆角:最大 8px */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* 布局尺寸 */
+  --content-max-width: 960px;
+  --topbar-height: 56px;
+  --tabbar-height: 56px;
+  --sidebar-width: 224px;
+}
+
+/* Element Plus 主题桥接:把组件库的设计变量映射到项目令牌。 */
+/* 生效前提:element-plus/dist/index.css 必须先于本文件加载—— */
+/* 两边都是 :root 上的同名变量,后加载者按 CSS 层叠规则胜出。 */
+:root {
+  --el-color-primary: var(--color-brand);
+  /* light-3/5/7/8/9 是主色与白色按 30%/50%/70%/80%/90% 混合的浅色阶, */
+  /* 组件的悬停、边框、弱背景会用到;dark-2 是加深 20% 的按压色。 */
+  --el-color-primary-light-3: #d9907a;
+  --el-color-primary-light-5: #e4b0a0;
+  --el-color-primary-light-7: #eed0c7;
+  --el-color-primary-light-8: #f1dcd5;
+  --el-color-primary-light-9: var(--color-brand-soft);
+  --el-color-primary-dark-2: var(--color-brand-strong);
+  --el-color-success: var(--color-success);
+  --el-color-danger: var(--color-danger);
+  --el-color-error: var(--color-danger);
+  --el-border-radius-base: var(--radius-sm);
+  --el-font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Vant 主题桥接:把 van- 系列组件的主色与令牌对齐,方式与 EP 相同—— */
+/* 覆盖组件库 CSS 变量,且本文件必须后于 vant/lib/index.css 加载。 */
+:root {
+  --van-primary-color: var(--color-brand);
+  --van-success-color: var(--color-success);
+  --van-danger-color: var(--color-danger);
+  --van-text-color: var(--color-text);
+  --van-text-color-2: var(--color-text-secondary);
+  --van-border-color: var(--color-border);
+  --van-background: var(--color-bg-customer);
+  --van-background-2: var(--color-surface);
+  --van-button-primary-background: var(--color-brand);
+  --van-button-primary-border-color: var(--color-brand);
+  --van-radius-md: var(--radius-md);
+  --van-radius-lg: var(--radius-lg);
+  --van-tabbar-height: var(--tabbar-height);
+}
