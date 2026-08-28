@@ -35,7 +35,17 @@ export const router = createRouter({
       children: [
         { path: '', name: 'home', component: HomeView },
         // 拆分前旧地址 /customer/** 兜底:去掉前缀后重定向到对应页面,保住旧书签。
-        { path: 'customer/:pathMatch(.*)*', redirect: (to) => ({ path: to.params.pathMatch as string, query: to.query }) },
+        // 拆分前旧地址 /customer/** 兜底:去掉前缀后重定向到对应页面,保住旧书签。
+        // pathMatch 在带 repeat 的通配下是字符串数组,需自行拼回路径。
+        {
+          path: 'customer/:pathMatch(.*)*',
+          redirect: (to) => {
+            const rest = Array.isArray(to.params.pathMatch)
+              ? to.params.pathMatch.join('/')
+              : (to.params.pathMatch ?? '')
+            return { path: `/${rest}`, query: to.query }
+          },
+        },
         {
           path: 'account',
           name: 'customer-account',

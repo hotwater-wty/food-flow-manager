@@ -23,19 +23,19 @@ const menuGroups = computed(() => [
   {
     label: '经营工作台',
     items: [
-      { label: '经营概览', to: '/admin/dashboard' },
-      { label: '订单处理', to: '/admin/orders' },
-      { label: '会话与桌台', to: '/admin/sessions' },
+      { label: '经营概览', to: '/dashboard' },
+      { label: '订单处理', to: '/orders' },
+      { label: '会话与桌台', to: '/sessions' },
     ],
   },
   {
     label: '资料维护',
     items: [
-      ...(isManager.value ? [{ label: '桌位维护', to: '/admin/resources/tables' }] : []),
-      { label: '菜品分类', to: '/admin/resources/categories' },
-      { label: '菜品维护', to: '/admin/resources/dishes' },
-      { label: '预约管理', to: '/admin/resources/reservations' },
-      ...(isManager.value ? [{ label: '员工管理', to: '/admin/resources/employees' }] : []),
+      ...(isManager.value ? [{ label: '桌位维护', to: '/resources/tables' }] : []),
+      { label: '菜品分类', to: '/resources/categories' },
+      { label: '菜品维护', to: '/resources/dishes' },
+      { label: '预约管理', to: '/resources/reservations' },
+      ...(isManager.value ? [{ label: '员工管理', to: '/resources/employees' }] : []),
     ],
   },
 ])

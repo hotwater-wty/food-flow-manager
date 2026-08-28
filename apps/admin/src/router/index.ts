@@ -30,7 +30,16 @@ export const router = createRouter({
         // 根路径直接进工作台;保留 /admin/orders 名称,登录回跳逻辑无需感知拆分。
         { path: '', redirect: { name: 'admin-orders' } },
         // 拆分前旧地址 /admin/** 兜底:去掉前缀后重定向到对应页面,保住旧书签。
-        { path: 'admin/:pathMatch(.*)*', redirect: (to) => ({ path: to.params.pathMatch as string, query: to.query }) },
+        // pathMatch 在带 repeat 的通配下是字符串数组,需自行拼回路径。
+        {
+          path: 'admin/:pathMatch(.*)*',
+          redirect: (to) => {
+            const rest = Array.isArray(to.params.pathMatch)
+              ? to.params.pathMatch.join('/')
+              : (to.params.pathMatch ?? '')
+            return { path: `/${rest}`, query: to.query }
+          },
+        },
         {
           path: 'dashboard',
           name: 'admin-dashboard',
