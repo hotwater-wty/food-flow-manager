@@ -8,6 +8,7 @@ import { Refresh } from '@element-plus/icons-vue'
 import { getAdminOrderDetail, getAdminOrders, updateOrderStatus } from '../services/admin-order'
 import type { AdminOrderData, OrderDetailData } from '../types/api'
 import { getOrderStatusLabel } from '../utils/order-status'
+import { useAutoRefresh } from '../composables/use-autoRefresh'
 
 // 页大小与后端约定一致;服务层固定传 pageSize=10。
 const PAGE_SIZE = 10
@@ -59,9 +60,12 @@ function advanceLabel(status: number) {
 }
 
 // 列表请求更新 records 和 total;分页组件据此渲染页码。
-async function load() {
-  loading.value = true
-  errorMessage.value = ''
+// silent 表示自动刷新/聚焦刷新触发的静默加载:不点亮加载遮罩,失败只记录不惊扰用户。
+async function load(options?: { silent?: boolean }) {
+  if (!options?.silent) {
+    loading.value = true
+    errorMessage.value = ''
+  }
   try {
     // '' 表示全部;此时不传 status,由后端返回所有状态。
     const status = statusFilter.value === '' ? undefined : statusFilter.value
@@ -70,10 +74,16 @@ async function load() {
     total.value = result.total
   } catch (error) {
     // unknown 错误经过 instanceof Error 类型收窄后才能读取 message。
-    errorMessage.value = error instanceof Error ? error.message : '管理订单查询失败'
+    if (options?.silent) {
+      console.warn('[订单工作台] 静默刷新失败', error)
+    } else {
+      errorMessage.value = error instanceof Error ? error.message : '管理订单查询失败'
+    }
   } finally {
     // 无论成功失败都解除加载状态,避免按钮永久 disabled。
-    loading.value = false
+    if (!options?.silent) {
+      loading.value = false
+    }
   }
 }
 
@@ -139,6 +149,10 @@ async function advance(order: AdminOrderData) {
   }
 }
 
+// 自动刷新(三期 R3):工作台默认每 20 秒静默轮询,标签页不可见时暂停;
+// 切回标签页/窗口聚焦时也会立即静默刷新,三种触发共用上面的 load。
+const { autoRefresh } = useAutoRefresh(load)
+
 // onMounted 接收函数引用;组件插入 DOM 后由 Vue 自动调用一次。
 onMounted(load)
 </script>
@@ -155,6 +169,10 @@ onMounted(load)
         <el-option v-for="option in statusOptions" :key="option.label" :label="option.label" :value="option.value" />
       </el-select>
       <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+      <label class="auto-refresh-toggle">
+        <el-switch v-model="autoRefresh" size="small" />
+        每 20 秒自动刷新
+      </label>
     </div>
 
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
@@ -240,6 +258,13 @@ onMounted(load)
 </template>
 
 <style scoped>
+.auto-refresh-toggle {
+  align-items: center;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  font-size: 0.85rem;
+  gap: var(--space-2);
+}
 /* 抽屉是本页面私有结构,样式用 scoped 与其他管理页隔离。 */
 .order-drawer-header {
   align-items: center;

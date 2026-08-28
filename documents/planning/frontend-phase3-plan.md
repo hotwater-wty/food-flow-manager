@@ -54,7 +54,7 @@
 - 知识重点:Vue `<transition>` 的工作机制(进入/离开类名、mode="out-in")、为何 router-view 需要配合 slot 写法。
 - 验收:type-check 与 build 通过;双端双视口(1440x900 / 390x844)全页切换走查,无闪烁、无布局跳动、守卫跳转(登录/404)不受影响。
 
-### P3-R3 数据刷新机制:工作台轮询 + 变更后刷新 + 聚焦刷新
+### P3-R3 数据刷新机制:工作台轮询 + 变更后刷新 + 聚焦刷新(已完成,2026-08-28)
 
 - 管理端订单/会话工作台:加可配置间隔的轮询(默认 15~30s,常量集中定义),`document.hidden` 时暂停、恢复可见时立即拉取,提供手动开关;轮询与手动刷新共用加载锁,避免请求堆积。
 - 全部页面审计:确认每次写操作(下单、状态推进、启停、删除等)后对应列表/详情即时刷新,补齐遗漏点。
@@ -110,4 +110,5 @@
 
 - P3-R1:后端编译、`vue-tsc -b`、`vite build`、`git diff --check` 全通过;API 直调禁用店长返回业务错误,店员启停正常;浏览器 DOM 快照断言店长行禁用按钮 `[disabled]`。详见 [`../records/reviews/前端三期R1店长禁用限制验收记录.md`](../records/reviews/前端三期R1店长禁用限制验收记录.md)。
 - P3-R2:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言双端过渡类名均被捕获(管理端 `fade-transform-enter-active`、顾客端 `fade-leave-active`)。详见 [`../records/reviews/前端三期R2路由过渡验收记录.md`](../records/reviews/前端三期R2路由过渡验收记录.md)。
+- P3-R3:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言:新订单在一个轮询周期内自动出现、开关关闭期间外部变更不刷新、重新开启后恢复——全程未点刷新按钮;验收数据已清理。详见 [`../records/reviews/前端三期R3数据刷新机制验收记录.md`](../records/reviews/前端三期R3数据刷新机制验收记录.md)。
 - (待后续切片完成后登记)

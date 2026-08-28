@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue'
 import { getOrderDetail, getOrders } from '../services/order-query'
 import type { OrderData, OrderDetailData } from '../types/api'
 import { getOrderStatusLabel } from '../utils/order-status'
+import { useAutoRefresh } from '../composables/use-autoRefresh'
 
 // 列表和当前展开详情分开存储,避免详情响应覆盖摘要列表。
 const orders = ref<OrderData[]>([])
@@ -29,15 +30,24 @@ function orderTagType(status: number): 'primary' | 'warning' | 'success' | 'defa
 // 展示时间:后端 ISO 的 T 换成空格。
 const formatTime = (value: string) => value.replace('T', ' ')
 
-async function loadOrders() {
-  isLoading.value = true
-  errorMessage.value = ''
+// silent 表示聚焦刷新触发的静默加载:不点亮加载动画,失败保留当前列表不惊扰用户。
+async function loadOrders(options?: { silent?: boolean }) {
+  if (!options?.silent) {
+    isLoading.value = true
+    errorMessage.value = ''
+  }
   try {
     orders.value = await getOrders()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '订单列表查询失败,请稍后重试'
+    if (options?.silent) {
+      console.warn('[顾客订单] 静默刷新失败', error)
+    } else {
+      errorMessage.value = error instanceof Error ? error.message : '订单列表查询失败,请稍后重试'
+    }
   } finally {
-    isLoading.value = false
+    if (!options?.silent) {
+      isLoading.value = false
+    }
   }
 }
 
@@ -58,6 +68,9 @@ async function showDetail(order: OrderData) {
     detailLoadingId.value = null
   }
 }
+
+// 聚焦刷新(三期 R3):顾客端不轮询,窗口重新可见/聚焦时静默拉最新订单。
+useAutoRefresh(loadOrders, { polling: false })
 
 onMounted(loadOrders)
 </script>

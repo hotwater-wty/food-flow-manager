@@ -8,6 +8,7 @@ import { checkInReservation } from '../services/session'
 import type { DiningSessionData, ReservationData } from '../types/api'
 import { canCancelReservation, getReservationStatusLabel } from '../utils/status'
 import { formatDateTime } from '../utils/format'
+import { useAutoRefresh } from '../composables/use-autoRefresh'
 
 // 列表使用数组泛型,明确每个元素都满足后端 ReservationData 结构。
 const reservations = ref<ReservationData[]>([])
@@ -27,16 +28,24 @@ function reservationTagType(status: number): 'primary' | 'warning' | 'default' |
   return 'warning'
 }
 
-async function loadReservations() {
-  // 列表刷新是取消和到店开台成功后的共同收敛点。
-  isLoading.value = true
-  errorMessage.value = ''
+// silent 表示聚焦刷新触发的静默加载;列表刷新仍是取消和到店开台成功后的共同收敛点。
+async function loadReservations(options?: { silent?: boolean }) {
+  if (!options?.silent) {
+    isLoading.value = true
+    errorMessage.value = ''
+  }
   try {
     reservations.value = await getReservations()
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '预约列表查询失败,请稍后重试'
+    if (options?.silent) {
+      console.warn('[顾客预约] 静默刷新失败', error)
+    } else {
+      errorMessage.value = error instanceof Error ? error.message : '预约列表查询失败,请稍后重试'
+    }
   } finally {
-    isLoading.value = false
+    if (!options?.silent) {
+      isLoading.value = false
+    }
   }
 }
 
@@ -105,6 +114,9 @@ async function handleCheckIn(reservation: ReservationData) {
     checkInLoadingId.value = null
   }
 }
+
+// 聚焦刷新(三期 R3):顾客端不轮询,窗口重新可见/聚焦时静默拉最新预约。
+useAutoRefresh(loadReservations, { polling: false })
 
 onMounted(loadReservations)
 </script>

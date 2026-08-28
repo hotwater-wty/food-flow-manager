@@ -9,6 +9,7 @@ import { cancelAdminSession, closeAdminSession, getAdminSessionDetail, getAdminS
 import type { DiningSessionData } from '../types/api'
 import { getSessionStatusLabel, getTableStatusLabel } from '../utils/status'
 import { usePagedList } from '../composables/use-pagedList'
+import { useAutoRefresh } from '../composables/use-autoRefresh'
 
 // 状态筛选:空字符串表示"全部"(el-option 的 value 不接受 undefined)。
 const statusFilter = ref<number | ''>('')
@@ -88,6 +89,9 @@ async function action(session: DiningSessionData, type: 'cancel' | 'close') {
   }
 }
 
+// 自动刷新(三期 R3):与订单工作台一致,每 20 秒静默轮询,不可见暂停、聚焦即刷。
+const { autoRefresh } = useAutoRefresh(load)
+
 // 首次进入工作台时自动拉取第一页。
 onMounted(load)
 </script>
@@ -104,6 +108,10 @@ onMounted(load)
         <el-option v-for="option in statusOptions" :key="option.label" :label="option.label" :value="option.value" />
       </el-select>
       <el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button>
+      <label class="auto-refresh-toggle">
+        <el-switch v-model="autoRefresh" size="small" />
+        每 20 秒自动刷新
+      </label>
     </div>
 
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
@@ -177,6 +185,13 @@ onMounted(load)
 </template>
 
 <style scoped>
+.auto-refresh-toggle {
+  align-items: center;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  font-size: 0.85rem;
+  gap: var(--space-2);
+}
 .session-drawer-body {
   min-height: 140px;
 }
