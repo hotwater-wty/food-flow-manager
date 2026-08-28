@@ -23,6 +23,7 @@ const menuGroups = computed(() => [
   {
     label: '经营工作台',
     items: [
+      { label: '经营概览', to: '/admin/dashboard' },
       { label: '订单处理', to: '/admin/orders' },
       { label: '会话与桌台', to: '/admin/sessions' },
     ],

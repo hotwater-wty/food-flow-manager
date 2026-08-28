@@ -88,6 +88,12 @@ export const router = createRouter({
       component: AdminLayout,
       children: [
         {
+          path: 'dashboard',
+          name: 'admin-dashboard',
+          component: () => import('../views/admin/DashboardView.vue'),
+          meta: { requiresAdminAuth: true, title: '经营概览' },
+        },
+        {
           path: 'orders',
           name: 'admin-orders',
           component: () => import('../views/AdminOrderWorkbenchView.vue'),

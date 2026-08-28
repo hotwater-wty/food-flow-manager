@@ -72,7 +72,7 @@
 - 知识重点:DRY 与模块边界、composable 复用、"共享层干净 = 未来拆分成本低"的工程视角。
 - 验收:type-check 与 build 通过;走查订单工作台、会话工作台、菜品页、顾客端订单/预约页行为与改版前一致(纯重构,行为不变);diff 中无业务逻辑变化。
 
-### P3-R5 商户端仪表盘(前端 + 最小统计端点)
+### P3-R5 商户端仪表盘(前端 + 最小统计端点)(已完成,2026-08-28)
 
 - 先定契约:统计端点的路径、字段、金额单位(分)、时间口径写入 `documents/frontend/05-前端工程与接口契约.md`,再动手实现。
 - 后端(本阶段唯一新增后端文件):新增只读统计端点(建议 `GET /api/admin/statistics/overview`):今日订单数、今日营收(分)、订单状态分布、热销菜品 TOP N(默认 5);利用 `create_time`/`status` 现有索引,不改表结构;店长店员均可访问(与订单工作台同权限)。
@@ -112,4 +112,5 @@
 - P3-R2:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言双端过渡类名均被捕获(管理端 `fade-transform-enter-active`、顾客端 `fade-leave-active`)。详见 [`../records/reviews/前端三期R2路由过渡验收记录.md`](../records/reviews/前端三期R2路由过渡验收记录.md)。
 - P3-R3:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言:新订单在一个轮询周期内自动出现、开关关闭期间外部变更不刷新、重新开启后恢复——全程未点刷新按钮;验收数据已清理。详见 [`../records/reviews/前端三期R3数据刷新机制验收记录.md`](../records/reviews/前端三期R3数据刷新机制验收记录.md)。
 - P3-R4:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器回归确认纯重构行为不变(筛选/空态/分页/下拉/标签/金额时间展示)。详见 [`../records/reviews/前端三期R4共享层整理验收记录.md`](../records/reviews/前端三期R4共享层整理验收记录.md)。
+- P3-R5:后端编译、`vue-tsc -b`、`vite build` 通过;造数后端点返回与数据库事实一致,浏览器渲染与端点一致;鉴权边界(401/403/放行)验证通过;验收数据已清理。详见 [`../records/reviews/前端三期R5仪表盘验收记录.md`](../records/reviews/前端三期R5仪表盘验收记录.md)。
 - (待后续切片完成后登记)

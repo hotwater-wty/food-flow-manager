@@ -182,3 +182,13 @@ export interface EmployeeCreateRequest { phone: string; password: string; name: 
 // extends 空接口表达“当前与顾客预约结构相同”，未来可独立增加管理字段。
 export interface ReservationAdminData extends ReservationData {}
 export interface EmployeeData { employeeId: number; phone: string; name: string; role: number; status: number }
+
+// 经营统计(三期 R5):口径为服务器时区当日、不含已取消订单,金额均为整数分。
+export interface StatusCount { status: number; count: number }
+export interface TopDish { dishId: number; dishName: string; quantity: number; amount: number }
+export interface StatisticsOverview {
+  todayOrderCount: number
+  todayRevenue: number
+  statusDistribution: StatusCount[]
+  topDishes: TopDish[]
+}
