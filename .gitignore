@@ -34,3 +34,12 @@ build/
 
 ### macOS ###
 .DS_Store
+
+### Node / pnpm workspace ###
+node_modules/
+dist/
+*.local
+.npm/
+
+### ZCode ###
+.zcode/
