@@ -14,6 +14,12 @@ const errorMessage = ref('')
 const nickname = ref('')
 // 一个布尔状态控制同一表单的两种提交分支，避免复制两套页面。
 const isRegistering = ref(false)
+
+// 登录/注册面板切换:切换时清掉上一次表单操作的错误提示。
+function toggleRegistering() {
+  isRegistering.value = !isRegistering.value
+  errorMessage.value = ''
+}
 const authStore = useAuthStore()
 // storeToRefs 保留 Store 字段的响应式连接，登录成功后模板会自动更新。
 const { isAuthenticated, user } = storeToRefs(authStore)
@@ -98,14 +104,7 @@ async function handleSubmit() {
       <button type="submit" :disabled="isSubmitting">
         {{ isSubmitting ? '处理中...' : isRegistering ? '注册' : '登录' }}
       </button>
-      <button
-        class="secondary-button"
-        type="button"
-        @click="
-          isRegistering = !isRegistering
-          errorMessage = ''
-        "
-      >
+      <button class="secondary-button" type="button" @click="toggleRegistering">
         {{ isRegistering ? '已有账号，去登录' : '注册新账号' }}
       </button>
     </form>

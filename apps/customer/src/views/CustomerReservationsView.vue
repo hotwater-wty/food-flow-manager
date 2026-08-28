@@ -2,6 +2,7 @@
 // 顾客预约页:展示预约状态,并把待到店预约连接到预约开台动作。
 // R4 改用 Vant:列表用卡片+状态 Tag,详情用弹层,取消改用 Dialog 确认(替代原生 confirm)。
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { showFailToast, showSuccessToast, showConfirmDialog } from 'vant'
 import { cancelReservation, getReservationDetail, getReservations } from '../services/reservation'
 import { checkInReservation } from '../services/session'
@@ -46,6 +47,13 @@ async function loadReservations(options?: { silent?: boolean }) {
       isLoading.value = false
     }
   }
+}
+
+// 到店开台成功弹窗的"去点餐"确认:关结果面板并跳点餐页(拆分后本应用内路径为 /menu)。
+const router = useRouter()
+function confirmSessionResult() {
+  sessionResult.value = null
+  void router.push('/menu')
 }
 
 // 详情改为弹层开关;重复点击同一预约只收起。
@@ -190,10 +198,7 @@ onMounted(loadReservations)
       show-cancel-button
       confirm-button-text="去点餐"
       cancel-button-text="关闭"
-      @confirm="
-        sessionResult = null
-        $router === undefined
-      "
+      @confirm="confirmSessionResult"
       @update:show="
         (value: boolean) => {
           if (!value) sessionResult = null

@@ -16,6 +16,12 @@ const isLoading = ref(true)
 const isOpening = ref(false)
 const errorMessage = ref('')
 
+// 结果面板的"继续选桌位"动作:清除开台结果并重新加载桌位列表。
+function backToScan() {
+  currentSession.value = null
+  void loadPage()
+}
+
 async function loadPage() {
   // 当前会话和可用桌位可并行读取;页面以服务端结果恢复,而不是依赖本地缓存。
   isLoading.value = true
@@ -71,17 +77,7 @@ onMounted(loadPage)
       </van-cell-group>
       <div class="session-restored-actions">
         <van-button block round type="primary" to="/menu">去点餐</van-button>
-        <van-button
-          v-if="currentSession.sessionStatus !== 1"
-          block
-          round
-          type="primary"
-          plain
-          @click="
-            currentSession = null
-            loadPage()
-          "
-        >
+        <van-button v-if="currentSession.sessionStatus !== 1" block round type="primary" plain @click="backToScan">
           换桌重开
         </van-button>
       </div>
