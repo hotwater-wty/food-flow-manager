@@ -163,3 +163,35 @@ code { background: var(--color-brand-soft); border-radius: var(--radius-sm); col
   .reservation-layout { grid-template-columns: 1fr; }
   .reservation-form { border-left: 0; border-top: 1px solid var(--color-border-soft); padding-left: 0; padding-top: 24px; }
 }
+
+/* 路由切换过渡(三期 R2):管理端用 fade-transform(位移+淡入淡出),顾客端用轻量 fade。
+   过渡类挂在路由组件根元素上,由两个布局的路由出口 <Transition name=...> 触发。 */
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateX(-12px);
+}
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateX(12px);
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+/* 系统开启"减少动态效果"时直接跳过过渡,尊重无障碍设置。 */
+@media (prefers-reduced-motion: reduce) {
+  .fade-transform-enter-active,
+  .fade-transform-leave-active,
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: none;
+  }
+}

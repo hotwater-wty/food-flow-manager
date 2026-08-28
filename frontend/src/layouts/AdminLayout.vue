@@ -82,7 +82,12 @@ function handleLogout() {
         </div>
       </header>
       <main class="admin-content">
-        <RouterView />
+        <!-- 路由切换过渡:mode="out-in" 先播完离开动画再进入,避免两页重叠跳动。 -->
+        <RouterView v-slot="{ Component }">
+          <Transition name="fade-transform" mode="out-in">
+            <component :is="Component" />
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>

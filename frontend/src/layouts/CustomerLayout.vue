@@ -45,7 +45,12 @@ const activeTabIndex = computed(() => {
     </header>
 
     <main class="customer-main">
-      <RouterView />
+      <!-- 路由切换过渡:顾客端只做轻量淡入淡出,避免移动端页面大幅位移。 -->
+      <RouterView v-slot="{ Component }">
+        <Transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </main>
 
     <!-- placeholder 固定占位:Tabbar 是 fixed 定位,用它把内容区底部撑出等高空间,避免最后一段被遮住。 -->

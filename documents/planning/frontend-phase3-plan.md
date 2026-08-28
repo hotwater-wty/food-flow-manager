@@ -47,7 +47,7 @@
 - 知识重点:前后端双重校验的分工(前端管体验、后端管安全)、computed 派生禁用状态、业务异常的契约表现。
 - 验收:`pnpm type-check`(vue-tsc -b)与 build 通过;浏览器走查店长/店员双账号员工页;用浏览器或 curl 直调 `POST /api/admin/employees/{店长id}/disable` 返回业务错误而非成功;`git diff --check` 干净。
 
-### P3-R2 路由切换过渡效果
+### P3-R2 路由切换过渡效果(已完成,2026-08-28)
 
 - 三个插入点:`App.vue` 顶层路由出口(布局层切换,可选)、`AdminLayout.vue` 内容区路由出口(fade-transform)、`CustomerLayout.vue` 内容区路由出口(轻量 fade);过渡 CSS 进 `styles/`,类名与二期令牌体系一致。
 - 前置核对:逐一确认各路由视图组件为单根节点(Vue transition 的前提),多根组件先包一层或调整结构。
@@ -109,4 +109,5 @@
 ## 6. 验收证据索引
 
 - P3-R1:后端编译、`vue-tsc -b`、`vite build`、`git diff --check` 全通过;API 直调禁用店长返回业务错误,店员启停正常;浏览器 DOM 快照断言店长行禁用按钮 `[disabled]`。详见 [`../records/reviews/前端三期R1店长禁用限制验收记录.md`](../records/reviews/前端三期R1店长禁用限制验收记录.md)。
+- P3-R2:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言双端过渡类名均被捕获(管理端 `fade-transform-enter-active`、顾客端 `fade-leave-active`)。详见 [`../records/reviews/前端三期R2路由过渡验收记录.md`](../records/reviews/前端三期R2路由过渡验收记录.md)。
 - (待后续切片完成后登记)
