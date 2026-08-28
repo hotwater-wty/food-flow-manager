@@ -25,6 +25,7 @@ import com.foodflow.module.reservation.entity.Reservation;
 import com.foodflow.module.reservation.service.ReservationService;
 import com.foodflow.module.table.entity.DiningTable;
 import com.foodflow.module.table.service.DiningTableService;
+import com.foodflow.module.notification.service.AdminNotificationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
     private final DiningTableService diningTableService;
     private final ReservationService reservationService;
     private final DiningOrderMapper diningOrderMapper;
+    private final AdminNotificationService notificationService;
 
     /**
      * 取消等待中的用餐会话
@@ -217,7 +219,9 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         diningTable = diningTableService.getById(tableId);
         
         // 构建会话VO
-        return toDiningSessionVO(diningSession, diningTable);
+        DiningSessionVO result = toDiningSessionVO(diningSession, diningTable);
+        notificationService.publish("reservation-check-in", Map.of("sessionId", diningSession.getId(), "tableId", tableId));
+        return result;
     }
 
     /**

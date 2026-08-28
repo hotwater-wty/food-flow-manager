@@ -11,6 +11,7 @@ import { getOrderStatusLabel, getOrderTagKind } from '@foodflow/shared/utils/ord
 import { formatDateTime, formatPrice } from '@foodflow/shared/utils/format'
 import { usePagedList } from '../composables/use-pagedList'
 import { useAutoRefresh } from '../composables/use-autoRefresh'
+import { useAdminSse } from '../composables/use-admin-sse'
 
 // 页大小与后端约定一致;服务层固定传 pageSize=10。
 const PAGE_SIZE = 10
@@ -109,6 +110,7 @@ async function advance(order: AdminOrderData) {
 // 自动刷新(三期 R3):工作台默认每 20 秒静默轮询,标签页不可见时暂停;
 // 切回标签页/窗口聚焦时也会立即静默刷新,三种触发共用上面的 load。
 const { autoRefresh } = useAutoRefresh(load)
+useAdminSse(() => void load({ silent: true }))
 
 // onMounted 接收函数引用;组件插入 DOM 后由 Vue 自动调用一次。
 onMounted(load)

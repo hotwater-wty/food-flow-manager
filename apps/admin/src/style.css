@@ -243,6 +243,13 @@ dd {
   text-align: left;
 }
 
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
 .fade-transform-enter-from {
   opacity: 0;
   transform: translateX(-12px);

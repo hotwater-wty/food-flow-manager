@@ -31,6 +31,7 @@ import com.foodflow.module.orderitem.entity.OrderItem;
 import com.foodflow.module.orderitem.service.OrderItemService;
 import com.foodflow.module.orderitem.vo.OrderItemCreateVO;
 import com.foodflow.module.orderitem.vo.OrderItemVO;
+import com.foodflow.module.notification.service.AdminNotificationService;
 import com.foodflow.module.table.entity.DiningTable;
 import com.foodflow.module.table.service.DiningTableService;
 
@@ -56,6 +57,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
     private final DishService dishService;
     private final DiningTableService diningTableService;
     private final OrderItemService orderItemService;
+    private final AdminNotificationService notificationService;
 
     /**
      * 创建用餐订单
@@ -183,6 +185,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
         }
         // 保存订单项
         orderItemService.saveBatch(orderItems);
+        notificationService.publish("new-order", Map.of("orderId", order.getId(), "orderNo", order.getOrderNo()));
 
         return DiningOrderCreateVO.builder()
                 .orderId(order.getId())

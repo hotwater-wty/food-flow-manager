@@ -4,7 +4,7 @@
 
 ## 当前主线
 
-后端 V1/V2 核心业务和工程增强已完成并冻结扩张(三期新增的只读统计端点除外)。前端一期(纵向业务闭环)、二期(布局重构与视觉统一)、三期(体验完善与商户端仪表盘)均已收口。**前端已于 2026-08-28 拆分为 pnpm workspace 双应用**:`apps/customer`(顾客端,Vant,dev 5174)与 `apps/admin`(商户端,Element Plus,dev 5173),共享契约包 `packages/shared`(types/api + utils);两端独立路由与请求层,旧地址 `/customer/**`、`/admin/**` 自动去前缀重定向,互通链接已全部移除;生产双域名部署(nginx)待单独授权。**同日完成第二批前端优化**:组件库按需引入与分包(admin JS gzip 约 351→203KB、customer 92KB)、购物车入 Pinia、双端网络错误提示、ESLint 9 + Prettier(workspace 根,`pnpm lint`)、shared 包 vitest 单测(`pnpm test`,9 例)、Playwright E2E 冒烟(`pnpm test:e2e`,双端 10 项断言)。当前无进行中的开发阶段;候选事项见 [`planning/后续发展建议清单.md`](planning/后续发展建议清单.md)(含已核实结论:F4 顾客端分页需后端先行,见 B1),不自动开工。进度详见 [`planning/frontend-split-plan.md`](planning/frontend-split-plan.md)(拆分)与 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md)(三期)。管理端使用独立员工 JWT。
+后端 V1/V2 核心业务和工程增强已完成并冻结扩张(三期新增的只读统计端点除外)。前端一期(纵向业务闭环)、二期(布局重构与视觉统一)、三期(体验完善与商户端仪表盘)均已收口。**前端已于 2026-08-28 拆分为 pnpm workspace 双应用**:`apps/customer`(顾客端,Vant,dev 5174)与 `apps/admin`(商户端,Element Plus,dev 5173),共享契约包 `packages/shared`(types/api + utils);两端独立路由与请求层,旧地址 `/customer/**`、`/admin/**` 自动去前缀重定向,互通链接已全部移除;生产双域名部署(nginx)待单独授权。**同日完成第二批前端优化**:组件库按需引入与分包(admin JS gzip 约 351→203KB、customer 92KB)、购物车入 Pinia、双端网络错误提示、ESLint 9 + Prettier(workspace 根,`pnpm lint`)、shared 包 vitest 单测(`pnpm test`,9 例)、Playwright E2E 冒烟(`pnpm test:e2e`,双端 10 项断言)。当前下一阶段计划已建立但尚未启动编码，详见 [`planning/frontend-next-phase-plan.md`](planning/frontend-next-phase-plan.md)；原候选事项索引保留在 [`planning/后续发展建议清单.md`](planning/后续发展建议清单.md)，不自动开工。进度详见 [`planning/frontend-split-plan.md`](planning/frontend-split-plan.md)(拆分)与 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md)(三期)。管理端使用独立员工 JWT。
 
 ## 当前权威资料
 
@@ -21,6 +21,7 @@
 | 二期切片计划与审查结论 | [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) | 已收口的历史计划,含首版覆盖审查结论 |
 | 三期计划与问题记录审查 | [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md) | 已收口:切片清单、验收证据索引与候选池 |
 | **前端双应用拆分计划** | [`planning/frontend-split-plan.md`](planning/frontend-split-plan.md) | 已收口:workspace 结构、端口约定与遗留事项 |
+| **前端与实时能力下一阶段计划** | [`planning/frontend-next-phase-plan.md`](planning/frontend-next-phase-plan.md) | 当前计划:管理端过渡修复、桌码闭环、SSE + ticket、分页与工程收尾;尚未启动编码 |
 | 双端拆分准备评估 | [`frontend/08-双端拆分准备评估.md`](frontend/08-双端拆分准备评估.md) | 已执行;耦合点清单与决策项留档 |
 
 ## 归档判断

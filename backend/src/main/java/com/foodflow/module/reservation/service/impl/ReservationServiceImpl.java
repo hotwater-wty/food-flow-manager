@@ -23,6 +23,7 @@ import com.foodflow.module.reservation.vo.ReservationCreateVO;
 import com.foodflow.module.reservation.vo.ReservationVO;
 import com.foodflow.module.table.entity.DiningTable;
 import com.foodflow.module.table.service.DiningTableService;
+import com.foodflow.module.notification.service.AdminNotificationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reservation> implements ReservationService {
     
     private final DiningTableService diningTableService;
+    private final AdminNotificationService notificationService;
     
     /**
      * 创建预约
@@ -80,6 +82,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         Reservation reservation = toReservation(reservationDTO);
         // 保存预约数据到数据库
         save(reservation);
+        notificationService.publish("new-reservation", java.util.Map.of("reservationId", reservation.getId()));
         // 封装对象返回数据
         return toCreateVO(reservation);
     }

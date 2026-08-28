@@ -15,6 +15,7 @@ import type { DiningSessionData } from '@foodflow/shared/types/api'
 import { getSessionStatusLabel, getTableStatusLabel } from '@foodflow/shared/utils/status'
 import { usePagedList } from '../composables/use-pagedList'
 import { useAutoRefresh } from '../composables/use-autoRefresh'
+import { useAdminSse } from '../composables/use-admin-sse'
 
 // 状态筛选:空字符串表示"全部"(el-option 的 value 不接受 undefined)。
 const statusFilter = ref<number | ''>('')
@@ -96,6 +97,7 @@ async function action(session: DiningSessionData, type: 'cancel' | 'close') {
 
 // 自动刷新(三期 R3):与订单工作台一致,每 20 秒静默轮询,不可见暂停、聚焦即刷。
 const { autoRefresh } = useAutoRefresh(load)
+useAdminSse(() => void load({ silent: true }))
 
 // 首次进入工作台时自动拉取第一页。
 onMounted(load)
