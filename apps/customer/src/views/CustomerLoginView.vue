@@ -60,9 +60,7 @@ async function handleSubmit() {
     </div>
 
     <div v-if="isAuthenticated && user" class="auth-session">
-      <p class="feedback feedback-success" role="status">
-        已登录，欢迎 {{ user.nickname }}。
-      </p>
+      <p class="feedback feedback-success" role="status">已登录，欢迎 {{ user.nickname }}。</p>
       <dl class="auth-user-details">
         <div>
           <dt>手机号</dt>
@@ -82,14 +80,7 @@ async function handleSubmit() {
     <form v-else class="auth-form" @submit.prevent="handleSubmit">
       <label>
         手机号
-        <input
-          v-model="phone"
-          type="tel"
-          inputmode="numeric"
-          autocomplete="tel"
-          placeholder="请输入手机号"
-          required
-        />
+        <input v-model="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="请输入手机号" required />
       </label>
 
       <label v-if="isRegistering">
@@ -99,13 +90,7 @@ async function handleSubmit() {
 
       <label>
         密码
-        <input
-          v-model="password"
-          type="password"
-          autocomplete="current-password"
-          placeholder="请输入密码"
-          required
-        />
+        <input v-model="password" type="password" autocomplete="current-password" placeholder="请输入密码" required />
       </label>
 
       <p v-if="errorMessage" class="feedback feedback-error" role="alert">{{ errorMessage }}</p>
@@ -113,7 +98,14 @@ async function handleSubmit() {
       <button type="submit" :disabled="isSubmitting">
         {{ isSubmitting ? '处理中...' : isRegistering ? '注册' : '登录' }}
       </button>
-      <button class="secondary-button" type="button" @click="isRegistering = !isRegistering; errorMessage = ''">
+      <button
+        class="secondary-button"
+        type="button"
+        @click="
+          isRegistering = !isRegistering
+          errorMessage = ''
+        "
+      >
         {{ isRegistering ? '已有账号，去登录' : '注册新账号' }}
       </button>
     </form>

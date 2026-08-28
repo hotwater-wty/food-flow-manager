@@ -57,7 +57,9 @@ onMounted(loadPage)
 
 <template>
   <section class="session-page">
-    <van-loading v-if="isLoading" class="session-loading" size="24px" vertical>正在查询当前会话和空闲桌位...</van-loading>
+    <van-loading v-if="isLoading" class="session-loading" size="24px" vertical
+      >正在查询当前会话和空闲桌位...</van-loading
+    >
 
     <div v-else-if="currentSession" class="session-restored">
       <van-icon name="checked" class="session-restored-icon" />
@@ -69,7 +71,17 @@ onMounted(loadPage)
       </van-cell-group>
       <div class="session-restored-actions">
         <van-button block round type="primary" to="/menu">去点餐</van-button>
-        <van-button v-if="currentSession.sessionStatus !== 1" block round type="primary" plain @click="currentSession = null; loadPage()">
+        <van-button
+          v-if="currentSession.sessionStatus !== 1"
+          block
+          round
+          type="primary"
+          plain
+          @click="
+            currentSession = null
+            loadPage()
+          "
+        >
           换桌重开
         </van-button>
       </div>

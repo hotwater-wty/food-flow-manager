@@ -12,7 +12,11 @@ function notifyNetworkError(error: unknown) {
   const now = Date.now()
   if (now - lastNetworkToastAt < 2000) return
   lastNetworkToastAt = now
-  ElMessage.error(axios.isAxiosError(error) && error.code === 'ECONNABORTED' ? '请求超时,请检查网络后重试' : '网络异常,请检查连接后重试')
+  ElMessage.error(
+    axios.isAxiosError(error) && error.code === 'ECONNABORTED'
+      ? '请求超时,请检查网络后重试'
+      : '网络异常,请检查连接后重试',
+  )
 }
 
 export const http = axios.create({

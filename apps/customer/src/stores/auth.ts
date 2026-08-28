@@ -52,10 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = nextToken
     user.value = nextUser
     // JSON.stringify 把对象序列化成字符串，因为 localStorage 只接受字符串。
-    localStorage.setItem(
-      AUTH_STORAGE_KEY,
-      JSON.stringify({ token: nextToken, user: nextUser } satisfies PersistedAuth),
-    )
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ token: nextToken, user: nextUser } satisfies PersistedAuth))
   }
 
   function logout() {

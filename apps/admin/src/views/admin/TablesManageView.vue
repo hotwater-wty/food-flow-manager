@@ -4,9 +4,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
-import {
-  createTable, deleteTable, getAdminTables, setTableEnabled, updateTable,
-} from '../../services/admin-resources'
+import { createTable, deleteTable, getAdminTables, setTableEnabled, updateTable } from '../../services/admin-resources'
 import type { TableRequest, TableVO } from '../../services/admin-resources'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getTableStatusLabel } from '@foodflow/shared/utils/status'
@@ -14,8 +12,9 @@ import { usePagedList } from '../../composables/use-pagedList'
 
 const PAGE_SIZE = 10
 
-const { records, pageNo, total, loading, errorMessage, load, handlePageChange } =
-  usePagedList<TableVO>((page) => getAdminTables(page))
+const { records, pageNo, total, loading, errorMessage, load, handlePageChange } = usePagedList<TableVO>((page) =>
+  getAdminTables(page),
+)
 
 // 写操作锁:任一写请求进行中时禁用其余行按钮。
 const actionId = ref<number | null>(null)
@@ -142,7 +141,12 @@ onMounted(load)
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openEdit(row as TableVO)">编辑</el-button>
-          <el-button link :type="row.status === 4 ? 'success' : 'warning'" :disabled="actionId !== null" @click="toggleEnabled(row as TableVO)">
+          <el-button
+            link
+            :type="row.status === 4 ? 'success' : 'warning'"
+            :disabled="actionId !== null"
+            @click="toggleEnabled(row as TableVO)"
+          >
             {{ row.status === 4 ? '启用' : '禁用' }}
           </el-button>
           <el-button link type="danger" :disabled="actionId !== null" @click="remove(row as TableVO)">删除</el-button>

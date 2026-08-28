@@ -12,15 +12,15 @@ import { usePagedList } from '../../composables/use-pagedList'
 
 const PAGE_SIZE = 10
 
-const { records, pageNo, total, loading, errorMessage, load, handlePageChange } =
-  usePagedList<ReservationAdminData>((page) => getAdminReservations(page))
+const { records, pageNo, total, loading, errorMessage, load, handlePageChange } = usePagedList<ReservationAdminData>(
+  (page) => getAdminReservations(page),
+)
 
 const actionId = ref<number | null>(null)
 
 const drawerVisible = ref(false)
 const detailLoading = ref(false)
 const detailData = ref<ReservationAdminData | null>(null)
-
 
 async function openDetail(item: ReservationAdminData) {
   drawerVisible.value = true
@@ -87,7 +87,9 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="状态" width="95">
         <template #default="{ row }">
-          <el-tag :type="getReservationTagKind(row.status)" disable-transitions>{{ getReservationStatusLabel(row.status) }}</el-tag>
+          <el-tag :type="getReservationTagKind(row.status)" disable-transitions>{{
+            getReservationStatusLabel(row.status)
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="140" fixed="right">
@@ -127,7 +129,9 @@ onMounted(load)
       </template>
       <div v-loading="detailLoading" class="reservation-drawer-body">
         <el-descriptions v-if="detailData" :column="1" border size="small">
-          <el-descriptions-item label="桌位">{{ detailData.tableNo || `桌位 ${detailData.tableId}` }}</el-descriptions-item>
+          <el-descriptions-item label="桌位">{{
+            detailData.tableNo || `桌位 ${detailData.tableId}`
+          }}</el-descriptions-item>
           <el-descriptions-item label="人数">{{ detailData.peopleCount }} 人</el-descriptions-item>
           <el-descriptions-item label="预约时间">{{ formatDateTime(detailData.reserveTime) }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ getReservationStatusLabel(detailData.status) }}</el-descriptions-item>

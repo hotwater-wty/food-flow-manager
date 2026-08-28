@@ -5,7 +5,9 @@ import { http } from './http'
 export async function getAdminSessions(pageNo = 1, status?: number): Promise<PageResult<DiningSessionData>> {
   // 管理端会话列表使用 PageResult，而顾客端当前会话是单个对象或 null。
   // status 支持后端的会话状态筛选(0-3);未传时不携带该参数,后端返回全部状态。
-  const response = await http.get<Result<PageResult<DiningSessionData>>>('/admin/sessions', { params: { pageNo, pageSize: 10, ...(status !== undefined ? { status } : {}) } })
+  const response = await http.get<Result<PageResult<DiningSessionData>>>('/admin/sessions', {
+    params: { pageNo, pageSize: 10, ...(status !== undefined ? { status } : {}) },
+  })
   const result = response.data
   if (result.code !== 1 || result.data === null) throw new Error(result.msg || '会话列表查询失败')
   return result.data

@@ -40,7 +40,9 @@ export const useAdminAuthStore = defineStore('admin-auth', () => {
       if (typeof parsed.token !== 'string' || !parsed.user) return logout()
       token.value = parsed.token
       user.value = parsed.user
-    } catch { logout() }
+    } catch {
+      logout()
+    }
   }
 
   return { token, user, isAuthenticated, login, logout, restore }

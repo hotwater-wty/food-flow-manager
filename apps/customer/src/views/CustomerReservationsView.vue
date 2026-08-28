@@ -141,7 +141,12 @@ onMounted(loadReservations)
         </div>
         <p class="my-reservations-time">预约时间:{{ formatDateTime(reservation.reserveTime) }}</p>
         <div class="my-reservations-actions">
-          <van-button size="small" plain @click="showDetail(reservation)" :loading="detailLoadingId === reservation.reservationId">
+          <van-button
+            size="small"
+            plain
+            :loading="detailLoadingId === reservation.reservationId"
+            @click="showDetail(reservation)"
+          >
             {{ selectedReservation?.reservationId === reservation.reservationId ? '收起详情' : '查看详情' }}
           </van-button>
           <van-button
@@ -165,7 +170,11 @@ onMounted(loadReservations)
             到店开台
           </van-button>
         </div>
-        <van-cell-group v-if="selectedReservation?.reservationId === reservation.reservationId" inset class="my-reservations-detail">
+        <van-cell-group
+          v-if="selectedReservation?.reservationId === reservation.reservationId"
+          inset
+          class="my-reservations-detail"
+        >
           <van-cell title="预约编号" :value="selectedReservation.reservationNo" />
           <van-cell title="桌位" :value="selectedReservation.tableNo || `桌位 ${selectedReservation.tableId}`" />
           <van-cell title="人数" :value="`${selectedReservation.peopleCount} 人`" />
@@ -181,8 +190,15 @@ onMounted(loadReservations)
       show-cancel-button
       confirm-button-text="去点餐"
       cancel-button-text="关闭"
-      @confirm="sessionResult = null; $router === undefined"
-      @update:show="(value: boolean) => { if (!value) sessionResult = null }"
+      @confirm="
+        sessionResult = null
+        $router === undefined
+      "
+      @update:show="
+        (value: boolean) => {
+          if (!value) sessionResult = null
+        }
+      "
     >
       <div v-if="sessionResult" class="my-reservations-session">
         <van-cell title="会话编号" :value="sessionResult.sessionNo" />

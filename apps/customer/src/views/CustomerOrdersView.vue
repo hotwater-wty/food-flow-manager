@@ -84,7 +84,9 @@ onMounted(loadOrders)
           </div>
           <van-tag :type="orderTagType(order.status)" round>{{ getOrderStatusLabel(order.status) }}</van-tag>
         </div>
-        <p class="my-orders-amount">订单金额:<strong>{{ formatPrice(order.totalAmount) }}</strong></p>
+        <p class="my-orders-amount">
+          订单金额:<strong>{{ formatPrice(order.totalAmount) }}</strong>
+        </p>
         <van-button size="small" plain :loading="detailLoadingId === order.orderId" @click="showDetail(order)">
           {{ selectedOrder?.orderId === order.orderId ? '收起明细' : '查看明细' }}
         </van-button>

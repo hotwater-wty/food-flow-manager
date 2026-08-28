@@ -22,7 +22,4 @@ const pinia = createPinia()
 useAuthStore(pinia).restore()
 
 // createApp 创建 Vue 应用实例;use 注册插件;mount 把组件树挂到 index.html 的 #app 节点。
-createApp(App)
-  .use(pinia)
-  .use(router)
-  .mount('#app')
+createApp(App).use(pinia).use(router).mount('#app')

@@ -53,18 +53,11 @@ function handleLogout() {
 <template>
   <div class="admin-shell">
     <aside class="admin-sidebar">
-      <RouterLink class="admin-brand" to="/">
-        膳畅管家<span>商户端</span>
-      </RouterLink>
+      <RouterLink class="admin-brand" to="/"> 膳畅管家<span>商户端</span> </RouterLink>
       <nav class="admin-menu" aria-label="管理端导航">
         <section v-for="group in menuGroups" :key="group.label" class="admin-menu-group">
           <p class="admin-menu-label">{{ group.label }}</p>
-          <RouterLink
-            v-for="item in group.items"
-            :key="item.to"
-            class="admin-menu-item"
-            :to="item.to"
-          >
+          <RouterLink v-for="item in group.items" :key="item.to" class="admin-menu-item" :to="item.to">
             {{ item.label }}
           </RouterLink>
         </section>

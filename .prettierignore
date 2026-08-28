@@ -1,0 +1,6 @@
+dist
+node_modules
+pnpm-lock.yaml
+*.md
+apps/*/src/auto-imports.d.ts
+apps/*/src/components.d.ts

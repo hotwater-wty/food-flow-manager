@@ -5,7 +5,11 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
 import {
-  createCategory, deleteCategory, getAdminCategories, setCategoryEnabled, updateCategory,
+  createCategory,
+  deleteCategory,
+  getAdminCategories,
+  setCategoryEnabled,
+  updateCategory,
 } from '../../services/admin-resources'
 import type { DishCategoryData, DishCategoryRequest } from '@foodflow/shared/types/api'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -13,8 +17,9 @@ import { usePagedList } from '../../composables/use-pagedList'
 
 const PAGE_SIZE = 10
 
-const { records, pageNo, total, loading, errorMessage, load, handlePageChange } =
-  usePagedList<DishCategoryData>((page) => getAdminCategories(page))
+const { records, pageNo, total, loading, errorMessage, load, handlePageChange } = usePagedList<DishCategoryData>(
+  (page) => getAdminCategories(page),
+)
 
 const actionId = ref<number | null>(null)
 
@@ -124,10 +129,17 @@ onMounted(load)
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openEdit(row as DishCategoryData)">编辑</el-button>
-          <el-button link :type="row.status === 1 ? 'warning' : 'success'" :disabled="actionId !== null" @click="toggleEnabled(row as DishCategoryData)">
+          <el-button
+            link
+            :type="row.status === 1 ? 'warning' : 'success'"
+            :disabled="actionId !== null"
+            @click="toggleEnabled(row as DishCategoryData)"
+          >
             {{ row.status === 1 ? '禁用' : '启用' }}
           </el-button>
-          <el-button link type="danger" :disabled="actionId !== null" @click="remove(row as DishCategoryData)">删除</el-button>
+          <el-button link type="danger" :disabled="actionId !== null" @click="remove(row as DishCategoryData)"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
       <template #empty>

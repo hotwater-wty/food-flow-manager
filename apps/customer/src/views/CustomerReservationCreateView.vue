@@ -24,7 +24,8 @@ const selectedTable = computed(() => tables.value.find((table) => table.tableId 
 // VanField 的 rules 校验器:返回 true 通过,返回错误文案则不通过并展示在字段下方。
 const peopleValidator = (value: number) => {
   if (value < 1) return '预约人数至少为 1 人'
-  if (selectedTable.value && value > selectedTable.value.capacity) return `该桌最多容纳 ${selectedTable.value.capacity} 人`
+  if (selectedTable.value && value > selectedTable.value.capacity)
+    return `该桌最多容纳 ${selectedTable.value.capacity} 人`
   return true
 }
 const timeValidator = (value: string) => {
@@ -118,25 +119,33 @@ onMounted(loadTables)
         <van-cell-group inset>
           <van-field name="stepper" label="预约人数" :rules="[{ validator: peopleValidator }]">
             <template #input>
-              <van-stepper v-model="peopleCount" min="1" :max="selectedTable?.capacity ?? 99" theme="round" button-size="26" />
+              <van-stepper
+                v-model="peopleCount"
+                min="1"
+                :max="selectedTable?.capacity ?? 99"
+                theme="round"
+                button-size="26"
+              />
             </template>
           </van-field>
           <!-- v-model 绑定 reserveTime 后,rules 校验器才能拿到表单值;自定义 input 插槽只负责录入控件形态。 -->
           <van-field v-model="reserveTime" name="预约时间" label="预约时间" :rules="[{ validator: timeValidator }]">
             <template #input>
               <!-- Field 内嵌原生 datetime-local:视觉归 Vant,录入归系统控件。 -->
-              <input
-                v-model="reserveTime"
-                type="datetime-local"
-                class="reserve-time-input"
-                aria-label="预约时间"
-              />
+              <input v-model="reserveTime" type="datetime-local" class="reserve-time-input" aria-label="预约时间" />
             </template>
           </van-field>
         </van-cell-group>
         <p v-if="errorMessage" class="reserve-error" role="alert">{{ errorMessage }}</p>
         <div class="reserve-submit">
-          <van-button round block type="primary" native-type="submit" :disabled="selectedTableId === null" :loading="isSubmitting">
+          <van-button
+            round
+            block
+            type="primary"
+            native-type="submit"
+            :disabled="selectedTableId === null"
+            :loading="isSubmitting"
+          >
             {{ selectedTableId === null ? '请先选择桌位' : '创建预约' }}
           </van-button>
         </div>

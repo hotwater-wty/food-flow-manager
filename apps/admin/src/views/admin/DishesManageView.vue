@@ -6,7 +6,12 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
 import {
-  createDish, deleteDish, getAdminCategories, getAdminDishes, setDishStatus, updateDish,
+  createDish,
+  deleteDish,
+  getAdminCategories,
+  getAdminDishes,
+  setDishStatus,
+  updateDish,
 } from '../../services/admin-resources'
 import type { DishCategoryData, DishData } from '@foodflow/shared/types/api'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -16,8 +21,9 @@ import { usePagedList } from '../../composables/use-pagedList'
 
 const PAGE_SIZE = 10
 
-const { records, pageNo, total, loading, errorMessage, load, handlePageChange } =
-  usePagedList<DishData>((page) => getAdminDishes(page))
+const { records, pageNo, total, loading, errorMessage, load, handlePageChange } = usePagedList<DishData>((page) =>
+  getAdminDishes(page),
+)
 
 // 分类下拉选项:新增/编辑菜品时把 categoryId 从"手填数字"升级为下拉选择。
 // 弹窗打开时按需加载一次;排序取后端默认顺序。
@@ -51,8 +57,9 @@ const rules: FormRules = {
   image: [{ required: true, message: '请输入图片地址', trigger: 'blur' }],
 }
 
-const categoryLabel = computed(() => (id: number) => categoryOptions.value.find((c) => c.id === id)?.name ?? `分类 ${id}`)
-
+const categoryLabel = computed(
+  () => (id: number) => categoryOptions.value.find((c) => c.id === id)?.name ?? `分类 ${id}`,
+)
 
 function dishTagType(status: number): 'success' | 'warning' | 'info' {
   if (status === 1) return 'success'
@@ -97,9 +104,22 @@ async function submit() {
   try {
     if (editingId.value !== null) {
       // 更新接口不接受创建时的 status 字段,状态变更走独立接口。
-      await updateDish(editingId.value, { categoryId: form.categoryId!, name: form.name, description: form.description, price: priceCents, image: form.image })
+      await updateDish(editingId.value, {
+        categoryId: form.categoryId!,
+        name: form.name,
+        description: form.description,
+        price: priceCents,
+        image: form.image,
+      })
     } else {
-      await createDish({ categoryId: form.categoryId!, name: form.name, description: form.description, price: priceCents, image: form.image, status: form.status })
+      await createDish({
+        categoryId: form.categoryId!,
+        name: form.name,
+        description: form.description,
+        price: priceCents,
+        image: form.image,
+        status: form.status,
+      })
     }
     ElMessage.success(editingId.value !== null ? '菜品已更新' : '菜品已创建')
     dialogVisible.value = false
@@ -203,7 +223,12 @@ onMounted(() => {
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" @click="openEdit(row as DishData)">编辑</el-button>
-          <el-button link :type="row.status === 1 ? 'warning' : 'success'" :disabled="actionId !== null" @click="toggleStatus(row as DishData)">
+          <el-button
+            link
+            :type="row.status === 1 ? 'warning' : 'success'"
+            :disabled="actionId !== null"
+            @click="toggleStatus(row as DishData)"
+          >
             {{ row.status === 1 ? '停售' : '启售' }}
           </el-button>
           <el-button link type="danger" :disabled="actionId !== null" @click="remove(row as DishData)">删除</el-button>
@@ -229,7 +254,12 @@ onMounted(() => {
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="分类" prop="categoryId">
           <el-select v-model="form.categoryId" placeholder="选择分类" style="width: 100%">
-            <el-option v-for="option in categoryOptions" :key="option.id" :label="`${option.name}(#${option.id})`" :value="option.id" />
+            <el-option
+              v-for="option in categoryOptions"
+              :key="option.id"
+              :label="`${option.name}(#${option.id})`"
+              :value="option.id"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="名称" prop="name">

@@ -13,16 +13,12 @@ const { isAuthenticated, user } = storeToRefs(authStore)
   <section class="home-view">
     <p class="eyebrow">膳畅管家</p>
     <h1>{{ isAuthenticated && user ? `欢迎回来,${user.nickname}` : '扫码点餐 · 预约座位' }}</h1>
-    <p class="summary">
-      到店后扫描桌码开台即可点餐,也可以提前预约座位;提交订单后可随时在"订单"里查看进度。
-    </p>
+    <p class="summary">到店后扫描桌码开台即可点餐,也可以提前预约座位;提交订单后可随时在"订单"里查看进度。</p>
 
     <div class="home-actions">
       <RouterLink class="home-primary-action" to="/menu">去点餐</RouterLink>
       <RouterLink class="secondary-button" to="/reservations/create">预约座位</RouterLink>
-      <RouterLink v-if="!isAuthenticated" class="secondary-button" to="/login">
-        登录 / 注册
-      </RouterLink>
+      <RouterLink v-if="!isAuthenticated" class="secondary-button" to="/login"> 登录 / 注册 </RouterLink>
     </div>
 
     <dl class="status-list">
@@ -39,6 +35,5 @@ const { isAuthenticated, user } = storeToRefs(authStore)
         <dd>在底部"订单"里跟踪制作进度</dd>
       </div>
     </dl>
-
   </section>
 </template>

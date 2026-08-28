@@ -23,8 +23,17 @@ export interface UserLoginData {
   token: string
 }
 
-export interface UserRegisterRequest { phone: string; password: string; nickname: string }
-export interface UserRegisterData { userId: number; phone: string; nickname: string; status: number }
+export interface UserRegisterRequest {
+  phone: string
+  password: string
+  nickname: string
+}
+export interface UserRegisterData {
+  userId: number
+  phone: string
+  nickname: string
+  status: number
+}
 
 export interface EmployeeLoginData {
   employeeId: number
@@ -174,18 +183,56 @@ export interface DiningSessionCloseData extends DiningSessionData {
 }
 
 // 管理端写请求使用独立类型，避免把后端返回对象直接当成表单数据。
-export interface TableRequest { tableNo: string; capacity: number; locationDesc?: string }
-export interface DishCategoryRequest { name: string; sort: number }
-export interface DishCreateRequest { categoryId: number; name: string; description: string; price: number; image: string; status: number }
-export interface DishUpdateRequest { categoryId: number; name: string; description: string; price: number; image: string }
-export interface EmployeeCreateRequest { phone: string; password: string; name: string }
-// extends 空接口表达“当前与顾客预约结构相同”，未来可独立增加管理字段。
-export interface ReservationAdminData extends ReservationData {}
-export interface EmployeeData { employeeId: number; phone: string; name: string; role: number; status: number }
+export interface TableRequest {
+  tableNo: string
+  capacity: number
+  locationDesc?: string
+}
+export interface DishCategoryRequest {
+  name: string
+  sort: number
+}
+export interface DishCreateRequest {
+  categoryId: number
+  name: string
+  description: string
+  price: number
+  image: string
+  status: number
+}
+export interface DishUpdateRequest {
+  categoryId: number
+  name: string
+  description: string
+  price: number
+  image: string
+}
+export interface EmployeeCreateRequest {
+  phone: string
+  password: string
+  name: string
+}
+// 当前与管理端预约结构相同,未来需要独立字段时改为 interface 扩展。
+export type ReservationAdminData = ReservationData
+export interface EmployeeData {
+  employeeId: number
+  phone: string
+  name: string
+  role: number
+  status: number
+}
 
 // 经营统计(三期 R5):口径为服务器时区当日、不含已取消订单,金额均为整数分。
-export interface StatusCount { status: number; count: number }
-export interface TopDish { dishId: number; dishName: string; quantity: number; amount: number }
+export interface StatusCount {
+  status: number
+  count: number
+}
+export interface TopDish {
+  dishId: number
+  dishName: string
+  quantity: number
+  amount: number
+}
 export interface StatisticsOverview {
   todayOrderCount: number
   todayRevenue: number

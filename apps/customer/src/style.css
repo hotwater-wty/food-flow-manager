@@ -3,7 +3,16 @@
 /* 布局私有样式(顶栏、底部导航)在 layouts/CustomerLayout.vue 的 scoped 样式中; */
 /* 管理端专属样式随 apps/admin 走,不在此文件。 */
 body {
-  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family:
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
   color: var(--color-text);
   background: var(--color-bg-customer);
   font-synthesis: none;
@@ -11,9 +20,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; }
-a { color: inherit; text-decoration: none; }
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
 /* ---- 通用卡片与文字 ---- */
 .home-view {
@@ -24,17 +41,62 @@ a { color: inherit; text-decoration: none; }
   max-width: 720px;
   padding: clamp(28px, 6vw, 56px);
 }
-.eyebrow { color: var(--color-brand); font-size: .8rem; font-weight: 700; letter-spacing: .08em; margin: 0 0 16px; text-transform: uppercase; }
-h1 { color: var(--color-text); font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 0; }
-.summary { color: var(--color-text-secondary); line-height: 1.7; margin: 24px 0 32px; max-width: 58ch; }
-.status-list { border-top: 1px solid var(--color-border-soft); display: grid; margin: 32px 0 0; }
-.status-list div { align-items: baseline; border-bottom: 1px solid var(--color-border-soft); display: flex; gap: 20px; justify-content: space-between; padding: 14px 0; }
-dt { color: var(--color-text-muted); font-size: .9rem; }
-dd { color: var(--color-text); font-size: .95rem; margin: 0; text-align: right; }
-code { background: var(--color-brand-soft); border-radius: var(--radius-sm); color: var(--color-brand); padding: 2px 6px; }
+.eyebrow {
+  color: var(--color-brand);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0 0 16px;
+  text-transform: uppercase;
+}
+h1 {
+  color: var(--color-text);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  margin: 0;
+}
+.summary {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  margin: 24px 0 32px;
+  max-width: 58ch;
+}
+.status-list {
+  border-top: 1px solid var(--color-border-soft);
+  display: grid;
+  margin: 32px 0 0;
+}
+.status-list div {
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border-soft);
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+dt {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+dd {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  margin: 0;
+  text-align: right;
+}
+code {
+  background: var(--color-brand-soft);
+  border-radius: var(--radius-sm);
+  color: var(--color-brand);
+  padding: 2px 6px;
+}
 
 /* ---- 首页行动区与员工入口 ---- */
-.home-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .home-primary-action {
   background: var(--color-brand);
   border: 0;
@@ -45,106 +107,511 @@ code { background: var(--color-brand-soft); border-radius: var(--radius-sm); col
   font-weight: 700;
   padding: 12px 24px;
 }
-.home-primary-action:hover { background: var(--color-brand-strong); }
-.home-staff-entry { border-top: 1px solid var(--color-border-soft); color: var(--color-text-muted); font-size: .85rem; margin: 32px 0 0; padding-top: 16px; }
-.home-staff-entry a { color: var(--color-brand); font-weight: 600; }
+.home-primary-action:hover {
+  background: var(--color-brand-strong);
+}
+.home-staff-entry {
+  border-top: 1px solid var(--color-border-soft);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: 32px 0 0;
+  padding-top: 16px;
+}
+.home-staff-entry a {
+  color: var(--color-brand);
+  font-weight: 600;
+}
 
 /* ---- 登录 / 注册 / 404 卡片 ---- */
-.auth-view { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin: 0 auto; max-width: 480px; padding: clamp(28px, 6vw, 48px); }
-.auth-heading h1 { font-size: clamp(2rem, 5vw, 3rem); }
-.auth-heading > p:last-child { color: var(--color-text-secondary); line-height: 1.6; margin: 16px 0 0; }
-.auth-form { display: grid; gap: 18px; margin-top: 32px; }
-.auth-form label { color: var(--color-text-secondary); display: grid; font-size: .9rem; font-weight: 600; gap: 8px; }
-.auth-form input { border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); color: var(--color-text); font: inherit; padding: 11px 12px; }
-.auth-form input:focus { border-color: var(--color-brand); outline: 2px solid var(--color-brand-ring); }
-.auth-form button { background: var(--color-brand); border: 0; border-radius: var(--radius-sm); color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: 12px; }
-.auth-form button:hover { background: var(--color-brand-strong); }
-.auth-form button:disabled { cursor: wait; opacity: .65; }
-.auth-session { display: grid; gap: 18px; margin-top: 32px; }
-.auth-user-details { border-top: 1px solid var(--color-border-soft); display: grid; margin: 0; }
-.auth-user-details div { align-items: baseline; border-bottom: 1px solid var(--color-border-soft); display: flex; gap: 20px; justify-content: space-between; padding: 12px 0; }
-.auth-session-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.auth-alt-link { border-top: 1px solid var(--color-border-soft); color: var(--color-text-muted); font-size: .85rem; margin: 24px 0 0; padding-top: 16px; }
-.auth-alt-link a { color: var(--color-brand); font-weight: 600; }
-.not-found-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.auth-view {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin: 0 auto;
+  max-width: 480px;
+  padding: clamp(28px, 6vw, 48px);
+}
+.auth-heading h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+.auth-heading > p:last-child {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 16px 0 0;
+}
+.auth-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 32px;
+}
+.auth-form label {
+  color: var(--color-text-secondary);
+  display: grid;
+  font-size: 0.9rem;
+  font-weight: 600;
+  gap: 8px;
+}
+.auth-form input {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font: inherit;
+  padding: 11px 12px;
+}
+.auth-form input:focus {
+  border-color: var(--color-brand);
+  outline: 2px solid var(--color-brand-ring);
+}
+.auth-form button {
+  background: var(--color-brand);
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 12px;
+}
+.auth-form button:hover {
+  background: var(--color-brand-strong);
+}
+.auth-form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.auth-session {
+  display: grid;
+  gap: 18px;
+  margin-top: 32px;
+}
+.auth-user-details {
+  border-top: 1px solid var(--color-border-soft);
+  display: grid;
+  margin: 0;
+}
+.auth-user-details div {
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border-soft);
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+.auth-session-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.auth-alt-link {
+  border-top: 1px solid var(--color-border-soft);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: 24px 0 0;
+  padding-top: 16px;
+}
+.auth-alt-link a {
+  color: var(--color-brand);
+  font-weight: 600;
+}
+.not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
 
 /* ---- 通用按钮 ---- */
-.secondary-button { background: var(--color-surface); border: 1px solid var(--color-brand); border-radius: var(--radius-sm); color: var(--color-brand); cursor: pointer; display: inline-block; font: inherit; font-weight: 700; padding: 11px 12px; text-align: center; }
-.secondary-button:hover { background: var(--color-brand-soft); }
-.danger-button { background: var(--color-surface); border: 1px solid var(--color-danger); border-radius: var(--radius-sm); color: var(--color-danger); cursor: pointer; font: inherit; font-weight: 700; padding: 11px 12px; }
-.danger-button:hover { background: var(--color-danger-soft); }
-.danger-button:disabled, .secondary-button:disabled { cursor: wait; opacity: .55; }
-.primary-outline-button { background: var(--color-surface); border: 1px solid var(--color-brand); border-radius: var(--radius-sm); color: var(--color-brand); cursor: pointer; font: inherit; font-weight: 700; padding: 11px 12px; }
-.primary-outline-button:disabled { cursor: wait; opacity: .55; }
+.secondary-button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-sm);
+  color: var(--color-brand);
+  cursor: pointer;
+  display: inline-block;
+  font: inherit;
+  font-weight: 700;
+  padding: 11px 12px;
+  text-align: center;
+}
+.secondary-button:hover {
+  background: var(--color-brand-soft);
+}
+.danger-button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 11px 12px;
+}
+.danger-button:hover {
+  background: var(--color-danger-soft);
+}
+.danger-button:disabled,
+.secondary-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.primary-outline-button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-sm);
+  color: var(--color-brand);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 11px 12px;
+}
+.primary-outline-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
 
 /* ---- 预约 ---- */
-.reservation-view { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin: 0 auto; max-width: 960px; padding: clamp(28px, 6vw, 48px); }
-.reservation-heading h1 { font-size: clamp(2rem, 5vw, 3rem); }
-.reservation-heading > p:last-child { color: var(--color-text-secondary); line-height: 1.6; margin: 16px 0 0; }
-.reservation-layout { display: grid; gap: 32px; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); margin-top: 32px; }
-.reservation-layout h2 { color: var(--color-text); font-size: 1.1rem; margin: 0 0 14px; }
-.table-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-.table-option { background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); color: var(--color-text); cursor: pointer; display: grid; gap: 6px; padding: 16px; text-align: left; }
-.table-option:hover, .table-option-selected { border-color: var(--color-brand); box-shadow: 0 0 0 2px var(--color-brand-ring); }
-.table-option span, .table-option small { color: var(--color-text-secondary); }
-.reservation-form { align-self: start; border-left: 1px solid var(--color-border-soft); display: grid; gap: 18px; padding-left: 24px; }
-.reservation-form label { color: var(--color-text-secondary); display: grid; font-size: .9rem; font-weight: 600; gap: 8px; }
-.reservation-form input { border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); color: var(--color-text); font: inherit; padding: 11px 12px; }
-.reservation-form button { background: var(--color-brand); border: 0; border-radius: var(--radius-sm); color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: 12px; }
-.reservation-form button:disabled { cursor: not-allowed; opacity: .5; }
-.reservation-result { display: grid; gap: 18px; margin-top: 32px; }
-.reservation-list { display: grid; gap: 14px; margin-top: 32px; }
-.reservation-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 18px; }
-.reservation-card-heading { align-items: flex-start; display: flex; gap: 16px; justify-content: space-between; }
-.reservation-card-heading div { display: grid; gap: 7px; }
-.reservation-card-heading span, .reservation-time { color: var(--color-text-secondary); }
-.reservation-status { color: var(--color-brand); font-weight: 700; white-space: nowrap; }
-.reservation-time { margin: 14px 0; }
-.reservation-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.reservation-detail { border-top: 1px solid var(--color-border-soft); display: grid; margin: 18px 0 0; }
-.reservation-detail div { align-items: baseline; border-bottom: 1px solid var(--color-border-soft); display: flex; justify-content: space-between; padding: 10px 0; }
+.reservation-view {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin: 0 auto;
+  max-width: 960px;
+  padding: clamp(28px, 6vw, 48px);
+}
+.reservation-heading h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+.reservation-heading > p:last-child {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 16px 0 0;
+}
+.reservation-layout {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  margin-top: 32px;
+}
+.reservation-layout h2 {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  margin: 0 0 14px;
+}
+.table-list {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.table-option {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  cursor: pointer;
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  text-align: left;
+}
+.table-option:hover,
+.table-option-selected {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px var(--color-brand-ring);
+}
+.table-option span,
+.table-option small {
+  color: var(--color-text-secondary);
+}
+.reservation-form {
+  align-self: start;
+  border-left: 1px solid var(--color-border-soft);
+  display: grid;
+  gap: 18px;
+  padding-left: 24px;
+}
+.reservation-form label {
+  color: var(--color-text-secondary);
+  display: grid;
+  font-size: 0.9rem;
+  font-weight: 600;
+  gap: 8px;
+}
+.reservation-form input {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font: inherit;
+  padding: 11px 12px;
+}
+.reservation-form button {
+  background: var(--color-brand);
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 12px;
+}
+.reservation-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.reservation-result {
+  display: grid;
+  gap: 18px;
+  margin-top: 32px;
+}
+.reservation-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 32px;
+}
+.reservation-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+}
+.reservation-card-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+.reservation-card-heading div {
+  display: grid;
+  gap: 7px;
+}
+.reservation-card-heading span,
+.reservation-time {
+  color: var(--color-text-secondary);
+}
+.reservation-status {
+  color: var(--color-brand);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.reservation-time {
+  margin: 14px 0;
+}
+.reservation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.reservation-detail {
+  border-top: 1px solid var(--color-border-soft);
+  display: grid;
+  margin: 18px 0 0;
+}
+.reservation-detail div {
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border-soft);
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+}
 
 /* ---- 反馈条 ---- */
-.feedback { border-radius: var(--radius-sm); line-height: 1.5; margin: 0; padding: 10px 12px; }
-.feedback-error { background: var(--color-danger-soft); color: var(--color-danger); }
-.feedback-success { background: var(--color-success-soft); color: var(--color-success); }
+.feedback {
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+  margin: 0;
+  padding: 10px 12px;
+}
+.feedback-error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.feedback-success {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
 
 /* ---- 开台 / 会话 ---- */
-.session-result, .session-open-panel { display: grid; gap: 18px; margin-top: 32px; }
-.session-open-panel h2 { color: var(--color-text); font-size: 1.1rem; margin: 0; }
-.session-open-panel > p { color: var(--color-text-secondary); margin: 0; }
-.open-session-button { background: var(--color-brand); border: 0; border-radius: var(--radius-sm); color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: 12px; }
-.open-session-button:hover { background: var(--color-brand-strong); }
-.open-session-button:disabled { cursor: wait; opacity: .55; }
+.session-result,
+.session-open-panel {
+  display: grid;
+  gap: 18px;
+  margin-top: 32px;
+}
+.session-open-panel h2 {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  margin: 0;
+}
+.session-open-panel > p {
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+.open-session-button {
+  background: var(--color-brand);
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 12px;
+}
+.open-session-button:hover {
+  background: var(--color-brand-strong);
+}
+.open-session-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
 
 /* ---- 菜单 / 购物车 ---- */
-.menu-view { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin: 0 auto; max-width: 1100px; padding: clamp(28px, 6vw, 48px); }
-.menu-layout { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr) minmax(260px, .38fr); margin-top: 32px; }
-.category-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-.category-button { background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); color: var(--color-text-secondary); cursor: pointer; font: inherit; padding: 9px 12px; }
-.category-button-selected { background: var(--color-brand); border-color: var(--color-brand); color: #fff; }
-.dish-list { display: grid; gap: 12px; }
-.dish-card { align-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-md); display: flex; gap: 16px; justify-content: space-between; padding: 16px; }
-.dish-card-content { display: grid; gap: 6px; min-width: 0; }
-.dish-card-content p { color: var(--color-text-muted); margin: 0; }
-.dish-price { color: var(--color-brand); font-weight: 700; }
-.quantity-control { align-items: center; display: flex; flex: 0 0 auto; gap: 10px; }
-.quantity-control button { background: var(--color-surface); border: 1px solid var(--color-brand); border-radius: var(--radius-sm); color: var(--color-brand); cursor: pointer; font-size: 1.1rem; height: 32px; width: 32px; }
-.quantity-control button:disabled { cursor: not-allowed; opacity: .4; }
-.cart-panel { align-self: start; border-left: 1px solid var(--color-border-soft); padding-left: 24px; }
-.cart-panel h2 { color: var(--color-text); font-size: 1.1rem; margin: 0 0 16px; }
-.cart-list { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
-.cart-list li { display: flex; gap: 12px; justify-content: space-between; }
-.cart-summary { border-top: 1px solid var(--color-border-soft); display: flex; justify-content: space-between; margin-top: 18px; padding-top: 14px; }
-.cart-note { color: var(--color-text-muted); font-size: .85rem; line-height: 1.5; }
-.order-result { display: grid; gap: 18px; margin-top: 24px; }
+.menu-view {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin: 0 auto;
+  max-width: 1100px;
+  padding: clamp(28px, 6vw, 48px);
+}
+.menu-layout {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.38fr);
+  margin-top: 32px;
+}
+.category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.category-button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  padding: 9px 12px;
+}
+.category-button-selected {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: #fff;
+}
+.dish-list {
+  display: grid;
+  gap: 12px;
+}
+.dish-card {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px;
+}
+.dish-card-content {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.dish-card-content p {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+.dish-price {
+  color: var(--color-brand);
+  font-weight: 700;
+}
+.quantity-control {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+.quantity-control button {
+  background: var(--color-surface);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-sm);
+  color: var(--color-brand);
+  cursor: pointer;
+  font-size: 1.1rem;
+  height: 32px;
+  width: 32px;
+}
+.quantity-control button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+.cart-panel {
+  align-self: start;
+  border-left: 1px solid var(--color-border-soft);
+  padding-left: 24px;
+}
+.cart-panel h2 {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  margin: 0 0 16px;
+}
+.cart-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cart-list li {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.cart-summary {
+  border-top: 1px solid var(--color-border-soft);
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
+  padding-top: 14px;
+}
+.cart-note {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.order-result {
+  display: grid;
+  gap: 18px;
+  margin-top: 24px;
+}
 
-@media (max-width: 760px) { .menu-layout { grid-template-columns: 1fr; } .cart-panel { border-left: 0; border-top: 1px solid var(--color-border-soft); padding-left: 0; padding-top: 24px; } }
+@media (max-width: 760px) {
+  .menu-layout {
+    grid-template-columns: 1fr;
+  }
+  .cart-panel {
+    border-left: 0;
+    border-top: 1px solid var(--color-border-soft);
+    padding-left: 0;
+    padding-top: 24px;
+  }
+}
 @media (max-width: 560px) {
-  .status-list div { align-items: flex-start; flex-direction: column; gap: 4px; }
-  dd { text-align: left; }
-  .reservation-layout { grid-template-columns: 1fr; }
-  .reservation-form { border-left: 0; border-top: 1px solid var(--color-border-soft); padding-left: 0; padding-top: 24px; }
+  .status-list div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+  dd {
+    text-align: left;
+  }
+  .reservation-layout {
+    grid-template-columns: 1fr;
+  }
+  .reservation-form {
+    border-left: 0;
+    border-top: 1px solid var(--color-border-soft);
+    padding-left: 0;
+    padding-top: 24px;
+  }
 }
 
 /* 路由切换过渡(三期 R2):顾客端用轻量 fade。

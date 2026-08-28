@@ -5,7 +5,12 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
-import { cancelAdminSession, closeAdminSession, getAdminSessionDetail, getAdminSessions } from '../services/admin-session'
+import {
+  cancelAdminSession,
+  closeAdminSession,
+  getAdminSessionDetail,
+  getAdminSessions,
+} from '../services/admin-session'
 import type { DiningSessionData } from '@foodflow/shared/types/api'
 import { getSessionStatusLabel, getTableStatusLabel } from '@foodflow/shared/utils/status'
 import { usePagedList } from '../composables/use-pagedList'
@@ -121,7 +126,9 @@ onMounted(load)
       <el-table-column prop="tableNo" label="桌位" width="80" />
       <el-table-column label="会话状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="sessionTagType(row.sessionStatus)" disable-transitions>{{ getSessionStatusLabel(row.sessionStatus) }}</el-tag>
+          <el-tag :type="sessionTagType(row.sessionStatus)" disable-transitions>{{
+            getSessionStatusLabel(row.sessionStatus)
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="桌位状态" width="100">
@@ -175,8 +182,12 @@ onMounted(load)
       <div v-loading="detailLoading" class="session-drawer-body">
         <el-descriptions v-if="detailData" :column="1" border size="small">
           <el-descriptions-item label="桌位">{{ detailData.tableNo }}</el-descriptions-item>
-          <el-descriptions-item label="会话状态">{{ getSessionStatusLabel(detailData.sessionStatus) }}</el-descriptions-item>
-          <el-descriptions-item label="桌位状态">{{ getTableStatusLabel(detailData.tableStatus) }}</el-descriptions-item>
+          <el-descriptions-item label="会话状态">{{
+            getSessionStatusLabel(detailData.sessionStatus)
+          }}</el-descriptions-item>
+          <el-descriptions-item label="桌位状态">{{
+            getTableStatusLabel(detailData.tableStatus)
+          }}</el-descriptions-item>
         </el-descriptions>
         <p v-else class="session-drawer-hint">正在读取会话数据...</p>
       </div>

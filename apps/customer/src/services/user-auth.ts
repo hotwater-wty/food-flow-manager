@@ -1,6 +1,12 @@
 // 顾客认证服务：注册和登录响应都经过 Result 解包后交给 Store。
 import axios from 'axios'
-import type { Result, UserLoginData, UserLoginRequest, UserRegisterData, UserRegisterRequest } from '@foodflow/shared/types/api'
+import type {
+  Result,
+  UserLoginData,
+  UserLoginRequest,
+  UserRegisterData,
+  UserRegisterRequest,
+} from '@foodflow/shared/types/api'
 import { http } from './http'
 
 export async function loginUser(request: UserLoginRequest): Promise<UserLoginData> {

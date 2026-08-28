@@ -29,10 +29,18 @@ const statusOptions: Array<{ label: string; value: number | '' }> = [
 
 // 三期 R4 改用 usePagedList:分页状态机与静默加载都交给组合式函数,
 // 闭包捕获 statusFilter,筛选值变化后重新 load 即携带新的查询参数。
-const { records: orders, pageNo, total, loading, errorMessage, load, handlePageChange, reloadFromFirstPage } =
-  usePagedList<AdminOrderData>((page) =>
-    getAdminOrders(page, statusFilter.value === '' ? undefined : statusFilter.value),
-  )
+const {
+  records: orders,
+  pageNo,
+  total,
+  loading,
+  errorMessage,
+  load,
+  handlePageChange,
+  reloadFromFirstPage,
+} = usePagedList<AdminOrderData>((page) =>
+  getAdminOrders(page, statusFilter.value === '' ? undefined : statusFilter.value),
+)
 
 // 详情抽屉:drawerVisible 控制开合,detailLoading 区分"加载中"与"已加载"。
 const drawerVisible = ref(false)

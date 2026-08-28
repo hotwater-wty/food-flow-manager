@@ -25,9 +25,7 @@ const route = useRoute()
 // 不让组件自己维护选中态,刷新或地址直达时高亮也不会错位;
 // 账户中心等不在导航里的页面返回 -1,四个 Tab 全部不点亮。
 const activeTabIndex = computed(() => {
-  return tabItems.findIndex((item) =>
-    item.exactOnly ? route.path === item.to : route.path.startsWith(item.to),
-  )
+  return tabItems.findIndex((item) => (item.exactOnly ? route.path === item.to : route.path.startsWith(item.to)))
 })
 </script>
 
@@ -56,12 +54,7 @@ const activeTabIndex = computed(() => {
     <!-- placeholder 固定占位:Tabbar 是 fixed 定位,用它把内容区底部撑出等高空间,避免最后一段被遮住。 -->
     <van-tabbar placeholder :model-value="activeTabIndex">
       <!-- 高亮由 activeTabIndex(路由推导)控制;点击时 to 负责跳转,路由变化后再回推高亮。 -->
-      <van-tabbar-item
-        v-for="item in tabItems"
-        :key="item.to"
-        :to="item.to"
-        :icon="item.icon"
-      >
+      <van-tabbar-item v-for="item in tabItems" :key="item.to" :to="item.to" :icon="item.icon">
         {{ item.label }}
       </van-tabbar-item>
     </van-tabbar>

@@ -120,7 +120,13 @@ onMounted(loadMenu)
 <template>
   <section class="menu-page">
     <!-- 没有会话时给出醒目提示与跳转入口;不阻塞浏览菜单。 -->
-    <van-notice-bar v-if="!isLoading && currentSession === null" left-icon="info-o" mode="link" text="当前没有用餐会话,下单前请先开台" to="/session" />
+    <van-notice-bar
+      v-if="!isLoading && currentSession === null"
+      left-icon="info-o"
+      mode="link"
+      text="当前没有用餐会话,下单前请先开台"
+      to="/session"
+    />
 
     <van-loading v-if="isLoading" class="menu-loading" size="24px" vertical>正在加载菜单...</van-loading>
     <template v-else>
@@ -132,11 +138,19 @@ onMounted(loadMenu)
           <van-cell title="桌位" :value="orderResult.tableNo" />
           <van-cell title="订单金额" :value="formatPrice(orderResult.totalAmount)" />
         </van-cell-group>
-        <van-button block type="primary" plain class="menu-order-result-button" @click="dismissOrderResult">继续点餐</van-button>
+        <van-button block type="primary" plain class="menu-order-result-button" @click="dismissOrderResult"
+          >继续点餐</van-button
+        >
       </div>
 
       <template v-else>
-        <van-tabs v-model:active="activeCategory" sticky :offset-top="56" line-width="20px" @click-tab="onCategoryChange">
+        <van-tabs
+          v-model:active="activeCategory"
+          sticky
+          :offset-top="56"
+          line-width="20px"
+          @click-tab="onCategoryChange"
+        >
           <van-tab title="全部" :name="ALL_CATEGORY" />
           <van-tab v-for="category in categories" :key="category.id" :title="category.name" :name="category.id" />
         </van-tabs>
@@ -207,7 +221,9 @@ onMounted(loadMenu)
         >
           <div v-if="selectedDish" class="menu-dish-detail">
             <van-image :src="selectedDish.image ?? undefined" fit="cover" width="100%" height="160" radius="8">
-              <template #error><div class="menu-dish-thumb--fallback menu-dish-detail-fallback">暂无图片</div></template>
+              <template #error
+                ><div class="menu-dish-thumb--fallback menu-dish-detail-fallback">暂无图片</div></template
+              >
             </van-image>
             <p class="menu-dish-desc">{{ selectedDish.description || '暂无菜品描述' }}</p>
             <p class="menu-dish-price menu-dish-detail-price">{{ formatPrice(selectedDish.price) }}</p>

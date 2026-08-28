@@ -7,6 +7,20 @@
     "dev:customer": "pnpm --filter @foodflow/customer dev",
     "type-check": "pnpm -r type-check",
     "build": "pnpm -r build",
-    "verify:api": "node apps/admin/scripts/smoke-api.mjs"
-  }
+    "verify:api": "node apps/admin/scripts/smoke-api.mjs",
+    "lint": "eslint apps packages --ext .ts,.vue",
+    "lint:fix": "eslint apps packages --ext .ts,.vue --fix",
+    "format": "prettier --write \"apps/**/src/**/*.{ts,vue,css}\" \"packages/**/src/**/*.{ts,css}\"",
+    "format:check": "prettier --check \"apps/**/src/**/*.{ts,vue,css}\" \"packages/**/src/**/*.{ts,css}\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vue/eslint-config-typescript": "^14.9.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^9.33.0",
+    "prettier": "^3.9.6",
+    "typescript-eslint": "^8.68.0"
+  },
+  "type": "module"
 }

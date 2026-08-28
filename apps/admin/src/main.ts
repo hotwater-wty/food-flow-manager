@@ -25,7 +25,4 @@ useAdminAuthStore(pinia).restore()
 
 // createApp 创建 Vue 应用实例;use 注册插件;mount 把组件树挂到 index.html 的 #app 节点。
 // locale 通过 ConfigProvider 组件注入(见 App.vue),不再是 app.use 的全局选项。
-createApp(App)
-  .use(pinia)
-  .use(router)
-  .mount('#app')
+createApp(App).use(pinia).use(router).mount('#app')

@@ -40,9 +40,7 @@ export const useCartStore = defineStore('cart', () => {
       .filter((dish): dish is DishData => dish !== undefined),
   )
 
-  const totalCount = computed(() =>
-    Object.values(quantities.value).reduce((sum, quantity) => sum + quantity, 0),
-  )
+  const totalCount = computed(() => Object.values(quantities.value).reduce((sum, quantity) => sum + quantity, 0))
 
   const totalPrice = computed(() =>
     items.value.reduce((total, dish) => total + dish.price * (quantities.value[dish.id] ?? 0), 0),
@@ -54,5 +52,16 @@ export const useCartStore = defineStore('cart', () => {
       : items.value.map((dish) => `${dish.name} × ${quantities.value[dish.id]}`).join('、'),
   )
 
-  return { quantities, catalog, items, totalCount, totalPrice, summary, lastOrderSummary, setQuantity, clear, syncCatalog }
+  return {
+    quantities,
+    catalog,
+    items,
+    totalCount,
+    totalPrice,
+    summary,
+    lastOrderSummary,
+    setQuantity,
+    clear,
+    syncCatalog,
+  }
 })

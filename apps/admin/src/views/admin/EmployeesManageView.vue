@@ -13,8 +13,9 @@ import { usePagedList } from '../../composables/use-pagedList'
 
 const PAGE_SIZE = 10
 
-const { records, pageNo, total, loading, errorMessage, load, handlePageChange } =
-  usePagedList<EmployeeData>((page) => getEmployees(page))
+const { records, pageNo, total, loading, errorMessage, load, handlePageChange } = usePagedList<EmployeeData>((page) =>
+  getEmployees(page),
+)
 
 const actionId = ref<number | null>(null)
 
@@ -103,22 +104,22 @@ onMounted(load)
       <el-table-column prop="phone" label="手机号" min-width="130" />
       <el-table-column label="角色" width="90">
         <template #default="{ row }">
-          <el-tag :type="row.role === 2 ? 'primary' : 'info'" disable-transitions>{{ getEmployeeRoleLabel(row.role) }}</el-tag>
+          <el-tag :type="row.role === 2 ? 'primary' : 'info'" disable-transitions>{{
+            getEmployeeRoleLabel(row.role)
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="状态" width="90">
         <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'info'" disable-transitions>{{ getEmployeeStatusLabel(row.status) }}</el-tag>
+          <el-tag :type="row.status === 1 ? 'success' : 'info'" disable-transitions>{{
+            getEmployeeStatusLabel(row.status)
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="110" fixed="right">
         <template #default="{ row }">
           <!-- 店长行不可禁用：按钮标灰并说明原因，后端 disableEmployee 也有角色守卫兜底。 -->
-          <el-tooltip
-            v-if="row.role === 2 && row.status === 1"
-            content="店长账号不可禁用"
-            placement="top"
-          >
+          <el-tooltip v-if="row.role === 2 && row.status === 1" content="店长账号不可禁用" placement="top">
             <span>
               <el-button link type="warning" disabled>禁用</el-button>
             </span>
