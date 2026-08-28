@@ -4,7 +4,7 @@
 
 这个项目更偏向真实后端工程实践，而不是简单 CRUD 练习。开发过程中重点关注了需求收敛、状态流转、角色鉴权、跨模块协作、接口文档、缓存设计和 Docker 部署。
 
-> 当前边界：后端业务、缓存和部署已形成可运行基线；根目录 `frontend/` 已完成 Vue 3 + TypeScript + Vite 前端首版与二期布局/视觉统一，覆盖顾客注册/登录、预约/开台、菜单详情、内存购物车、订单，以及员工认证、管理订单/会话和第二批资料维护工作台。管理端使用 Element Plus 桌面工作台布局，顾客端为 Vant 移动优先界面（设计令牌集中在 `frontend/src/styles/tokens.css`）。前端二期已于 2026-08-27 收口；支付、持久化购物车、真实二维码等候选能力不属于当前完成范围。
+> 当前边界：后端业务、缓存和部署已形成可运行基线；前端于 2026-08-28 拆分为 pnpm workspace 双应用——`apps/customer`（顾客端，Vant 移动优先，dev 5174）与 `apps/admin`（商户端，Element Plus 桌面工作台，dev 5173），共享契约包 `packages/shared`（类型与格式化/状态映射工具）。已完成顾客注册/登录、预约/开台、点餐购物车、订单，以及员工认证、经营概览仪表盘、订单/会话工作台和资料维护。支付、持久化购物车、真实二维码等候选能力不属于当前完成范围。
 
 ## 仓库结构
 
@@ -17,7 +17,11 @@ food-flow-manager/
 │   ├── .mvn/
 │   ├── .dockerignore
 │   └── Dockerfile
-├── frontend/                 # Vue 3 + TypeScript + Vite 前端工程
+├── apps/                     # 前端双应用(pnpm workspace)
+│   ├── customer/             # 顾客端 Vant,dev http://localhost:5174
+│   └── admin/                # 商户端 Element Plus,dev http://localhost:5173
+├── packages/shared/          # 双端共享契约:types/api 与 utils(格式化/状态映射)
+├── pnpm-workspace.yaml
 ├── docker-compose.yml        # 根目录统一编排 MySQL、Redis 和后端
 ├── assets/schema.sql         # 数据库初始化运行时资产
 ├── documents/                # 当前、规划、指南、记录和归档
@@ -291,7 +295,7 @@ documents/architecture/backend/接口规范设计.md
 
 ## 前端文档
 
-前端目标规格采用 Vue 3、TypeScript、Vite、Pinia、Vue Router 和 Axios；管理端引入 Element Plus、顾客端引入 Vant，主题经陶土橙设计令牌桥接统一。
+前端目标规格采用 Vue 3、TypeScript、Vite、Pinia、Vue Router 和 Axios；管理端引入 Element Plus、顾客端引入 Vant，主题经陶土橙设计令牌桥接统一。2026-08-28 起为 pnpm workspace 双应用（apps/customer + apps/admin + packages/shared），启动方式：仓库根目录 `npx pnpm@11.19.0 install` 后 `npx pnpm@11.19.0 dev:admin`（5173）/ `npx pnpm@11.19.0 dev:customer`（5174）。
 
 前端文档入口：
 

@@ -4,7 +4,7 @@
 
 ## 当前主线
 
-后端 V1/V2 核心业务和工程增强已完成并冻结扩张(三期新增的只读统计端点除外)。前端一期(阶段 0-6,2026-08-24 收口)、二期(布局重构与视觉统一,R1-R5,2026-08-27 收口)与**三期:体验完善与商户端仪表盘(P3-R1 至 P3-R6,2026-08-28 收口)**均已完成。三期交付:店长禁用限制(前端标灰+后端守卫,`disableEmployee` 拒绝店长与自我禁用)、路由切换过渡(管理端 fade-transform/顾客端轻量 fade)、数据自动刷新(`useAutoRefresh` 组合式函数:20 秒轮询+可见性暂停+聚焦刷新,静默加载不惊扰用户)、共享层整理(`formatPrice`/状态标签映射收敛、工作台统一 `usePagedList`、分类下拉取全量)、商户端仪表盘(`GET /api/admin/statistics/overview` + 经营概览页,零依赖呈现)、双端拆分成本评估(`frontend/08-双端拆分准备评估.md`)。当前无进行中的开发阶段;候选池事项见三期计划第 5 节,不自动开工。进度与复盘详见 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md)。管理端使用独立员工 JWT。
+后端 V1/V2 核心业务和工程增强已完成并冻结扩张(三期新增的只读统计端点除外)。前端一期(纵向业务闭环)、二期(布局重构与视觉统一)、三期(体验完善与商户端仪表盘)均已收口。**前端已于 2026-08-28 拆分为 pnpm workspace 双应用**:`apps/customer`(顾客端,Vant,dev 5174)与 `apps/admin`(商户端,Element Plus,dev 5173),共享契约包 `packages/shared`(types/api + utils);两端独立路由与请求层,旧地址 `/customer/**`、`/admin/**` 自动去前缀重定向,互通链接已全部移除;生产双域名部署(nginx)待单独授权。当前无进行中的开发阶段;候选事项见三期计划第 5 节与各复盘,不自动开工。进度详见 [`planning/frontend-split-plan.md`](planning/frontend-split-plan.md)(拆分)与 [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md)(三期)。管理端使用独立员工 JWT。
 
 ## 当前权威资料
 
@@ -20,7 +20,8 @@
 | 一期开发过程记录 | [`planning/frontend-development-plan.md`](planning/frontend-development-plan.md) | 一期历史记录,已标注收口 |
 | 二期切片计划与审查结论 | [`planning/frontend-redesign-plan.md`](planning/frontend-redesign-plan.md) | 已收口的历史计划,含首版覆盖审查结论 |
 | 三期计划与问题记录审查 | [`planning/frontend-phase3-plan.md`](planning/frontend-phase3-plan.md) | 已收口:切片清单、验收证据索引与候选池 |
-| 双端拆分准备评估 | [`frontend/08-双端拆分准备评估.md`](frontend/08-双端拆分准备评估.md) | 耦合点清单、拆分步骤草案与待决策项 |
+| **前端双应用拆分计划** | [`planning/frontend-split-plan.md`](planning/frontend-split-plan.md) | 已收口:workspace 结构、端口约定与遗留事项 |
+| 双端拆分准备评估 | [`frontend/08-双端拆分准备评估.md`](frontend/08-双端拆分准备评估.md) | 已执行;耦合点清单与决策项留档 |
 
 ## 归档判断
 
