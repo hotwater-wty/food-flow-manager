@@ -18,9 +18,9 @@ const { isAuthenticated, user } = storeToRefs(authStore)
     </p>
 
     <div class="home-actions">
-      <RouterLink class="home-primary-action" to="/customer/menu">去点餐</RouterLink>
-      <RouterLink class="secondary-button" to="/customer/reservations/create">预约座位</RouterLink>
-      <RouterLink v-if="!isAuthenticated" class="secondary-button" to="/customer/login">
+      <RouterLink class="home-primary-action" to="/menu">去点餐</RouterLink>
+      <RouterLink class="secondary-button" to="/reservations/create">预约座位</RouterLink>
+      <RouterLink v-if="!isAuthenticated" class="secondary-button" to="/login">
         登录 / 注册
       </RouterLink>
     </div>
@@ -40,8 +40,5 @@ const { isAuthenticated, user } = storeToRefs(authStore)
       </div>
     </dl>
 
-    <p class="home-staff-entry">
-      员工请从<RouterLink to="/admin/login">管理端入口</RouterLink>登录。
-    </p>
   </section>
 </template>

@@ -87,7 +87,7 @@ onMounted(loadTables)
       </van-cell-group>
       <div class="reserve-result-actions">
         <van-button block type="primary" plain @click="reservationResult = null">再约一桌</van-button>
-        <van-button block type="primary" plain to="/customer/reservations">查看我的预约</van-button>
+        <van-button block type="primary" plain to="/reservations">查看我的预约</van-button>
       </div>
     </div>
 

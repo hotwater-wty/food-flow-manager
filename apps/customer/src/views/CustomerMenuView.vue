@@ -129,7 +129,7 @@ onMounted(loadMenu)
 <template>
   <section class="menu-page">
     <!-- 没有会话时给出醒目提示与跳转入口;不阻塞浏览菜单。 -->
-    <van-notice-bar v-if="!isLoading && currentSession === null" left-icon="info-o" mode="link" text="当前没有用餐会话,下单前请先开台" to="/customer/session" />
+    <van-notice-bar v-if="!isLoading && currentSession === null" left-icon="info-o" mode="link" text="当前没有用餐会话,下单前请先开台" to="/session" />
 
     <van-loading v-if="isLoading" class="menu-loading" size="24px" vertical>正在加载菜单...</van-loading>
     <template v-else>

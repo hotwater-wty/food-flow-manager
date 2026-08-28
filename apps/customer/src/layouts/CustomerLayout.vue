@@ -12,12 +12,12 @@ const authStore = useAuthStore()
 const { isAuthenticated, user } = storeToRefs(authStore)
 
 // exactOnly 标记"首页":"/"是所有顾客页的父路径,必须精确匹配;
-// 其余项用前缀匹配,覆盖如 /customer/reservations/create 这类子路径。
+// 其余项用前缀匹配,覆盖如 /reservations/create 这类子路径。
 const tabItems = [
   { label: '首页', to: '/', icon: 'wap-home-o', exactOnly: true },
-  { label: '点餐', to: '/customer/menu', icon: 'goods-collect-o' },
-  { label: '预约', to: '/customer/reservations', icon: 'calendar-o' },
-  { label: '订单', to: '/customer/orders', icon: 'orders-o' },
+  { label: '点餐', to: '/menu', icon: 'goods-collect-o' },
+  { label: '预约', to: '/reservations', icon: 'calendar-o' },
+  { label: '订单', to: '/orders', icon: 'orders-o' },
 ]
 
 const route = useRoute()
@@ -36,11 +36,11 @@ const activeTabIndex = computed(() => {
     <header class="customer-topbar">
       <RouterLink class="customer-brand" to="/">膳畅管家</RouterLink>
       <nav class="customer-account" aria-label="账户入口">
-        <RouterLink v-if="isAuthenticated && user" to="/customer/account">
+        <RouterLink v-if="isAuthenticated && user" to="/account">
           <van-icon name="user-o" />
           {{ user.nickname }}
         </RouterLink>
-        <RouterLink v-else to="/customer/login">登录 / 注册</RouterLink>
+        <RouterLink v-else to="/login">登录 / 注册</RouterLink>
       </nav>
     </header>
 

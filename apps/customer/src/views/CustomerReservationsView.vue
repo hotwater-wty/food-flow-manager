@@ -125,7 +125,7 @@ onMounted(loadReservations)
     <p v-if="errorMessage" class="my-reservations-error" role="alert">{{ errorMessage }}</p>
     <van-loading v-if="isLoading" class="my-reservations-loading" size="24px" vertical>正在查询预约...</van-loading>
     <van-empty v-else-if="reservations.length === 0" description="当前没有预约记录">
-      <van-button round type="primary" size="small" to="/customer/reservations/create">去预约</van-button>
+      <van-button round type="primary" size="small" to="/reservations/create">去预约</van-button>
     </van-empty>
 
     <div v-else class="my-reservations-list" role="list" aria-label="我的预约列表">

@@ -41,9 +41,9 @@ async function handleLogout() {
     </div>
 
     <van-cell-group inset title="我的服务">
-      <van-cell title="我的预约" icon="calendar-o" is-link to="/customer/reservations" />
-      <van-cell title="我的订单" icon="orders-o" is-link to="/customer/orders" />
-      <van-cell title="当前用餐/开台" icon="shop-o" is-link to="/customer/session" />
+      <van-cell title="我的预约" icon="calendar-o" is-link to="/reservations" />
+      <van-cell title="我的订单" icon="orders-o" is-link to="/orders" />
+      <van-cell title="当前用餐/开台" icon="shop-o" is-link to="/session" />
     </van-cell-group>
 
     <van-cell-group inset title="账号">

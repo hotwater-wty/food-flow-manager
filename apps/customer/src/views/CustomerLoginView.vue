@@ -40,7 +40,7 @@ async function handleSubmit() {
       authStore.login(loginData)
       // 登录页已脱离顾客端布局，登录成功后必须主动跳转：
       // 优先回跳守卫带来的 redirect，没有则进入默认的点餐页。
-      await router.push(typeof route.query.redirect === 'string' ? route.query.redirect : '/customer/menu')
+      await router.push(typeof route.query.redirect === 'string' ? route.query.redirect : '/menu')
     }
     password.value = ''
   } catch (error) {
@@ -74,7 +74,7 @@ async function handleSubmit() {
         </div>
       </dl>
       <div class="auth-session-actions">
-        <RouterLink class="secondary-button" to="/customer/menu">进入点餐</RouterLink>
+        <RouterLink class="secondary-button" to="/menu">进入点餐</RouterLink>
         <button class="secondary-button" type="button" @click="authStore.logout">退出登录</button>
       </div>
     </div>

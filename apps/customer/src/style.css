@@ -1,6 +1,7 @@
-/* 全局基础样式:字体、重置和跨页面复用的卡片/表单/反馈样式。 */
+/* 顾客端全局样式(拆分后独立维护):字体、重置和跨页面复用的卡片/表单/反馈样式。 */
 /* 颜色、间距、圆角等具体数值统一定义在 styles/tokens.css,这里只引用变量。 */
-/* 布局私有样式(侧栏、顶栏、底部导航)已迁移到 layouts/ 组件的 scoped 样式中。 */
+/* 布局私有样式(顶栏、底部导航)在 layouts/CustomerLayout.vue 的 scoped 样式中; */
+/* 管理端专属样式随 apps/admin 走,不在此文件。 */
 body {
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--color-text);
@@ -138,24 +139,6 @@ code { background: var(--color-brand-soft); border-radius: var(--radius-sm); col
 .cart-note { color: var(--color-text-muted); font-size: .85rem; line-height: 1.5; }
 .order-result { display: grid; gap: 18px; margin-top: 24px; }
 
-/* ---- 管理端工作台 ---- */
-/* R2 起管理端页面逐步改用 Element Plus 组件,这里只保留跨页面复用的页面骨架样式。 */
-.admin-page { display: grid; gap: var(--space-4); }
-.admin-page-heading h1 { color: var(--color-text); font-size: 1.4rem; margin: 0; }
-.admin-page-heading p { color: var(--color-text-secondary); margin: 4px 0 0; }
-.admin-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin-top: 0; }
-.admin-toolbar label { color: var(--color-text-secondary); display: grid; font-size: .9rem; font-weight: 600; gap: 8px; }
-.admin-toolbar select { border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); font: inherit; padding: 9px 12px; }
-.admin-toolbar .status-select { width: 160px; }
-.admin-pagination { display: flex; justify-content: flex-end; }
-.pagination-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
-.resource-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
-.resource-form { border: 1px solid var(--color-border); display: grid; gap: 12px; margin-top: 20px; padding: 18px; }
-.resource-form h2 { font-size: 1.1rem; margin: 0; }
-.resource-form input, .resource-form select { border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); font: inherit; padding: 10px 12px; }
-.resource-list { display: grid; gap: 12px; margin-top: 24px; }
-.resource-list .reservation-card { display: grid; gap: 10px; }
-
 @media (max-width: 760px) { .menu-layout { grid-template-columns: 1fr; } .cart-panel { border-left: 0; border-top: 1px solid var(--color-border-soft); padding-left: 0; padding-top: 24px; } }
 @media (max-width: 560px) {
   .status-list div { align-items: flex-start; flex-direction: column; gap: 4px; }
@@ -164,20 +147,8 @@ code { background: var(--color-brand-soft); border-radius: var(--radius-sm); col
   .reservation-form { border-left: 0; border-top: 1px solid var(--color-border-soft); padding-left: 0; padding-top: 24px; }
 }
 
-/* 路由切换过渡(三期 R2):管理端用 fade-transform(位移+淡入淡出),顾客端用轻量 fade。
-   过渡类挂在路由组件根元素上,由两个布局的路由出口 <Transition name=...> 触发。 */
-.fade-transform-enter-active,
-.fade-transform-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.fade-transform-enter-from {
-  opacity: 0;
-  transform: translateX(-12px);
-}
-.fade-transform-leave-to {
-  opacity: 0;
-  transform: translateX(12px);
-}
+/* 路由切换过渡(三期 R2):顾客端用轻量 fade。
+   过渡类挂在路由组件根元素上,由 CustomerLayout 的路由出口 <Transition name="fade"> 触发。 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.18s ease;
@@ -188,8 +159,6 @@ code { background: var(--color-brand-soft); border-radius: var(--radius-sm); col
 }
 /* 系统开启"减少动态效果"时直接跳过过渡,尊重无障碍设置。 */
 @media (prefers-reduced-motion: reduce) {
-  .fade-transform-enter-active,
-  .fade-transform-leave-active,
   .fade-enter-active,
   .fade-leave-active {
     transition: none;

@@ -68,7 +68,7 @@ onMounted(loadPage)
         <van-cell title="状态" :value="getSessionStatusLabel(currentSession.sessionStatus)" />
       </van-cell-group>
       <div class="session-restored-actions">
-        <van-button block round type="primary" to="/customer/menu">去点餐</van-button>
+        <van-button block round type="primary" to="/menu">去点餐</van-button>
         <van-button v-if="currentSession.sessionStatus !== 1" block round type="primary" plain @click="currentSession = null; loadPage()">
           换桌重开
         </van-button>

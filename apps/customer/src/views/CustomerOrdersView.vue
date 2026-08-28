@@ -72,7 +72,7 @@ onMounted(loadOrders)
     <p v-if="errorMessage" class="my-orders-error" role="alert">{{ errorMessage }}</p>
     <van-loading v-if="isLoading" class="my-orders-loading" size="24px" vertical>正在查询订单...</van-loading>
     <van-empty v-else-if="orders.length === 0" description="当前没有订单记录">
-      <van-button round type="primary" size="small" to="/customer/menu">去点餐</van-button>
+      <van-button round type="primary" size="small" to="/menu">去点餐</van-button>
     </van-empty>
 
     <div v-else class="my-orders-list" role="list" aria-label="我的订单列表">
