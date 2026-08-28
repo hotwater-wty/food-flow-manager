@@ -305,6 +305,10 @@ onMounted(loadMenu)
 .menu-submit-bar {
   /* SubmitBar 的 z-index 低于 Tabbar 时会被遮挡,提到其上;bottom=50 让它停在 Tabbar 之上。 */
   z-index: 20;
+  /* F8 修复 6px 视觉缝隙:Tabbar(fixed,bottom:0)与 SubmitBar(bottom:50)之间
+     露出页面背景形成一条缝;把 SubmitBar 背景向下延伸 6px 盖住缝隙,
+     不用改 bottom 值,避免与 safe-area 逻辑互相干扰。 */
+  padding-bottom: 6px;
 }
 .menu-dish-detail {
   display: grid;
