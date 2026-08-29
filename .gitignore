@@ -38,6 +38,7 @@ build/
 ### Node / pnpm workspace ###
 node_modules/
 dist/
+# Local environment files may contain passwords. Keep the safe template tracked.
 *.local
 .npm/
 .env
