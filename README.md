@@ -4,7 +4,7 @@
 
 这个项目更偏向真实后端工程实践，而不是简单 CRUD 练习。开发过程中重点关注了需求收敛、状态流转、角色鉴权、跨模块协作、接口文档、缓存设计和 Docker 部署。
 
-> 当前边界：后端业务、缓存和部署已形成可运行基线；前端于 2026-08-28 拆分为 pnpm workspace 双应用——`apps/customer`（顾客端，Vant 移动优先，dev 5174）与 `apps/admin`（商户端，Element Plus 桌面工作台，dev 5173），共享契约包 `packages/shared`（类型与格式化/状态映射工具）。已完成顾客注册/登录、预约/开台、点餐购物车、订单，以及员工认证、经营概览仪表盘、订单/会话工作台和资料维护。支付、持久化购物车、真实二维码等候选能力不属于当前完成范围。
+> 当前边界：后端业务、缓存和部署已形成可运行基线；前端为 pnpm workspace 双应用，`apps/customer`（顾客端，Vant，dev 5174）与 `apps/admin`（商户端，Element Plus，dev 5173）共享 `packages/shared` 契约包。已完成顾客首页选座/预约到店、点餐和订单，以及员工经营概览、订单/会话工作台、资料维护、统一写反馈和布局级 SSE。支付、持久化购物车、真实二维码等候选能力不属于当前完成范围，后续路线见 [`documents/planning/project-development-plan.md`](documents/planning/project-development-plan.md)。
 
 ## 仓库结构
 
@@ -22,7 +22,8 @@ food-flow-manager/
 │   └── admin/                # 商户端 Element Plus,dev http://localhost:5173
 ├── packages/shared/          # 双端共享契约:types/api 与 utils(格式化/状态映射)
 ├── pnpm-workspace.yaml
-├── docker-compose.yml        # 根目录统一编排 MySQL、Redis 和后端
+├── docker-compose.yml        # 完整编排：MySQL、Redis 和后端
+├── docker-compose.dev.yml    # 开发调试依赖：仅 MySQL 和 Redis
 ├── assets/schema.sql         # 数据库初始化运行时资产
 ├── documents/                # 当前、规划、指南、记录和归档
 └── .gitignore / .gitattributes
@@ -37,7 +38,7 @@ V1 的目标是先做成一个可运行、可测试、可复盘的最小业务�
 核心业务场景：
 
 - 用户注册登录后查看桌位并创建预约。
-- 用户到店后可通过预约扫码开台，或直接扫码占座。
+- 用户可通过预约到店开台，或在首页选择空闲桌位直接开台。
 - 用户在有效开台会话下查看启售菜品并创建堂食订单。
 - 商户端可查看订单并按流程更新订单状态。
 - 店员可在用餐结束后清台，释放桌位。
@@ -48,8 +49,8 @@ V1 的目标是先做成一个可运行、可测试、可复盘的最小业务�
 ```text
 用户注册登录
   -> 查看空闲桌位
-  -> 创建预约 / 直接扫码占座
-  -> 到店扫码开台
+  -> 创建预约 / 首页选择空闲桌位
+  -> 预约到店或直接开台
   -> 查看启售菜品
   -> 创建堂食订单
   -> 商户处理订单
@@ -95,7 +96,7 @@ V1 的目标是先做成一个可运行、可测试、可复盘的最小业务�
 - 员工认证与管理：员工登录、员工新增、启用、禁用、店长权限控制。
 - 桌位管理：桌位新增、修改、删除、启用、禁用、用户查看空闲桌位。
 - 预约管理：用户创建预约、取消预约、查看预约，商户异常取消预约。
-- 开台会话：预约扫码开台、非预约扫码占座、查看当前开台、释放等待中桌位、清台。
+- 开台会话：预约到店开台、非预约选座开台、查看当前开台、释放等待中桌位、清台。
 - 菜品分类：商户端菜品分类基础维护，用户端启用分类缓存。
 - 菜品管理：商户端菜品 CRUD、上下架，用户端查看启售菜品和菜品详情。
 - 堂食订单：用户创建订单、查看订单列表和详情，商户查看订单并更新订单状态。
@@ -185,7 +186,7 @@ cd backend
 
 ## Docker 部署
 
-当前 Docker 部署采用 Docker 多阶段构建。部署者只需要拉取仓库并执行 `docker compose up -d --build`，Docker 会在构建阶段自动完成 Maven 打包，不再需要手动生成、复制或改名 jar 包。
+当前 Docker 部署采用 Docker 多阶段构建。部署者准备外部环境变量后执行 `docker compose up -d --build`，Docker 会在构建阶段自动完成 Maven 打包，不再需要手动生成、复制或改名 jar 包。开发默认密码仅用于本地，不应作为生产凭据。
 
 ### 1. 服务器环境要求
 
@@ -234,8 +235,11 @@ backend/Dockerfile
 在 `docker-compose.yml` 所在目录执行：
 
 ```bash
+cp .env.example .env
 docker compose up -d --build
 ```
+
+`.env` 只保存在本机并已加入 Git 忽略；生产环境应由部署平台注入 `MYSQL_ROOT_PASSWORD`、`REDIS_PASSWORD` 等 Secret，不要提交真实密码。
 
 该命令会自动完成：
 
@@ -243,6 +247,15 @@ docker compose up -d --build
 - 在构建阶段执行 Maven 打包。
 - 启动 MySQL、Redis 和后端服务容器。
 - 挂载 `assets/schema.sql` 作为 MySQL 初始化脚本。
+
+日常 IDEA 断点调试时，只启动数据库和 Redis，再由 IDEA 启动后端：
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.dev.yml up -d
+```
+
+此时后端使用 `application-dev.yaml` 的 `localhost:3306`、`localhost:6379` 和本地开发密码 `1234`；不要同时启动完整 Compose 中的 `food-flow-manager` 服务，否则会占用 `8080` 端口。
 
 Compose 位于根目录，后端 Dockerfile 位于 `backend/Dockerfile`；如果调整任一位置，必须同步检查 `build.context`、Dockerfile 路径和 SQL 挂载路径。
 
@@ -305,7 +318,7 @@ documents/frontend/03-页面地图与交互状态.md
 documents/frontend/04-视觉设计与组件规则.md
 ```
 
-前端一期(纵向业务闭环)与二期(布局重构与视觉统一)均已按"顾客登录 -> 预约或模拟扫码 -> 点餐 -> 查看订单；员工登录 -> 订单/会话工作台 -> 资料维护"的真实后端闭环完成验收；后续新增能力须另立计划。
+前端历史阶段已按“顾客登录 -> 预约到店或首页选座 -> 点餐 -> 查看订单；员工登录 -> 订单/会话工作台 -> 资料维护”的真实后端闭环完成验收，阶段计划已归档到 `documents/archive/frontend/`。当前只从 `documents/planning/project-development-plan.md` 启动新切片。
 
 ## 数据库设计说明
 
@@ -341,7 +354,7 @@ documents/architecture/backend/领域模型与核心表设计.md
 - 禁用用户或员工后，旧 token 请求被拦截。
 - 桌位管理与用户查看空闲桌位。
 - 用户预约、取消预约、查看预约。
-- 预约扫码开台、非预约扫码占座。
+- 预约到店开台、非预约选择空闲桌位开台。
 - 用户查看当前开台会话。
 - 菜品分类和菜品管理。
 - 用户查看启售菜品。
@@ -362,17 +375,17 @@ documents/architecture/backend/领域模型与核心表设计.md
 - Docker Compose 支持 MySQL、Redis 和后端服务协同启动。
 - 补充了大量接口注解，Knife4j / OpenAPI 可展示更完整的接口信息。
 
-## 后续候选方向
+## 后续发展路线
 
-V2 的主要增强已经完成，后续更多属于继续迭代的方向：
+当前迭代已经统一收敛到 [`documents/planning/project-development-plan.md`](documents/planning/project-development-plan.md)，推荐顺序如下：
 
-- 预约时间策略和超时处理。
-- 操作日志。
-- Spring Security 权限体系升级。
-- 消息队列与异步通知。
-- 更完整的自动化测试。
+- 先补后端测试基线、CI、稳定错误码和数据库迁移治理。
+- 再补顾客列表分页、员工/顾客状态管理和 JWT 生命周期。
+- 将预约从“立即锁桌”重构为真实时间段与过期释放模型。
+- 随后建设审计日志、经营趋势、SSE 生产化和可观测性。
+- 最后完成双前端生产部署、Secret、备份恢复和回滚能力。
 
-历史候选池仅供追溯，不作为当前任务来源；需要启动后端增强时，先在 `documents/planning/` 建立当前阶段计划并校准源码。
+不建议为了展示技术栈而立即拆微服务或同时引入 MQ、分布式锁等复杂基础设施。历史候选池仅供追溯，不作为当前任务来源：
 
 ```text
 documents/archive/backend/tasks/V2待办任务清单.md

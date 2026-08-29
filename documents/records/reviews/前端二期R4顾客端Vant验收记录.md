@@ -1,7 +1,7 @@
 # 前端二期 R4 顾客端 Vant 验收记录
 
 > 日期:2026-08-27
-> 对应计划:[`../../planning/frontend-redesign-plan.md`](../../planning/frontend-redesign-plan.md) 切片 R4
+> 对应计划:[`../../archive/frontend/plans/frontend-redesign-plan.md`](../../archive/frontend/plans/frontend-redesign-plan.md) 切片 R4
 > 环境:docker compose 后端(health UP),前端 `vite` 开发服务器(5173),顾客账号 13900001234,主视口 390x844
 
 ## 一、变更清单

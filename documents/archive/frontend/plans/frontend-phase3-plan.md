@@ -2,7 +2,7 @@
 
 > 立项日期:2026-08-28
 > 状态:**已收口**——P3-R1 至 P3-R6 全部完成(2026-08-28),验收记录见 `../records/reviews/前端三期R*验收记录.md`;候选池事项不自动开工
-> 上游文档:[`frontend-redesign-plan.md`](frontend-redesign-plan.md)(二期已收口)、[`../records/reviews/前端二期阶段复盘.md`](../records/reviews/前端二期阶段复盘.md)、[`../frontend/05-前端工程与接口契约.md`](../frontend/05-前端工程与接口契约.md)
+> 上游文档:[`frontend-redesign-plan.md`](frontend-redesign-plan.md)(二期已收口)、[`../records/reviews/前端二期阶段复盘.md`](../../../records/reviews/前端二期阶段复盘.md)、[`../frontend/05-前端工程与接口契约.md`](../../../frontend/05-前端工程与接口契约.md)
 > 分工决策:沿用二期惯例——AI 为主实现,用户浏览器验收 + 阅读代码;每片完成后输出"改了什么 / 为什么这样组织 / 涉及知识点 / 建议补的课程",停点等用户确认再继续。
 
 ## 1. 背景:二期收口后的问题记录与审查结论
@@ -83,7 +83,7 @@
 
 ### P3-R6 双端拆分成本评估(收尾)(已完成,2026-08-28)
 
-- 输出 `documents/frontend/08-双端拆分准备评估.md`:耦合点清单(`http.ts` 的 token 选择与 401 跳转、`types/api.ts` 双端 DTO、`utils/status.ts`、单 router 与守卫矩阵、`tokens.css`)+ 拆分步骤草案(pnpm workspace 或双目录、构建配置、共享包抽取)+ 建议时机。
+- 输出 `documents/archive/frontend/assessments/双端拆分准备评估.md`:耦合点清单(`http.ts` 的 token 选择与 401 跳转、`types/api.ts` 双端 DTO、`utils/status.ts`、单 router 与守卫矩阵、`tokens.css`)+ 拆分步骤草案(pnpm workspace 或双目录、构建配置、共享包抽取)+ 建议时机。
 - 更新 `CURRENT.md`:阶段三收口,实际拆分列为下一阶段候选。
 - 知识重点:monorepo/多包工程的基本形态、拆分的决策依据(何时值得拆)。
 - 验收:文档评审通过,与代码现状一致。
@@ -109,9 +109,9 @@
 
 ## 6. 验收证据索引
 
-- P3-R1:后端编译、`vue-tsc -b`、`vite build`、`git diff --check` 全通过;API 直调禁用店长返回业务错误,店员启停正常;浏览器 DOM 快照断言店长行禁用按钮 `[disabled]`。详见 [`../records/reviews/前端三期R1店长禁用限制验收记录.md`](../records/reviews/前端三期R1店长禁用限制验收记录.md)。
-- P3-R2:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言双端过渡类名均被捕获(管理端 `fade-transform-enter-active`、顾客端 `fade-leave-active`)。详见 [`../records/reviews/前端三期R2路由过渡验收记录.md`](../records/reviews/前端三期R2路由过渡验收记录.md)。
-- P3-R3:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言:新订单在一个轮询周期内自动出现、开关关闭期间外部变更不刷新、重新开启后恢复——全程未点刷新按钮;验收数据已清理。详见 [`../records/reviews/前端三期R3数据刷新机制验收记录.md`](../records/reviews/前端三期R3数据刷新机制验收记录.md)。
-- P3-R4:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器回归确认纯重构行为不变(筛选/空态/分页/下拉/标签/金额时间展示)。详见 [`../records/reviews/前端三期R4共享层整理验收记录.md`](../records/reviews/前端三期R4共享层整理验收记录.md)。
-- P3-R5:后端编译、`vue-tsc -b`、`vite build` 通过;造数后端点返回与数据库事实一致,浏览器渲染与端点一致;鉴权边界(401/403/放行)验证通过;验收数据已清理。详见 [`../records/reviews/前端三期R5仪表盘验收记录.md`](../records/reviews/前端三期R5仪表盘验收记录.md)。
-- P3-R6:评估文档 [`../frontend/08-双端拆分准备评估.md`](../frontend/08-双端拆分准备评估.md) 已产出,与代码现状核对一致(耦合点 7 项、步骤草案、决策项、微服务前瞻)。
+- P3-R1:后端编译、`vue-tsc -b`、`vite build`、`git diff --check` 全通过;API 直调禁用店长返回业务错误,店员启停正常;浏览器 DOM 快照断言店长行禁用按钮 `[disabled]`。详见 [`../records/reviews/前端三期R1店长禁用限制验收记录.md`](../../../records/reviews/前端三期R1店长禁用限制验收记录.md)。
+- P3-R2:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言双端过渡类名均被捕获(管理端 `fade-transform-enter-active`、顾客端 `fade-leave-active`)。详见 [`../records/reviews/前端三期R2路由过渡验收记录.md`](../../../records/reviews/前端三期R2路由过渡验收记录.md)。
+- P3-R3:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器行为断言:新订单在一个轮询周期内自动出现、开关关闭期间外部变更不刷新、重新开启后恢复——全程未点刷新按钮;验收数据已清理。详见 [`../records/reviews/前端三期R3数据刷新机制验收记录.md`](../../../records/reviews/前端三期R3数据刷新机制验收记录.md)。
+- P3-R4:`vue-tsc -b`、`vite build`、`git diff --check` 通过;浏览器回归确认纯重构行为不变(筛选/空态/分页/下拉/标签/金额时间展示)。详见 [`../records/reviews/前端三期R4共享层整理验收记录.md`](../../../records/reviews/前端三期R4共享层整理验收记录.md)。
+- P3-R5:后端编译、`vue-tsc -b`、`vite build` 通过;造数后端点返回与数据库事实一致,浏览器渲染与端点一致;鉴权边界(401/403/放行)验证通过;验收数据已清理。详见 [`../records/reviews/前端三期R5仪表盘验收记录.md`](../../../records/reviews/前端三期R5仪表盘验收记录.md)。
+- P3-R6:评估文档 [`../frontend/08-双端拆分准备评估.md`](../assessments/双端拆分准备评估.md) 已产出,与代码现状核对一致(耦合点 7 项、步骤草案、决策项、微服务前瞻)。

@@ -2,7 +2,7 @@
 
 > 文档状态：问题记录
 > 记录日期：2026-08-23
-> 当前执行入口：[`../../planning/frontend-development-plan.md`](../../planning/frontend-development-plan.md)
+> 当前执行入口：[`../../planning/project-development-plan.md`](../../planning/project-development-plan.md)
 
 ## 现象
 

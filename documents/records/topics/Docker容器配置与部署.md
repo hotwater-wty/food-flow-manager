@@ -46,6 +46,8 @@ backend/Dockerfile
 
 本机直接启动应用时，开发配置仍使用本机地址；不要为容器部署修改本地开发配置。Compose 通过环境变量覆盖数据源和 Redis 连接参数。
 
+日常断点调试可使用根目录 `docker-compose.dev.yml`，它只启动 MySQL 和 Redis；Spring Boot 由 IDEA 以 Debug 模式启动。`.env` 从 `.env.example` 复制后仅保存在本机，生产部署必须由外部 Secret 注入密码。
+
 ## 3. 部署与更新流程
 
 首次部署或代码更新后，在包含 `docker-compose.yml` 的项目根目录执行：

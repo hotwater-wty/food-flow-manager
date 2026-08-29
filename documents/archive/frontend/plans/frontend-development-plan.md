@@ -1,9 +1,9 @@
 # 前端学习型开发总计划
 
-> 文档状态：当前计划
-> 维护入口：[`documents/CURRENT.md`](../CURRENT.md)
-> 执行规则：[`AGENTS.md`](../../AGENTS.md)
-> 前端规格：[`documents/frontend/README.md`](../frontend/README.md)
+> 文档状态：已完成并归档；当前计划见 [`../../../planning/project-development-plan.md`](../../../planning/project-development-plan.md)
+> 维护入口：[`documents/CURRENT.md`](../../../CURRENT.md)
+> 执行规则：[`AGENTS.md`](../../../../AGENTS.md)
+> 前端规格：[`documents/frontend/README.md`](../../../frontend/README.md)
 
 ## 1. 目标与现实边界
 
@@ -135,4 +135,4 @@
 
 ## 8. 学习工作流调整记录
 
-2026-08-23：个人 Skill `project-practice-learning` 已封存并停止自动触发。实践表明，其双层解释模板适合单个陌生概念的首次上手，但不足以串联多个知识点并建立总体工程观。当前项目继续保留“先任务简报、用户决定分工、分块实践、验收复盘”的流程；讲解方式改为先建立工程地图和当前切片位置，再按实际卡点使用概念解释。详细问题记录见 [`../records/issues/项目实践学习Skill封存记录.md`](../records/issues/项目实践学习Skill封存记录.md)。
+2026-08-23：个人 Skill `project-practice-learning` 已封存并停止自动触发。实践表明，其双层解释模板适合单个陌生概念的首次上手，但不足以串联多个知识点并建立总体工程观。当前项目继续保留“先任务简报、用户决定分工、分块实践、验收复盘”的流程；讲解方式改为先建立工程地图和当前切片位置，再按实际卡点使用概念解释。详细问题记录见 [`../records/issues/项目实践学习Skill封存记录.md`](../../../records/issues/项目实践学习Skill封存记录.md)。

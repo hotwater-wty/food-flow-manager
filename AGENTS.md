@@ -39,6 +39,6 @@
 ## 文档与 Git
 
 - 当前事实写入 `documents/architecture/` 或 `documents/frontend/`；当前阶段计划写入 `documents/planning/`；过程证据写入 `documents/records/`。
-- 每次前端切片完成后更新 `documents/planning/frontend-development-plan.md`，必要时补充接口契约和学习记录。
+- 每次切片完成后更新 `documents/planning/project-development-plan.md`，必要时补充前后端契约、学习记录和验收证据。
 - 不修改 `backend/src`、`backend/pom.xml`、Docker 或数据库脚本，除非任务明确授权且先说明原因。
 - 提交信息使用清晰的中文或英文动词短语；提交前运行 `git diff --check` 和与任务匹配的验证命令。

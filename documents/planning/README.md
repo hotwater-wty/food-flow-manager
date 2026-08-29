@@ -1,7 +1,7 @@
 # 当前项目计划
 
-此目录用于承接未来跨模块或后端阶段的当前计划与任务池。
+本目录只保留仍会指导后续开发的活跃计划，避免历史阶段计划和候选清单混入当前任务。
 
-前端各历史阶段计划:一期 [`frontend-development-plan.md`](frontend-development-plan.md)、二期 [`frontend-redesign-plan.md`](frontend-redesign-plan.md)、三期 [`frontend-phase3-plan.md`](frontend-phase3-plan.md)、双应用拆分 [`frontend-split-plan.md`](frontend-split-plan.md)均已收口。当前“首页选座、统一写反馈、布局级 SSE”阶段见 [`frontend-next-phase-plan.md`](frontend-next-phase-plan.md)；二维码方案已暂停。原候选清单 [`后续发展建议清单.md`](后续发展建议清单.md)保留为事项索引。
+当前唯一计划：[`project-development-plan.md`](project-development-plan.md)。它包含历史候选审查、未完成任务、可靠性与后端迭代、前后端新业务和生产部署路线。计划不代表自动开工，每个切片仍需按 `AGENTS.md` 先输出任务简报并确认分工。
 
-新增计划时只保留一个当前版本；阶段完成后移入 `../archive/`，并在 [`../CURRENT.md`](../CURRENT.md) 更新权威入口。
+已完成的前端一期至顾客选座/SSE 阶段计划、旧候选清单和拆分评估已移入 [`../archive/frontend/`](../archive/frontend/)。验收与复盘仍在 [`../records/`](../records/)，当前产品和接口事实仍在 [`../frontend/`](../frontend/) 与 [`../architecture/backend/`](../architecture/backend/)。

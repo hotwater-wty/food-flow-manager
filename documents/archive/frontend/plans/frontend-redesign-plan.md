@@ -1,8 +1,8 @@
 # 前端二期计划:布局重构与视觉统一
 
 > 立项日期:2026-08-27
-> 状态:**已收口**——R1-R5 全部完成,复盘见 [`../records/reviews/前端二期阶段复盘.md`](../records/reviews/前端二期阶段复盘.md);本文件转为历史记录,后置候选不自动开工
-> 上游文档:[`frontend-development-plan.md`](frontend-development-plan.md)(一期已收口)、[`../frontend/04-视觉设计与组件规则.md`](../frontend/04-视觉设计与组件规则.md)
+> 状态:**已收口**——R1-R5 全部完成,复盘见 [`../records/reviews/前端二期阶段复盘.md`](../../../records/reviews/前端二期阶段复盘.md);本文件转为历史记录,后置候选不自动开工
+> 上游文档:[`frontend-development-plan.md`](frontend-development-plan.md)(一期已收口)、[`../frontend/04-视觉设计与组件规则.md`](../../../frontend/04-视觉设计与组件规则.md)
 > 分工决策:AI 为主实现,用户浏览器验收 + 阅读代码;每片完成后输出"改了什么 / 为什么这样组织 / 涉及知识点 / 建议补的课程"。
 
 ## 1. 背景:一期收口审查结论
@@ -42,7 +42,7 @@
 - 安装 `element-plus@2.14.5`、`@element-plus/icons-vue@2.3.2`(pnpm 11.19.0,lockfile 同步);`main.ts` 全量引入并配置中文语言包。
 - `tokens.css` 增加 Element Plus 主题桥接段:`--el-color-primary` 系映射为陶土橙色阶,success/danger 映射语义令牌,圆角与字体对齐项目规范。
 - 订单工作台改版:ElTable(六列+状态 ElTag+固定操作列)、ElPagination(中文"共 N 条")、ElSelect 筛选(空字符串哨兵表示"全部")、ElDrawer 详情(订单信息 ElDescriptions+菜品明细表+备注列表)、刷新按钮(图标包);终态"完成订单"用 ElMessageBox.confirm 拦截误触,推进成功用 ElMessage 提示;时间展示把 ISO 的 T 换为空格。
-- 验收:`vue-tsc --noEmit` 与 `vite build` 通过(全量引入后主包 gzip 约 322KB,优化后置);浏览器真实数据走查通过:表格渲染、筛选(含空状态 ElEmpty)、详情抽屉(含备注)、完整状态推进链(已下单→制作中→已上齐→已完成,终态确认弹窗)、移动 390 视口表格横滚+固定操作列。验收数据已清理(会话关闭、桌位释放)。详见 [`../records/reviews/前端二期R2订单工作台试点验收记录.md`](../records/reviews/前端二期R2订单工作台试点验收记录.md)。
+- 验收:`vue-tsc --noEmit` 与 `vite build` 通过(全量引入后主包 gzip 约 322KB,优化后置);浏览器真实数据走查通过:表格渲染、筛选(含空状态 ElEmpty)、详情抽屉(含备注)、完整状态推进链(已下单→制作中→已上齐→已完成,终态确认弹窗)、移动 390 视口表格横滚+固定操作列。验收数据已清理(会话关闭、桌位释放)。详见 [`../records/reviews/前端二期R2订单工作台试点验收记录.md`](../../../records/reviews/前端二期R2订单工作台试点验收记录.md)。
 
 ### R3 管理端其余页 + 资料维护拆分(已完成,2026-08-27)
 
@@ -51,7 +51,7 @@
 - 会话工作台 EP 改版:状态筛选下拉、表格(会话/桌位双状态列)、详情抽屉真正渲染数据(替代原"拼接一行反馈文本")、取消等待/清台带确认弹窗。
 - 资料维护拆为五个子路由页 `/admin/resources/{tables|categories|dishes|reservations|employees}`(旧 `/admin/resources` 重定向到桌位页):统一 ElTable+ElPagination+ElDialog 表单(声明式校验 rules)+删除/启停确认弹窗;菜品页新增 ElImage 图片渲染(带失败占位)、分类下拉选择(替代手填 ID)、价格"元↔分"边界换算;预约页详情改抽屉。原 186 行五合一 `AdminResourcesView.vue` 删除,详情按钮从"调用后提示已读取"改为真实渲染。
 - 角色显隐:`RouteMeta.requiresManager` + 路由守卫(店员访问店长页重定向回订单页);侧栏菜单 computed 按角色过滤,店员看不到"桌位维护/员工管理"入口。后端拦截器仍是最终防线。
-- 验收:`vue-tsc --noEmit` 与 `vite build` 通过;店长/店员双账号浏览器走查通过(店员菜单缺省两项+URL 直达被拦、店长七项菜单齐全、员工页两账号渲染、会话筛选含空状态、详情抽屉、桌位新增弹窗校验与真实创建、删除确认链)。验收数据已清理(测试桌位与店员账号已删)。详见 [`../records/reviews/前端二期R3管理端拆分验收记录.md`](../records/reviews/前端二期R3管理端拆分验收记录.md)。
+- 验收:`vue-tsc --noEmit` 与 `vite build` 通过;店长/店员双账号浏览器走查通过(店员菜单缺省两项+URL 直达被拦、店长七项菜单齐全、员工页两账号渲染、会话筛选含空状态、详情抽屉、桌位新增弹窗校验与真实创建、删除确认链)。验收数据已清理(测试桌位与店员账号已删)。详见 [`../records/reviews/前端二期R3管理端拆分验收记录.md`](../../../records/reviews/前端二期R3管理端拆分验收记录.md)。
 
 ### R4 Vant 引入 + 顾客端全部页面(已完成,2026-08-27)
 
@@ -64,12 +64,12 @@
 - 我的预约/我的订单:卡片+VanTag 状态、详情内嵌 cell-group、showConfirmDialog 替代原生 confirm、空状态 VanEmpty 带引导按钮。
 - 账户页:从"认证验证页"升级为账户中心(头像昵称卡+服务入口 cell+用户 ID+退出登录确认)。
 - 验收中发现并修复两个缺陷:1) 预约页模板残留内联 TS 断言表达式导致组件渲染中断;2) VanField 校验器绑定在无 v-model 的字段上拿不到表单值(时间校验恒失败)。
-- 验收:`vue-tsc --noEmit` 与 `vite build` 通过;390x844 全流程浏览器走查通过:首页/Tabbar 图标、菜单页(提示条→开台→返回→加购 2 份→SubmitBar 合计 ¥24.68→下单成功面板)、我的订单(6 笔+明细展开)、账户中心(头像/服务入口/退出)、我的预约列表、预约创建完整链(选桌→填时间→创建成功含编号)。验收数据已清理(会话已清台、测试预约已取消)。详见 [`../records/reviews/前端二期R4顾客端Vant验收记录.md`](../records/reviews/前端二期R4顾客端Vant验收记录.md)。
+- 验收:`vue-tsc --noEmit` 与 `vite build` 通过;390x844 全流程浏览器走查通过:首页/Tabbar 图标、菜单页(提示条→开台→返回→加购 2 份→SubmitBar 合计 ¥24.68→下单成功面板)、我的订单(6 笔+明细展开)、账户中心(头像/服务入口/退出)、我的预约列表、预约创建完整链(选桌→填时间→创建成功含编号)。验收数据已清理(会话已清台、测试预约已取消)。详见 [`../records/reviews/前端二期R4顾客端Vant验收记录.md`](../../../records/reviews/前端二期R4顾客端Vant验收记录.md)。
 
 ### R5 收尾 + 文档同步(已完成,2026-08-27)
 
 - 两端双视口全局走查(命令+浏览器),走查中修复四类问题:`type-check` 脚本改为真验证 `vue-tsc -b` 并修复暴露的 4 个类型错误;VanTabbar 高亮改为路由推导(修"选中态恒为首页");新增 `utils/format.ts` 统一四处 ISO 时间展示;菜品页分类选项挂载预载(修首屏"分类 N"兜底文案)。
-- 文档同步:03 页面地图按实际路由重写、04 视觉设计补落地现状节、开发流程手册清过期句、一期计划标注二期收口、`CURRENT.md` 收口;新建 [`../records/reviews/前端二期R5收尾文档同步验收记录.md`](../records/reviews/前端二期R5收尾文档同步验收记录.md) 与 [`../records/reviews/前端二期阶段复盘.md`](../records/reviews/前端二期阶段复盘.md)。
+- 文档同步:03 页面地图按实际路由重写、04 视觉设计补落地现状节、开发流程手册清过期句、一期计划标注二期收口、`CURRENT.md` 收口;新建 [`../records/reviews/前端二期R5收尾文档同步验收记录.md`](../../../records/reviews/前端二期R5收尾文档同步验收记录.md) 与 [`../records/reviews/前端二期阶段复盘.md`](../../../records/reviews/前端二期阶段复盘.md)。
 - 验收:`vue-tsc -b && vite build && node scripts/smoke-api.mjs` 全部通过(主包 gzip 约 351KB);两端双视口走查通过,本轮无业务数据写入。
 
 ## 4. 范围与边界
@@ -83,4 +83,4 @@
 
 - R1:`vue-tsc --noEmit` 退出码 0(当时尚未发现该命令为空验证);`vite build` 成功(dist 产物正常);docker compose 后端 `{"status":"UP"}`;浏览器双视口走查(顾客端首页/登录/守卫回跳/点餐页、404、管理端守卫/登录/菜单树导航/资源页/登出、移动端侧栏折叠)全部通过。
 - R2/R3/R4:详见各自验收记录(`records/reviews/`)中的命令输出与浏览器路径;其中"type-check 通过"结论由 R5 的 `vue-tsc -b` 回溯确认后仍然成立(4 个新报错已修复,不涉及其它页面行为)。
-- R5:`vue-tsc -b` / `vite build` / `scripts/smoke-api.mjs` 三条全通过;浏览器 390x844 与 1440x900 全局走查通过;证据见 [`../records/reviews/前端二期R5收尾文档同步验收记录.md`](../records/reviews/前端二期R5收尾文档同步验收记录.md)。
+- R5:`vue-tsc -b` / `vite build` / `scripts/smoke-api.mjs` 三条全通过;浏览器 390x844 与 1440x900 全局走查通过;证据见 [`../records/reviews/前端二期R5收尾文档同步验收记录.md`](../../../records/reviews/前端二期R5收尾文档同步验收记录.md)。
