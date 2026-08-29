@@ -1,0 +1,57 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: food-flow-manager-mysql-dev
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1234}
+      MYSQL_DATABASE: food_flow_manager
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+08:00
+    volumes:
+      - food-flow-manager-mysql-dev-data:/var/lib/mysql
+      - "./assets/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - food-flow-manager-dev-net
+
+  redis:
+    image: redis:8.6.2
+    container_name: food-flow-manager-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: Asia/Shanghai
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-1234}
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-1234}"]
+    volumes:
+      - food-flow-manager-redis-dev-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - food-flow-manager-dev-net
+
+networks:
+  food-flow-manager-dev-net:
+    name: food-flow-manager-dev
+    driver: bridge
+
+volumes:
+  food-flow-manager-mysql-dev-data:
+    name: food-flow-manager-mysql-dev-data
+  food-flow-manager-redis-dev-data:
+    name: food-flow-manager-redis-dev-data
