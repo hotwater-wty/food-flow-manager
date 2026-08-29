@@ -2,13 +2,14 @@
 // 桌位维护页:二期 R3 从单页五 Tab 拆分而来,路由 /admin/resources/tables。
 // 新增/编辑共用一个 ElDialog 表单;删除是店长专属操作,由路由守卫保证只有店长能进本页。
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
 import { createTable, deleteTable, getAdminTables, setTableEnabled, updateTable } from '../../services/admin-resources'
 import type { TableRequest, TableVO } from '../../services/admin-resources'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getTableStatusLabel } from '@foodflow/shared/utils/status'
 import { usePagedList } from '../../composables/use-pagedList'
+import { useAdminOperation } from '../../composables/use-admin-operation'
 
 const PAGE_SIZE = 10
 
@@ -18,6 +19,8 @@ const { records, pageNo, total, loading, errorMessage, load, handlePageChange } 
 
 // 写操作锁:任一写请求进行中时禁用其余行按钮。
 const actionId = ref<number | null>(null)
+const actionType = ref<'delete' | 'toggle' | null>(null)
+const { run } = useAdminOperation()
 
 // 对话框表单:editingId 为 null 表示新增,有值表示编辑对应桌位。
 const dialogVisible = ref(false)
@@ -57,17 +60,16 @@ async function submit() {
   // validate 返回 Promise,校验失败时 reject;catch 后直接返回,保持弹窗打开。
   await formRef.value?.validate().catch(() => Promise.reject())
   submitting.value = true
-  try {
-    if (editingId.value !== null) await updateTable(editingId.value, form)
-    else await createTable(form)
-    ElMessage.success(editingId.value !== null ? '桌位已更新' : '桌位已创建')
+  const isEditing = editingId.value !== null
+  const succeeded = await run({
+    execute: () => (isEditing ? updateTable(editingId.value!, form) : createTable(form)),
+    refresh: () => load({ rethrow: true }),
+    successMessage: isEditing ? '桌位已更新' : '桌位已创建',
+  })
+  if (succeeded) {
     dialogVisible.value = false
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '桌位保存失败'
-  } finally {
-    submitting.value = false
   }
+  submitting.value = false
 }
 
 // 删除不可恢复,统一走确认弹窗。
@@ -82,28 +84,26 @@ async function remove(item: TableVO) {
     return
   }
   actionId.value = item.tableId
-  try {
-    await deleteTable(item.tableId)
-    ElMessage.success(`桌位 ${item.tableNo} 已删除`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '桌位删除失败'
-  } finally {
-    actionId.value = null
-  }
+  actionType.value = 'delete'
+  await run({
+    execute: () => deleteTable(item.tableId),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `桌位 ${item.tableNo} 已删除`,
+  })
+  actionId.value = null
+  actionType.value = null
 }
 
 async function toggleEnabled(item: TableVO) {
   actionId.value = item.tableId
-  try {
-    await setTableEnabled(item.tableId, item.status === 4)
-    ElMessage.success(`桌位 ${item.tableNo} 已${item.status === 4 ? '启用' : '禁用'}`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '桌位状态更新失败'
-  } finally {
-    actionId.value = null
-  }
+  actionType.value = 'toggle'
+  await run({
+    execute: () => setTableEnabled(item.tableId, item.status === 4),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `桌位 ${item.tableNo} 已${item.status === 4 ? '启用' : '禁用'}`,
+  })
+  actionId.value = null
+  actionType.value = null
 }
 
 onMounted(load)
@@ -117,7 +117,7 @@ onMounted(load)
     </div>
 
     <div class="admin-toolbar">
-      <el-button type="primary" :icon="Plus" @click="openCreate">新增桌位</el-button>
+      <el-button type="primary" :icon="Plus" :disabled="actionId !== null" @click="openCreate">新增桌位</el-button>
       <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
     </div>
 
@@ -140,16 +140,26 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row as TableVO)">编辑</el-button>
+          <el-button link type="primary" :disabled="actionId !== null" @click="openEdit(row as TableVO)"
+            >编辑</el-button
+          >
           <el-button
             link
             :type="row.status === 4 ? 'success' : 'warning'"
             :disabled="actionId !== null"
+            :loading="actionId === row.tableId && actionType === 'toggle'"
             @click="toggleEnabled(row as TableVO)"
           >
             {{ row.status === 4 ? '启用' : '禁用' }}
           </el-button>
-          <el-button link type="danger" :disabled="actionId !== null" @click="remove(row as TableVO)">删除</el-button>
+          <el-button
+            link
+            type="danger"
+            :disabled="actionId !== null"
+            :loading="actionId === row.tableId && actionType === 'delete'"
+            @click="remove(row as TableVO)"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
       <template #empty>

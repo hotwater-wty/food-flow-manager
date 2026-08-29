@@ -2,8 +2,8 @@
 // 管理订单工作台:二期 R2 试点,用 Element Plus 的表格/分页/标签/抽屉重构首版卡片列表。
 // 业务逻辑与首版一致:分页读取订单、按后端状态机推进状态、点击详情查看菜品明细;
 // 变化只在展示层——表格替代卡片列表,详情从行内展开改为右侧抽屉。
-import { onMounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref, watch } from 'vue'
+import { ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { getAdminOrderDetail, getAdminOrders, updateOrderStatus } from '../services/admin-order'
 import type { AdminOrderData, OrderDetailData } from '@foodflow/shared/types/api'
@@ -11,7 +11,8 @@ import { getOrderStatusLabel, getOrderTagKind } from '@foodflow/shared/utils/ord
 import { formatDateTime, formatPrice } from '@foodflow/shared/utils/format'
 import { usePagedList } from '../composables/use-pagedList'
 import { useAutoRefresh } from '../composables/use-autoRefresh'
-import { useAdminSse } from '../composables/use-admin-sse'
+import { useAdminOperation } from '../composables/use-admin-operation'
+import { useAdminNotificationsStore } from '../stores/admin-notifications'
 
 // 页大小与后端约定一致;服务层固定传 pageSize=10。
 const PAGE_SIZE = 10
@@ -50,6 +51,8 @@ const detailData = ref<OrderDetailData | null>(null)
 
 // 写操作锁:记录正在推进的订单 ID,并让整页其他推进按钮暂时禁用,避免并发写请求。
 const actionId = ref<number | null>(null)
+const { run } = useAdminOperation()
+const notificationsStore = useAdminNotificationsStore()
 
 // 推进按钮文案由当前状态推导;只允许相邻状态,跳级会被后端拒绝。
 function advanceLabel(status: number) {
@@ -90,27 +93,31 @@ async function advance(order: AdminOrderData) {
     }
   }
   actionId.value = order.orderId
-  errorMessage.value = ''
   try {
-    // 前端只计算相邻目标状态,后端状态机仍是最终裁判。
-    await updateOrderStatus(order.orderId, order.status + 1)
-    ElMessage.success(`订单 ${order.orderNo} 已推进至「${getOrderStatusLabel(order.status + 1)}」`)
+    const succeeded = await run({
+      execute: () => updateOrderStatus(order.orderId, order.status + 1),
+      refresh: () => load({ rethrow: true }),
+      successMessage: `订单 ${order.orderNo} 已推进至「${getOrderStatusLabel(order.status + 1)}」`,
+    })
     // 抽屉正展示该订单时,用已确认的新状态同步本地详情,避免展示过期状态。
-    if (drawerVisible.value && detailData.value?.orderId === order.orderId) {
+    if (succeeded && drawerVisible.value && detailData.value?.orderId === order.orderId) {
       detailData.value = { ...detailData.value, status: order.status + 1 }
     }
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '订单状态更新失败'
   } finally {
     actionId.value = null
   }
 }
 
-// 自动刷新(三期 R3):工作台默认每 20 秒静默轮询,标签页不可见时暂停;
-// 切回标签页/窗口聚焦时也会立即静默刷新,三种触发共用上面的 load。
-const { autoRefresh } = useAutoRefresh(load)
-useAdminSse(() => void load({ silent: true }))
+// SSE 负责外部变化通知；聚焦刷新仅作为从后台返回时的兜底，不再进行 20 秒轮询。
+useAutoRefresh(load, { polling: false })
+watch(
+  () => notificationsStore.version,
+  () => {
+    if (notificationsStore.latestEvent === 'new-order' || notificationsStore.latestEvent === 'test-notification') {
+      void load({ silent: true })
+    }
+  },
+)
 
 // onMounted 接收函数引用;组件插入 DOM 后由 Vue 自动调用一次。
 onMounted(load)
@@ -128,10 +135,6 @@ onMounted(load)
         <el-option v-for="option in statusOptions" :key="option.label" :label="option.label" :value="option.value" />
       </el-select>
       <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
-      <label class="auto-refresh-toggle">
-        <el-switch v-model="autoRefresh" size="small" />
-        每 20 秒自动刷新
-      </label>
     </div>
 
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
@@ -217,13 +220,6 @@ onMounted(load)
 </template>
 
 <style scoped>
-.auto-refresh-toggle {
-  align-items: center;
-  color: var(--color-text-secondary);
-  display: inline-flex;
-  font-size: 0.85rem;
-  gap: var(--space-2);
-}
 /* 抽屉是本页面私有结构,样式用 scoped 与其他管理页隔离。 */
 .order-drawer-header {
   align-items: center;

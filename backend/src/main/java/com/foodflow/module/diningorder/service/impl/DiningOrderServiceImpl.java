@@ -185,7 +185,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
         }
         // 保存订单项
         orderItemService.saveBatch(orderItems);
-        notificationService.publish("new-order", Map.of("orderId", order.getId(), "orderNo", order.getOrderNo()));
+        notificationService.publishAfterCommit("new-order", Map.of("orderId", order.getId(), "orderNo", order.getOrderNo()));
 
         return DiningOrderCreateVO.builder()
                 .orderId(order.getId())

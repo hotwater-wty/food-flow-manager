@@ -6,6 +6,7 @@ import { createApp } from 'vue'
 import 'element-plus/es/components/message/style/css'
 import 'element-plus/es/components/message-box/style/css'
 import 'element-plus/es/components/loading/style/css'
+import 'element-plus/es/components/notification/style/css'
 // 按需引入后组件样式不再统一先于令牌加载;tokens.css 的 --el-* 变量是 CSS 自定义属性,
 // 只依赖 :root 存在,与样式的加载顺序无关,主题覆盖依然成立。
 import './styles/tokens.css'

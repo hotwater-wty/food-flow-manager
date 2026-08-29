@@ -68,7 +68,7 @@ export const router = createRouter({
           path: 'session',
           name: 'customer-session',
           component: CustomerSessionView,
-          meta: { requiresAuth: true, title: '扫码开台' },
+          meta: { requiresAuth: true, title: '选择座位' },
         },
         {
           path: 'menu',

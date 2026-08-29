@@ -3,13 +3,14 @@
 // 后端整个 /api/admin/employees 前缀都限制店长;本页路由同样标记 requiresManager,
 // 店员登录时侧栏不显示入口,直接访问 URL 也会被前端守卫拦下(后端拦截器仍是最终防线)。
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
 import { createEmployee, getEmployees, setEmployeeEnabled } from '../../services/admin-resources'
 import type { EmployeeCreateRequest, EmployeeData } from '@foodflow/shared/types/api'
 import type { FormInstance, FormRules } from 'element-plus'
 import { getEmployeeRoleLabel, getEmployeeStatusLabel } from '@foodflow/shared/utils/status'
 import { usePagedList } from '../../composables/use-pagedList'
+import { useAdminOperation } from '../../composables/use-admin-operation'
 
 const PAGE_SIZE = 10
 
@@ -18,6 +19,7 @@ const { records, pageNo, total, loading, errorMessage, load, handlePageChange } 
 )
 
 const actionId = ref<number | null>(null)
+const { run } = useAdminOperation()
 
 const dialogVisible = ref(false)
 const formRef = ref<FormInstance>()
@@ -46,16 +48,13 @@ function openCreate() {
 async function submit() {
   await formRef.value?.validate().catch(() => Promise.reject())
   submitting.value = true
-  try {
-    await createEmployee(form)
-    ElMessage.success(`员工 ${form.name} 已创建`)
-    dialogVisible.value = false
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '员工创建失败'
-  } finally {
-    submitting.value = false
-  }
+  const succeeded = await run({
+    execute: () => createEmployee(form),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `员工 ${form.name} 已创建`,
+  })
+  if (succeeded) dialogVisible.value = false
+  submitting.value = false
 }
 
 async function toggleEnabled(item: EmployeeData) {
@@ -70,15 +69,12 @@ async function toggleEnabled(item: EmployeeData) {
     return
   }
   actionId.value = item.employeeId
-  try {
-    await setEmployeeEnabled(item.employeeId, item.status !== 1)
-    ElMessage.success(`员工 ${item.name} 已${item.status === 1 ? '禁用' : '启用'}`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '员工状态更新失败'
-  } finally {
-    actionId.value = null
-  }
+  await run({
+    execute: () => setEmployeeEnabled(item.employeeId, item.status !== 1),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `员工 ${item.name} 已${item.status === 1 ? '禁用' : '启用'}`,
+  })
+  actionId.value = null
 }
 
 onMounted(load)
@@ -92,7 +88,7 @@ onMounted(load)
     </div>
 
     <div class="admin-toolbar">
-      <el-button type="primary" :icon="Plus" @click="openCreate">新增员工</el-button>
+      <el-button type="primary" :icon="Plus" :disabled="actionId !== null" @click="openCreate">新增员工</el-button>
       <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
     </div>
 

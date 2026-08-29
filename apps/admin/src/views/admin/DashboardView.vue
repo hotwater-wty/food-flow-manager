@@ -1,13 +1,14 @@
 <script setup lang="ts">
 // 商户端仪表盘(三期 R5):今日经营概览,数据来自 GET /api/admin/statistics/overview。
 // 呈现默认零依赖:统计卡片 + 状态分布条 + 热销榜单,不引入图表库。
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
 import { getStatisticsOverview } from '../../services/statistics'
 import type { StatisticsOverview } from '@foodflow/shared/types/api'
 import { getOrderStatusLabel, getOrderTagKind } from '@foodflow/shared/utils/order-status'
 import { formatPrice } from '@foodflow/shared/utils/format'
 import { useAutoRefresh } from '../../composables/use-autoRefresh'
+import { useAdminNotificationsStore } from '../../stores/admin-notifications'
 
 const overview = ref<StatisticsOverview | null>(null)
 const loading = ref(true)
@@ -34,8 +35,12 @@ async function load(options?: { silent?: boolean }) {
   }
 }
 
-// 仪表盘数据频次低、变化感知价值高,默认开启 20 秒轮询(与工作台同款开关)。
-const { autoRefresh } = useAutoRefresh(load)
+const notificationsStore = useAdminNotificationsStore()
+useAutoRefresh(load, { polling: false })
+watch(
+  () => notificationsStore.version,
+  () => void load({ silent: true }),
+)
 
 // 状态分布条:过滤掉没有数据的状态,比例按剩余条目计算,避免零宽色块。
 const distribution = computed(() => {
@@ -68,10 +73,6 @@ onMounted(load)
 
     <div class="admin-toolbar">
       <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
-      <label class="auto-refresh-toggle">
-        <el-switch v-model="autoRefresh" size="small" />
-        每 20 秒自动刷新
-      </label>
     </div>
 
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />

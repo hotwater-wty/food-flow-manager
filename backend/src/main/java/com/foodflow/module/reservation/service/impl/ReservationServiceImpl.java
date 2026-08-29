@@ -82,7 +82,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
         Reservation reservation = toReservation(reservationDTO);
         // 保存预约数据到数据库
         save(reservation);
-        notificationService.publish("new-reservation", java.util.Map.of("reservationId", reservation.getId()));
+        notificationService.publishAfterCommit("new-reservation", java.util.Map.of("reservationId", reservation.getId()));
         // 封装对象返回数据
         return toCreateVO(reservation);
     }

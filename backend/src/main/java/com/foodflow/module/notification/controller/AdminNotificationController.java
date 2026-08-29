@@ -3,6 +3,8 @@ package com.foodflow.module.notification.controller;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/admin/notifications")
 public class AdminNotificationController {
     private final AdminNotificationService notificationService;
+    private final Environment environment;
 
     @PostMapping("/ticket")
     public Result<Map<String, String>> issueTicket() {
@@ -39,6 +42,10 @@ public class AdminNotificationController {
 
     @PostMapping("/test")
     public Result<Void> testEvent() {
+        if (!environment.acceptsProfiles(Profiles.of("dev", "test"))) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND, "Not Found");
+        }
         notificationService.publish("test-notification", Map.of("message", "SSE test event"));
         return Result.success();
     }

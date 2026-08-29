@@ -12,7 +12,7 @@
     "lint:fix": "eslint apps packages --ext .ts,.vue --fix",
     "format": "prettier --write \"apps/**/src/**/*.{ts,vue,css}\" \"packages/**/src/**/*.{ts,css}\"",
     "format:check": "prettier --check \"apps/**/src/**/*.{ts,vue,css}\" \"packages/**/src/**/*.{ts,css}\"",
-    "test": "pnpm --filter @foodflow/shared test",
+    "test": "pnpm --filter @foodflow/shared test && pnpm --filter @foodflow/admin test",
     "test:e2e": "node scripts/e2e-smoke.mjs"
   },
   "devDependencies": {

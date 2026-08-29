@@ -125,7 +125,7 @@ onMounted(loadMenu)
       left-icon="info-o"
       mode="link"
       text="当前没有用餐会话,下单前请先开台"
-      to="/session"
+      to="/"
     />
 
     <van-loading v-if="isLoading" class="menu-loading" size="24px" vertical>正在加载菜单...</van-loading>

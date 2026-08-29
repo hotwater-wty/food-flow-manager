@@ -18,6 +18,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { getDishStatusLabel } from '@foodflow/shared/utils/status'
 import { formatPrice } from '@foodflow/shared/utils/format'
 import { usePagedList } from '../../composables/use-pagedList'
+import { useAdminOperation } from '../../composables/use-admin-operation'
 
 const PAGE_SIZE = 10
 
@@ -42,6 +43,8 @@ async function loadCategoryOptions() {
 }
 
 const actionId = ref<number | null>(null)
+const actionType = ref<'delete' | 'toggle' | null>(null)
+const { run } = useAdminOperation()
 
 const dialogVisible = ref(false)
 const editingId = ref<number | null>(null)
@@ -97,38 +100,40 @@ async function submit() {
   // 元转分:先转数值再取整,避免浮点乘法误差(如 12.34 * 100 = 1233.9999...)。
   const priceCents = Math.round(Number(priceYuan.value) * 100)
   if (!Number.isFinite(priceCents) || priceCents < 0) {
-    errorMessage.value = '价格格式不正确'
+    ElMessage.warning('价格格式不正确')
     return
   }
   submitting.value = true
-  try {
-    if (editingId.value !== null) {
-      // 更新接口不接受创建时的 status 字段,状态变更走独立接口。
-      await updateDish(editingId.value, {
-        categoryId: form.categoryId!,
-        name: form.name,
-        description: form.description,
-        price: priceCents,
-        image: form.image,
-      })
-    } else {
-      await createDish({
-        categoryId: form.categoryId!,
-        name: form.name,
-        description: form.description,
-        price: priceCents,
-        image: form.image,
-        status: form.status,
-      })
-    }
-    ElMessage.success(editingId.value !== null ? '菜品已更新' : '菜品已创建')
+  const isEditing = editingId.value !== null
+  const succeeded = await run({
+    execute: async () => {
+      if (isEditing) {
+        // 更新接口不接受创建时的 status 字段,状态变更走独立接口。
+        await updateDish(editingId.value!, {
+          categoryId: form.categoryId!,
+          name: form.name,
+          description: form.description,
+          price: priceCents,
+          image: form.image,
+        })
+      } else {
+        await createDish({
+          categoryId: form.categoryId!,
+          name: form.name,
+          description: form.description,
+          price: priceCents,
+          image: form.image,
+          status: form.status,
+        })
+      }
+    },
+    refresh: () => load({ rethrow: true }),
+    successMessage: isEditing ? '菜品已更新' : '菜品已创建',
+  })
+  if (succeeded) {
     dialogVisible.value = false
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '菜品保存失败'
-  } finally {
-    submitting.value = false
   }
+  submitting.value = false
 }
 
 async function remove(item: DishData) {
@@ -142,29 +147,27 @@ async function remove(item: DishData) {
     return
   }
   actionId.value = item.id
-  try {
-    await deleteDish(item.id)
-    ElMessage.success(`菜品「${item.name}」已删除`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '菜品删除失败'
-  } finally {
-    actionId.value = null
-  }
+  actionType.value = 'delete'
+  await run({
+    execute: () => deleteDish(item.id),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `菜品「${item.name}」已删除`,
+  })
+  actionId.value = null
+  actionType.value = null
 }
 
 // 在"停售(0)"与"启售(1)"间切换;售罄(2)由后端业务流转产生,不由资料页设置。
 async function toggleStatus(item: DishData) {
   actionId.value = item.id
-  try {
-    await setDishStatus(item.id, item.status === 1 ? 0 : 1)
-    ElMessage.success(`菜品「${item.name}」已${item.status === 1 ? '停售' : '启售'}`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '菜品状态更新失败'
-  } finally {
-    actionId.value = null
-  }
+  actionType.value = 'toggle'
+  await run({
+    execute: () => setDishStatus(item.id, item.status === 1 ? 0 : 1),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `菜品「${item.name}」已${item.status === 1 ? '停售' : '启售'}`,
+  })
+  actionId.value = null
+  actionType.value = null
 }
 
 onMounted(() => {
@@ -183,7 +186,7 @@ onMounted(() => {
     </div>
 
     <div class="admin-toolbar">
-      <el-button type="primary" :icon="Plus" @click="openCreate">新增菜品</el-button>
+      <el-button type="primary" :icon="Plus" :disabled="actionId !== null" @click="openCreate">新增菜品</el-button>
       <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
     </div>
 
@@ -222,16 +225,26 @@ onMounted(() => {
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row as DishData)">编辑</el-button>
+          <el-button link type="primary" :disabled="actionId !== null" @click="openEdit(row as DishData)"
+            >编辑</el-button
+          >
           <el-button
             link
             :type="row.status === 1 ? 'warning' : 'success'"
             :disabled="actionId !== null"
+            :loading="actionId === row.id && actionType === 'toggle'"
             @click="toggleStatus(row as DishData)"
           >
             {{ row.status === 1 ? '停售' : '启售' }}
           </el-button>
-          <el-button link type="danger" :disabled="actionId !== null" @click="remove(row as DishData)">删除</el-button>
+          <el-button
+            link
+            type="danger"
+            :disabled="actionId !== null"
+            :loading="actionId === row.id && actionType === 'delete'"
+            @click="remove(row as DishData)"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
       <template #empty>

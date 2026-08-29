@@ -7,6 +7,7 @@
     "dev": "vite",
     "type-check": "vue-tsc -b",
     "verify:api": "node scripts/smoke-api.mjs",
+    "test": "vitest run",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },

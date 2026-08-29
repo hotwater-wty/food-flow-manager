@@ -4,6 +4,7 @@
 import { RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '../stores/auth'
+import CustomerTablePicker from '../components/CustomerTablePicker.vue'
 
 const authStore = useAuthStore()
 const { isAuthenticated, user } = storeToRefs(authStore)
@@ -12,19 +13,21 @@ const { isAuthenticated, user } = storeToRefs(authStore)
 <template>
   <section class="home-view">
     <p class="eyebrow">膳畅管家</p>
-    <h1>{{ isAuthenticated && user ? `欢迎回来,${user.nickname}` : '扫码点餐 · 预约座位' }}</h1>
-    <p class="summary">到店后扫描桌码开台即可点餐,也可以提前预约座位;提交订单后可随时在"订单"里查看进度。</p>
+    <h1>{{ isAuthenticated && user ? `欢迎回来，${user.nickname}` : '到店选座 · 在线点餐' }}</h1>
+    <p class="summary">到店后选择空闲桌位开台即可点餐，也可以提前预约座位；提交订单后可随时在“订单”里查看进度。</p>
 
-    <div class="home-actions">
-      <RouterLink class="home-primary-action" to="/menu">去点餐</RouterLink>
+    <CustomerTablePicker v-if="isAuthenticated" />
+    <div v-else class="home-actions">
+      <RouterLink class="home-primary-action" :to="{ path: '/login', query: { redirect: '/' } }"
+        >登录后选择桌位</RouterLink
+      >
       <RouterLink class="secondary-button" to="/reservations/create">预约座位</RouterLink>
-      <RouterLink v-if="!isAuthenticated" class="secondary-button" to="/login"> 登录 / 注册 </RouterLink>
     </div>
 
     <dl class="status-list">
       <div>
         <dt>第一步</dt>
-        <dd>扫码或进入"点餐"页开台,绑定桌位</dd>
+        <dd>登录后选择空闲桌位并确认开台</dd>
       </div>
       <div>
         <dt>第二步</dt>

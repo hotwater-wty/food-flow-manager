@@ -11,30 +11,44 @@ export function usePagedList<T>(fetchPage: (pageNo: number) => Promise<PageResul
   const total: Ref<number> = ref(0)
   const loading: Ref<boolean> = ref(true)
   const errorMessage: Ref<string> = ref('')
+  let pendingLoad: Promise<void> | null = null
 
   // silent 表示由自动刷新/聚焦刷新触发的静默加载:不点亮加载遮罩,失败也只记录不惊扰用户。
-  async function load(options?: { silent?: boolean }) {
-    if (!options?.silent) {
-      loading.value = true
-      errorMessage.value = ''
+  async function load(options?: { silent?: boolean; rethrow?: boolean }) {
+    if (pendingLoad) {
+      // SSE/聚焦触发的静默刷新不应把在途写后刷新的异常变成未处理 Promise；
+      // 写操作本身携带 rethrow，仍会在自己的调用链中得到失败结果并提示用户。
+      if (!options?.rethrow) return pendingLoad.catch(() => undefined)
+      await pendingLoad
+      return load(options)
     }
-    try {
-      const result = await fetchPage(pageNo.value)
-      records.value = result.records
-      total.value = result.total
-    } catch (error) {
-      // unknown 错误经过 instanceof Error 类型收窄后才能读取 message。
-      if (options?.silent) {
-        // 静默刷新失败时保留当前数据与界面,等下一次轮询重试;弱网/后端未启动时不刷屏。
-        console.warn('[usePagedList] 静默刷新失败', error)
-      } else {
-        errorMessage.value = error instanceof Error ? error.message : '查询失败'
-      }
-    } finally {
+
+    pendingLoad = (async () => {
       if (!options?.silent) {
-        // 无论成功失败都解除加载状态,避免表格的加载遮罩永久停留。
-        loading.value = false
+        loading.value = true
+        errorMessage.value = ''
       }
+      try {
+        const result = await fetchPage(pageNo.value)
+        records.value = result.records
+        total.value = result.total
+      } catch (error) {
+        // 静默刷新失败保留旧数据；写操作的刷新需要把失败继续交给统一反馈模块。
+        if (options?.silent) {
+          console.warn('[usePagedList] 静默刷新失败', error)
+        } else {
+          errorMessage.value = error instanceof Error ? error.message : '查询失败'
+        }
+        if (options?.rethrow) throw error
+      } finally {
+        if (!options?.silent) loading.value = false
+      }
+    })()
+
+    try {
+      await pendingLoad
+    } finally {
+      pendingLoad = null
     }
   }
 

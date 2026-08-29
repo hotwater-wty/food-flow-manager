@@ -6,6 +6,8 @@ export interface Result<T> {
   msg: string
   // 失败响应允许 data 为 null，所以调用方必须先判空再使用数据。
   data: T | null
+  // 成功时为空；失败时用于前端稳定展示和定位，不依赖中文文案匹配。
+  errorCode?: string | null
 }
 
 export interface UserLoginRequest {

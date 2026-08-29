@@ -1,14 +1,16 @@
 <script setup lang="ts">
 // 预约管理页:二期 R3 从单页五 Tab 拆分而来,路由 /admin/resources/reservations。
 // 预约是只读为主的管理视角:详情用抽屉渲染,异常预约可取消。
-import { onMounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref, watch } from 'vue'
+import { ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { cancelAdminReservation, getAdminReservationDetail, getAdminReservations } from '../../services/admin-resources'
 import type { ReservationAdminData } from '@foodflow/shared/types/api'
 import { canCancelReservation, getReservationStatusLabel, getReservationTagKind } from '@foodflow/shared/utils/status'
 import { formatDateTime } from '@foodflow/shared/utils/format'
 import { usePagedList } from '../../composables/use-pagedList'
+import { useAdminOperation } from '../../composables/use-admin-operation'
+import { useAdminNotificationsStore } from '../../stores/admin-notifications'
 
 const PAGE_SIZE = 10
 
@@ -17,6 +19,8 @@ const { records, pageNo, total, loading, errorMessage, load, handlePageChange } 
 )
 
 const actionId = ref<number | null>(null)
+const { run } = useAdminOperation()
+const notificationsStore = useAdminNotificationsStore()
 
 const drawerVisible = ref(false)
 const detailLoading = ref(false)
@@ -47,18 +51,26 @@ async function cancel(item: ReservationAdminData) {
     return
   }
   actionId.value = item.reservationId
-  try {
-    await cancelAdminReservation(item.reservationId)
-    ElMessage.success(`预约 ${item.reservationNo} 已取消`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '预约取消失败'
-  } finally {
-    actionId.value = null
-  }
+  await run({
+    execute: () => cancelAdminReservation(item.reservationId),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `预约 ${item.reservationNo} 已取消`,
+  })
+  actionId.value = null
 }
 
 onMounted(load)
+watch(
+  () => notificationsStore.version,
+  () => {
+    if (
+      notificationsStore.latestEvent === 'new-reservation' ||
+      notificationsStore.latestEvent === 'reservation-check-in'
+    ) {
+      void load({ silent: true })
+    }
+  },
+)
 </script>
 
 <template>

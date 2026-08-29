@@ -2,8 +2,8 @@
 // 管理会话工作台:二期 R3 用 Element Plus 重构。
 // 与首版的差异:1) 补上后端早已支持的状态筛选;2) "详情"从拼接一行反馈文本
 // 改为右侧抽屉真正渲染会话数据;3) 取消等待/清台两个写操作增加确认弹窗。
-import { onMounted, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref, watch } from 'vue'
+import { ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import {
   cancelAdminSession,
@@ -15,7 +15,8 @@ import type { DiningSessionData } from '@foodflow/shared/types/api'
 import { getSessionStatusLabel, getTableStatusLabel } from '@foodflow/shared/utils/status'
 import { usePagedList } from '../composables/use-pagedList'
 import { useAutoRefresh } from '../composables/use-autoRefresh'
-import { useAdminSse } from '../composables/use-admin-sse'
+import { useAdminOperation } from '../composables/use-admin-operation'
+import { useAdminNotificationsStore } from '../stores/admin-notifications'
 
 // 状态筛选:空字符串表示"全部"(el-option 的 value 不接受 undefined)。
 const statusFilter = ref<number | ''>('')
@@ -41,6 +42,8 @@ const detailData = ref<DiningSessionData | null>(null)
 
 // 写操作互斥锁:记录正在操作的会话 ID,并禁用其余行的操作按钮。
 const actionId = ref<number | null>(null)
+const { run } = useAdminOperation()
+const notificationsStore = useAdminNotificationsStore()
 
 // 会话状态映射 Tag 颜色:等待黄、用餐主色、完成绿、取消灰。
 function sessionTagType(status: number): 'primary' | 'warning' | 'success' | 'info' {
@@ -82,22 +85,30 @@ async function action(session: DiningSessionData, type: 'cancel' | 'close') {
     return
   }
   actionId.value = session.sessionId
-  errorMessage.value = ''
   try {
-    if (type === 'cancel') await cancelAdminSession(session.sessionId)
-    else await closeAdminSession(session.sessionId)
-    ElMessage.success(type === 'cancel' ? `会话 ${session.sessionNo} 已取消` : `桌位 ${session.tableNo} 已清台`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '会话操作失败'
+    await run({
+      execute: () => (type === 'cancel' ? cancelAdminSession(session.sessionId) : closeAdminSession(session.sessionId)),
+      refresh: () => load({ rethrow: true }),
+      successMessage: type === 'cancel' ? `会话 ${session.sessionNo} 已取消` : `桌位 ${session.tableNo} 已清台`,
+    })
   } finally {
     actionId.value = null
   }
 }
 
-// 自动刷新(三期 R3):与订单工作台一致,每 20 秒静默轮询,不可见暂停、聚焦即刷。
-const { autoRefresh } = useAutoRefresh(load)
-useAdminSse(() => void load({ silent: true }))
+useAutoRefresh(load, { polling: false })
+watch(
+  () => notificationsStore.version,
+  () => {
+    if (
+      ['new-order', 'new-reservation', 'reservation-check-in', 'test-notification'].includes(
+        notificationsStore.latestEvent ?? '',
+      )
+    ) {
+      void load({ silent: true })
+    }
+  },
+)
 
 // 首次进入工作台时自动拉取第一页。
 onMounted(load)
@@ -115,10 +126,6 @@ onMounted(load)
         <el-option v-for="option in statusOptions" :key="option.label" :label="option.label" :value="option.value" />
       </el-select>
       <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
-      <label class="auto-refresh-toggle">
-        <el-switch v-model="autoRefresh" size="small" />
-        每 20 秒自动刷新
-      </label>
     </div>
 
     <el-alert v-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
@@ -198,13 +205,6 @@ onMounted(load)
 </template>
 
 <style scoped>
-.auto-refresh-toggle {
-  align-items: center;
-  color: var(--color-text-secondary);
-  display: inline-flex;
-  font-size: 0.85rem;
-  gap: var(--space-2);
-}
 .session-drawer-body {
   min-height: 140px;
 }

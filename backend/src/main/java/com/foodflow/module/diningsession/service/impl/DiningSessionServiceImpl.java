@@ -220,7 +220,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         
         // 构建会话VO
         DiningSessionVO result = toDiningSessionVO(diningSession, diningTable);
-        notificationService.publish("reservation-check-in", Map.of("sessionId", diningSession.getId(), "tableId", tableId));
+        notificationService.publishAfterCommit("reservation-check-in", Map.of("sessionId", diningSession.getId(), "tableId", tableId));
         return result;
     }
 

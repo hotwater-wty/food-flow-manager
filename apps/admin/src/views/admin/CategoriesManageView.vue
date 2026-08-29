@@ -2,7 +2,7 @@
 // 菜品分类维护页:二期 R3 从单页五 Tab 拆分而来,路由 /admin/resources/categories。
 // 分类结构最简单(名称+排序+启停),作为五个资源页中的样板页。
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
 import {
   createCategory,
@@ -14,6 +14,7 @@ import {
 import type { DishCategoryData, DishCategoryRequest } from '@foodflow/shared/types/api'
 import type { FormInstance, FormRules } from 'element-plus'
 import { usePagedList } from '../../composables/use-pagedList'
+import { useAdminOperation } from '../../composables/use-admin-operation'
 
 const PAGE_SIZE = 10
 
@@ -22,6 +23,8 @@ const { records, pageNo, total, loading, errorMessage, load, handlePageChange } 
 )
 
 const actionId = ref<number | null>(null)
+const actionType = ref<'delete' | 'toggle' | null>(null)
+const { run } = useAdminOperation()
 
 const dialogVisible = ref(false)
 const editingId = ref<number | null>(null)
@@ -50,17 +53,16 @@ function openEdit(item: DishCategoryData) {
 async function submit() {
   await formRef.value?.validate().catch(() => Promise.reject())
   submitting.value = true
-  try {
-    if (editingId.value !== null) await updateCategory(editingId.value, form)
-    else await createCategory(form)
-    ElMessage.success(editingId.value !== null ? '分类已更新' : '分类已创建')
+  const isEditing = editingId.value !== null
+  const succeeded = await run({
+    execute: () => (isEditing ? updateCategory(editingId.value!, form) : createCategory(form)),
+    refresh: () => load({ rethrow: true }),
+    successMessage: isEditing ? '分类已更新' : '分类已创建',
+  })
+  if (succeeded) {
     dialogVisible.value = false
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '分类保存失败'
-  } finally {
-    submitting.value = false
   }
+  submitting.value = false
 }
 
 async function remove(item: DishCategoryData) {
@@ -74,28 +76,26 @@ async function remove(item: DishCategoryData) {
     return
   }
   actionId.value = item.id
-  try {
-    await deleteCategory(item.id)
-    ElMessage.success(`分类「${item.name}」已删除`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '分类删除失败'
-  } finally {
-    actionId.value = null
-  }
+  actionType.value = 'delete'
+  await run({
+    execute: () => deleteCategory(item.id),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `分类「${item.name}」已删除`,
+  })
+  actionId.value = null
+  actionType.value = null
 }
 
 async function toggleEnabled(item: DishCategoryData) {
   actionId.value = item.id
-  try {
-    await setCategoryEnabled(item.id, item.status !== 1)
-    ElMessage.success(`分类「${item.name}」已${item.status === 1 ? '禁用' : '启用'}`)
-    await load()
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : '分类状态更新失败'
-  } finally {
-    actionId.value = null
-  }
+  actionType.value = 'toggle'
+  await run({
+    execute: () => setCategoryEnabled(item.id, item.status !== 1),
+    refresh: () => load({ rethrow: true }),
+    successMessage: `分类「${item.name}」已${item.status === 1 ? '禁用' : '启用'}`,
+  })
+  actionId.value = null
+  actionType.value = null
 }
 
 onMounted(load)
@@ -109,7 +109,7 @@ onMounted(load)
     </div>
 
     <div class="admin-toolbar">
-      <el-button type="primary" :icon="Plus" @click="openCreate">新增分类</el-button>
+      <el-button type="primary" :icon="Plus" :disabled="actionId !== null" @click="openCreate">新增分类</el-button>
       <el-button :icon="Refresh" :loading="loading" @click="load()">刷新</el-button>
     </div>
 
@@ -128,16 +128,24 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row as DishCategoryData)">编辑</el-button>
+          <el-button link type="primary" :disabled="actionId !== null" @click="openEdit(row as DishCategoryData)"
+            >编辑</el-button
+          >
           <el-button
             link
             :type="row.status === 1 ? 'warning' : 'success'"
             :disabled="actionId !== null"
+            :loading="actionId === row.id && actionType === 'toggle'"
             @click="toggleEnabled(row as DishCategoryData)"
           >
             {{ row.status === 1 ? '禁用' : '启用' }}
           </el-button>
-          <el-button link type="danger" :disabled="actionId !== null" @click="remove(row as DishCategoryData)"
+          <el-button
+            link
+            type="danger"
+            :disabled="actionId !== null"
+            :loading="actionId === row.id && actionType === 'delete'"
+            @click="remove(row as DishCategoryData)"
             >删除</el-button
           >
         </template>

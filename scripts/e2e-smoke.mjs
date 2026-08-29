@@ -32,6 +32,12 @@ async function testAdmin(browser) {
   await page.waitForURL('**/orders', { timeout: 5000 }).catch(() => {})
   assert(page.url().endsWith('/orders'), '员工登录后进入订单工作台')
   await page.waitForTimeout(800)
+  const sseConnected = await page
+    .locator('.notification-status--connected')
+    .waitFor({ state: 'visible', timeout: 8000 })
+    .then(() => true)
+    .catch(() => false)
+  assert(sseConnected, '管理布局建立唯一 SSE 连接')
   const tableVisible = await page.locator('.el-table').first().isVisible().catch(() => false)
   assert(tableVisible, '订单工作台表格渲染')
   // 旧地址重定向
@@ -48,6 +54,31 @@ async function testAdmin(browser) {
 
 async function testCustomer(browser) {
   console.log('[顾客端 5174]')
+  const homePage = await browser.newPage()
+  const protectedTableRequests = []
+  homePage.on('request', (request) => {
+    if (request.url().includes('/api/user/tables')) protectedTableRequests.push(request.url())
+  })
+  await homePage.goto(`${CUSTOMER_URL}/`)
+  await homePage.waitForTimeout(500)
+  assert(protectedTableRequests.length === 0, '未登录首页不请求受保护桌位接口')
+  await homePage.getByRole('link', { name: '登录后选择桌位' }).click()
+  await homePage.locator('input[autocomplete="tel"]').fill(CUSTOMER.phone)
+  await homePage.locator('input[autocomplete="current-password"]').fill(CUSTOMER.password)
+  await homePage.getByRole('button', { name: '登录', exact: true }).click()
+  await homePage.waitForURL(`${CUSTOMER_URL}/`, { timeout: 5000 }).catch(() => {})
+  await homePage.locator('.table-picker-title, .table-picker-session-title').first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => {})
+  const pickerVisible = await homePage.getByText('选择空闲桌位', { exact: true }).isVisible().catch(() => false)
+  const sessionVisible = await homePage.getByText('当前已绑定桌位', { exact: true }).isVisible().catch(() => false)
+  assert(pickerVisible || sessionVisible, '从首页登录后回到首页显示选座或已绑定桌位')
+  if (pickerVisible) {
+    await homePage.getByRole('button', { name: '确认选择此桌位' }).click()
+    const confirmVisible = await homePage.getByText('确认选择桌位', { exact: true }).isVisible().catch(() => false)
+    assert(confirmVisible, '选桌后显示二次确认对话框')
+    await homePage.getByRole('button', { name: '取消', exact: true }).click()
+  }
+  await homePage.close()
+
   const page = await browser.newPage()
   // 守卫:未登录访问点餐页应到登录页
   await page.goto(`${CUSTOMER_URL}/menu`)

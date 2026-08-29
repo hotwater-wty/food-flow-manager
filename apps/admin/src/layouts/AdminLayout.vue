@@ -5,11 +5,17 @@ import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAdminAuthStore } from '../stores/admin-auth'
+import { useAdminNotificationsStore } from '../stores/admin-notifications'
+import { useAdminSse } from '../composables/use-admin-sse'
 
 // useRoute 读当前路由(meta.title 由路由表提供),useRouter 做编程式跳转。
 const route = useRoute()
 const router = useRouter()
 const adminAuthStore = useAdminAuthStore()
+const notificationsStore = useAdminNotificationsStore()
+const { connected: notificationsConnected, disconnect: disconnectNotifications } = useAdminSse((event) =>
+  notificationsStore.publish(event),
+)
 // storeToRefs 保持 Store 字段的响应式连接;员工登录/退出后顶栏会自动更新。
 const { user } = storeToRefs(adminAuthStore)
 
@@ -45,6 +51,7 @@ const roleLabel = computed(() => (user.value?.role === 2 ? '店长' : '店员'))
 
 // 登出先清空 Store(内存 + localStorage),再回到员工登录页。
 function handleLogout() {
+  disconnectNotifications()
   adminAuthStore.logout()
   router.push({ name: 'admin-login' })
 }
@@ -68,6 +75,13 @@ function handleLogout() {
       <header class="admin-topbar">
         <p class="admin-page-title">{{ route.meta.title }}</p>
         <div v-if="user" class="admin-user">
+          <el-tooltip :content="notificationsConnected ? '实时通知已连接' : '实时通知重连中'" placement="bottom">
+            <span
+              class="notification-status"
+              :class="{ 'notification-status--connected': notificationsConnected }"
+              aria-label="实时通知状态"
+            />
+          </el-tooltip>
           <span class="admin-user-name">{{ user.name }}</span>
           <span class="admin-role-tag" :class="{ 'admin-role-tag--manager': user.role === 2 }">
             {{ roleLabel }}
@@ -175,6 +189,15 @@ function handleLogout() {
   align-items: center;
   display: flex;
   gap: var(--space-3);
+}
+.notification-status {
+  background: var(--color-warning);
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+.notification-status--connected {
+  background: var(--color-success);
 }
 .admin-user-name {
   color: var(--color-text);
