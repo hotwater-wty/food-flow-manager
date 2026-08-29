@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verify;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.foodflow.module.notification.service.impl.AdminNotificationServiceImpl;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -24,7 +26,7 @@ class AdminNotificationServiceTest {
 
     @Test
     void ticketCanOnlyBeConsumedOnce() {
-        AdminNotificationService service = new AdminNotificationService(() -> 1_000L);
+        AdminNotificationServiceImpl service = new AdminNotificationServiceImpl(() -> 1_000L);
         String ticket = service.issueTicket(7L);
         assertThat(service.consumeTicket(ticket)).isEqualTo(7L);
         assertThat(service.consumeTicket(ticket)).isNull();
@@ -33,7 +35,7 @@ class AdminNotificationServiceTest {
     @Test
     void expiredTicketIsRejected() {
         AtomicLong now = new AtomicLong(1_000L);
-        AdminNotificationService service = new AdminNotificationService(now::get);
+        AdminNotificationServiceImpl service = new AdminNotificationServiceImpl(now::get);
         String ticket = service.issueTicket(7L);
         now.addAndGet(60_001L);
         assertThat(service.consumeTicket(ticket)).isNull();
@@ -41,7 +43,7 @@ class AdminNotificationServiceTest {
 
     @Test
     void rollbackDoesNotPublishRegisteredEvent() {
-        AdminNotificationService service = spy(new AdminNotificationService());
+        AdminNotificationServiceImpl service = spy(new AdminNotificationServiceImpl());
         TransactionSynchronizationManager.initSynchronization();
         TransactionSynchronizationManager.setActualTransactionActive(true);
 

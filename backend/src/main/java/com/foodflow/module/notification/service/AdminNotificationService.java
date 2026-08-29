@@ -1,89 +1,26 @@
 package com.foodflow.module.notification.service;
 
-import java.time.Duration;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.LongSupplier;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import lombok.extern.slf4j.Slf4j;
+/**
+ * 管理端实时通知服务。
+ *
+ * <p>业务模块只依赖此接口，不直接依赖 SSE 的内存连接实现，便于后续替换为
+ * Redis Pub/Sub 或其他多实例事件分发方案。</p>
+ */
+public interface AdminNotificationService {
+    /** 为员工签发短时、一次性消费的 SSE ticket。 */
+    String issueTicket(Long employeeId);
 
-@Slf4j
-@Service
-public class AdminNotificationService {
-    private static final Duration TICKET_TTL = Duration.ofSeconds(60);
-    private final Map<String, Ticket> tickets = new ConcurrentHashMap<>();
-    private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
-    private final LongSupplier currentTimeMillis;
+    /** 消费 SSE ticket；不存在、过期或已消费时返回 {@code null}。 */
+    Long consumeTicket(String value);
 
-    public AdminNotificationService() {
-        this(System::currentTimeMillis);
-    }
+    /** 为员工建立或替换一条 SSE 长连接。 */
+    SseEmitter connect(Long employeeId);
 
-    AdminNotificationService(LongSupplier currentTimeMillis) {
-        this.currentTimeMillis = currentTimeMillis;
-    }
+    /** 向当前在线管理端连接广播业务事件。 */
+    void publish(String eventName, Object data);
 
-    public String issueTicket(Long employeeId) {
-        long now = currentTimeMillis.getAsLong();
-        tickets.entrySet().removeIf(entry -> entry.getValue().expiresAt < now);
-        String value = UUID.randomUUID().toString();
-        tickets.put(value, new Ticket(employeeId, now + TICKET_TTL.toMillis()));
-        return value;
-    }
-
-    public Long consumeTicket(String value) {
-        Ticket ticket = tickets.remove(value);
-        if (ticket == null || ticket.expiresAt < currentTimeMillis.getAsLong()) return null;
-        return ticket.employeeId;
-    }
-
-    public SseEmitter connect(Long employeeId) {
-        SseEmitter emitter = new SseEmitter(0L);
-        SseEmitter previous = emitters.put(employeeId, emitter);
-        if (previous != null) previous.complete();
-        emitter.onCompletion(() -> emitters.remove(employeeId, emitter));
-        emitter.onTimeout(() -> emitters.remove(employeeId, emitter));
-        emitter.onError(error -> emitters.remove(employeeId, emitter));
-        try {
-            emitter.send(SseEmitter.event().name("connected").data(Map.of("employeeId", employeeId)));
-        } catch (Exception error) {
-            emitters.remove(employeeId, emitter);
-            emitter.completeWithError(error);
-        }
-        return emitter;
-    }
-
-    public void publish(String eventName, Object data) {
-        emitters.forEach((employeeId, emitter) -> {
-            try {
-                emitter.send(SseEmitter.event().name(eventName).data(data));
-            } catch (Exception error) {
-                log.debug("SSE connection closed for employee {}", employeeId);
-                emitters.remove(employeeId, emitter);
-            }
-        });
-    }
-
-    /** Publish only after a surrounding business transaction has committed. */
-    public void publishAfterCommit(String eventName, Object data) {
-        if (!TransactionSynchronizationManager.isActualTransactionActive()
-                || !TransactionSynchronizationManager.isSynchronizationActive()) {
-            publish(eventName, data);
-            return;
-        }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                publish(eventName, data);
-            }
-        });
-    }
-
-    private record Ticket(Long employeeId, long expiresAt) {}
+    /** 在当前事务提交后广播事件；无事务时立即广播。 */
+    void publishAfterCommit(String eventName, Object data);
 }
