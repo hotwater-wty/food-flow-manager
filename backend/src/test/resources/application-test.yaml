@@ -1,0 +1,4 @@
+# Testcontainers 注入的数据源和 Redis 地址由 IntegrationTestContainers 动态提供。
+spring:
+  main:
+    banner-mode: off

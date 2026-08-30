@@ -177,6 +177,8 @@ cd backend
 ./mvnw clean test
 ```
 
+后端集成测试使用 Testcontainers 自动启动隔离的 MySQL/Redis，因此运行测试时只需 Docker Desktop 正常运行，不需要先启动 `docker-compose.dev.yml`；IDEA 断点调试仍使用开发 Compose 提供依赖。
+
 Windows PowerShell：
 
 ```powershell

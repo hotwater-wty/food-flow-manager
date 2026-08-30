@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.foodflow.testsupport.IntegrationTestContainers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +33,8 @@ import com.foodflow.module.user.mapper.UserMapper;
 /**
  * 直接开台的最小真实业务回归：通过 Spring 上下文调用 Service，并检查 MySQL 最终状态。
  */
-@SpringBootTest
 @Transactional
-class DiningSessionServiceIntegrationTest {
+class DiningSessionServiceIntegrationTest extends IntegrationTestContainers {
     private static final AtomicInteger DATA_SEQUENCE = new AtomicInteger();
 
     @Autowired
