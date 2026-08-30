@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.foodflow.common.constant.CacheConstants;
 import com.foodflow.common.enums.LoginTypeEnum;
 import com.foodflow.common.enums.SubmitSceneEnum;
+import com.foodflow.common.exception.BusinessErrorCode;
 import com.foodflow.common.exception.BusinessException;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class SubmitTokenService {
 
     public String generateToken(LoginTypeEnum loginType, Long loginId, SubmitSceneEnum scene) {
         if (loginType == null || loginId == null || scene == null) {
-            throw new BusinessException("生成提交令牌失败");
+            throw new BusinessException(BusinessErrorCode.SUBMIT_TOKEN_INVALID);
         }
 
         String token = UUID.randomUUID().toString().replace("-", "");
@@ -36,17 +37,17 @@ public class SubmitTokenService {
 
     public void validateAndConsume(LoginTypeEnum loginType, Long loginId, SubmitSceneEnum scene, String token) {
         if (loginType == null || loginId == null || scene == null) {
-            throw new BusinessException("提交令牌校验失败");
+            throw new BusinessException(BusinessErrorCode.SUBMIT_TOKEN_INVALID);
         }
         if (token == null || token.isBlank()) {
-            throw new BusinessException("请勿重复提交");
+            throw new BusinessException(BusinessErrorCode.SUBMIT_TOKEN_REPLAYED);
         }
 
         String key = buildKey(loginType, loginId, scene, token);
 
         Boolean deleted = stringRedisTemplate.delete(key);
         if (deleted == null || !deleted) {
-            throw new BusinessException("请勿重复提交");
+            throw new BusinessException(BusinessErrorCode.SUBMIT_TOKEN_REPLAYED);
         }
     }
 

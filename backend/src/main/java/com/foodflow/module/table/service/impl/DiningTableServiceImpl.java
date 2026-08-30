@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.enums.TableStatusEnum;
+import com.foodflow.common.exception.BusinessErrorCode;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.result.PageResult;
 import com.foodflow.module.table.dto.TableDTO;
@@ -60,7 +61,7 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
     public TableVO getTableById(Long tableId) {
         DiningTable diningTable = getById(tableId);
         if (diningTable == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         return toTableVO(diningTable);
     }
@@ -72,11 +73,11 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
     public void updateTable(Long tableId, TableDTO tableDTO) {
         DiningTable diningTable = getById(tableId);
         if (diningTable == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         if (diningTable.getStatus() != TableStatusEnum.DISABLED
                 && diningTable.getStatus() != TableStatusEnum.FREE) {
-            throw new BusinessException("业务状态的桌位不能更新");
+            throw new BusinessException(BusinessErrorCode.TABLE_BUSY_CANNOT_UPDATE);
         }
         // BeanUtils.copyProperties(tableDTO, diningTable);
         diningTable.setTableNo(tableDTO.getTableNo());
@@ -96,11 +97,11 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
         // TODO 需设定为店长权限
         DiningTable diningTable = getById(tableId);
         if (diningTable == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         if (diningTable.getStatus() != TableStatusEnum.DISABLED
                 && diningTable.getStatus() != TableStatusEnum.FREE) {
-            throw new BusinessException("业务状态的桌位不能删除");
+            throw new BusinessException(BusinessErrorCode.TABLE_BUSY_CANNOT_DELETE);
         }
         removeById(tableId);
     }
@@ -125,10 +126,10 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
 
         DiningTable diningTable = getById(tableId);
         if (diningTable == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         if (diningTable.getStatus() != TableStatusEnum.DISABLED) {
-            throw new BusinessException("不能重复启用");
+            throw new BusinessException(BusinessErrorCode.TABLE_ALREADY_ENABLED);
         }
         diningTable.setStatus(TableStatusEnum.FREE);
         updateById(diningTable);
@@ -141,13 +142,13 @@ public class DiningTableServiceImpl extends ServiceImpl<DiningTableMapper, Dinin
     public void disableTable(Long tableId) {
         DiningTable diningTable = getById(tableId);
         if (diningTable == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         if (diningTable.getStatus() == TableStatusEnum.DISABLED) {
-            throw new BusinessException("不能重复禁用");
+            throw new BusinessException(BusinessErrorCode.TABLE_ALREADY_DISABLED);
         }
         if (diningTable.getStatus() != TableStatusEnum.FREE) {
-            throw new BusinessException("当前桌位处于业务状态，不能禁用");
+            throw new BusinessException(BusinessErrorCode.TABLE_BUSY_CANNOT_DISABLE);
         }
         diningTable.setStatus(TableStatusEnum.DISABLED);
         updateById(diningTable);

@@ -1,6 +1,7 @@
 package com.foodflow.common.enums;
 
 import com.foodflow.common.exception.BusinessException;
+import com.foodflow.common.exception.BusinessErrorCode;
 
 public enum SubmitSceneEnum {
 
@@ -31,6 +32,6 @@ public enum SubmitSceneEnum {
                 return scene;
             }
         }
-        throw new BusinessException("提交场景不合法");
+        throw new BusinessException(BusinessErrorCode.SUBMIT_SCENE_INVALID);
     }
 }

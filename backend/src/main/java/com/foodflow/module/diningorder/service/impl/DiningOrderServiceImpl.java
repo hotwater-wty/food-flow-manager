@@ -7,6 +7,7 @@ import com.foodflow.common.enums.DiningSessionStatusEnum;
 import com.foodflow.common.enums.DishStatusEnum;
 import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
+import com.foodflow.common.exception.BusinessErrorCode;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.result.PageResult;
 import com.foodflow.common.utils.NumberUtils;
@@ -71,13 +72,13 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
     public DiningOrderCreateVO createOrder(Long sessionId, OrderItemCreateDTO orderItemCreateDTO) {
         DiningSession session = diningSessionService.getById(sessionId);
         if (session == null) {
-            throw new BusinessException("会话不存在");
+            throw new BusinessException(BusinessErrorCode.ORDER_SESSION_NOT_FOUND);
         }
         if (!Objects.equals(session.getUserId(), LoginContext.getUserId())) {
-            throw new BusinessException("会话不属于当前用户");
+            throw new BusinessException(BusinessErrorCode.SESSION_FORBIDDEN);
         }
         if (session.getStatus() != DiningSessionStatusEnum.WAITING) {
-            throw new BusinessException("会话状态错误");
+            throw new BusinessException(BusinessErrorCode.ORDER_SESSION_INVALID_STATE);
         }
 
         // 获取订单项列表
@@ -95,7 +96,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .eq(Dish::getStatus, DishStatusEnum.ON_SALE)
                 .list();
         if (dishes.size() != dishIds.size()) {
-            throw new BusinessException("菜品不存在或已下架");
+            throw new BusinessException(BusinessErrorCode.DISH_UNAVAILABLE);
         }
 
         // 构建菜品ID到菜品的映射
@@ -108,13 +109,13 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
         // 桌位状态审查
         DiningTable diningTable = diningTableService.getById(session.getTableId());
         if (diningTable == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         if (diningTable.getStatus() != TableStatusEnum.WAITING) {
-            throw new BusinessException("桌位状态错误");
+            throw new BusinessException(BusinessErrorCode.ORDER_SESSION_INVALID_STATE);
         }
         if (!Objects.equals(diningTable.getCurrentSessionId(), sessionId)) {
-            throw new BusinessException("桌位与会话匹配异常");
+            throw new BusinessException(BusinessErrorCode.ORDER_SESSION_TABLE_MISMATCH);
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -130,7 +131,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                 .set(DiningSession::getUpdateTime, now)
                 .update();
         if (!sessionUpdated) {
-            throw new BusinessException("会话状态更新失败");
+            throw new BusinessException(BusinessErrorCode.SESSION_UPDATE_FAILED);
         }
 
         // 更新桌位状态
@@ -142,7 +143,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                         .set(DiningTable::getUpdateTime, now)
                         .update();
         if (!tableUpdated) {
-            throw new BusinessException("桌位状态更新失败");
+            throw new BusinessException(BusinessErrorCode.TABLE_STATE_UPDATE_FAILED);
         }
 
         // TODO 此处操作缓存
@@ -202,7 +203,7 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
     /* private DiningSession getExistingSession(Long sessionId) {
         DiningSession session = diningSessionService.getById(sessionId);
         if (session == null) {
-            throw new BusinessException("会话不存在");
+            throw new BusinessException(BusinessErrorCode.ORDER_SESSION_NOT_FOUND);
         }
         return session;
     } */
@@ -265,10 +266,10 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
     public UserDiningOrderDetailVO getOrderDetail(Long orderId) {
         DiningOrder order = getById(orderId);
         if (order == null) {
-            throw new BusinessException("订单不存在");
+            throw new BusinessException(BusinessErrorCode.ORDER_NOT_FOUND);
         }
         if (!Objects.equals(order.getUserId(), LoginContext.getUserId())) {
-            throw new BusinessException("只能查看自己的订单");
+            throw new BusinessException(BusinessErrorCode.ORDER_FORBIDDEN);
         }
         DiningTable table = diningTableService.getById(order.getTableId());
         List<OrderItem> orderItemList = orderItemService.query()
@@ -356,13 +357,13 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
     public AdminDiningOrderDetailVO getAdminOrderDetail(Long orderId) {
         DiningOrder order = getById(orderId);
         if (order == null) {
-            throw new BusinessException("订单不存在");
+            throw new BusinessException(BusinessErrorCode.ORDER_NOT_FOUND);
         }
         DiningTable table = diningTableService.getById(order.getTableId());
         if (order.getStatus() != OrderStatusEnum.COMPLETED
                 && order.getStatus() != OrderStatusEnum.CANCELED
                 && table == null) {
-            throw new BusinessException("桌位不存在，状态异常");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         List<OrderItem> orderItemList = orderItemService.query()
                 .eq("order_id", orderId)
@@ -401,21 +402,21 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
     public DiningOrderUpdateVO updateAdminOrderStatus(Long orderId, OrderStatusUpdateDTO orderStatusUpdateDTO) {
         DiningOrder order = getById(orderId);
         if (order == null) {
-            throw new BusinessException("订单不存在");
+            throw new BusinessException(BusinessErrorCode.ORDER_NOT_FOUND);
         }
 
         OrderStatusEnum currentStatus = order.getStatus();
         if (currentStatus == OrderStatusEnum.COMPLETED 
                 || currentStatus == OrderStatusEnum.CANCELED) {
-            throw new BusinessException("订单已完成或已取消，不能更新状态");
+            throw new BusinessException(BusinessErrorCode.ORDER_COMPLETED_CANNOT_UPDATE);
         }
 
         OrderStatusEnum newStatus = OrderStatusEnum.ofCode(orderStatusUpdateDTO.getStatus());
         if (newStatus == null) {
-            throw new BusinessException("订单状态不能为空");
+            throw new BusinessException(BusinessErrorCode.ORDER_STATUS_REQUIRED);
         }
         if (newStatus == OrderStatusEnum.CANCELED) {
-            throw new BusinessException("暂不支持取消订单");
+            throw new BusinessException(BusinessErrorCode.ORDER_CANCEL_UNSUPPORTED);
         }
         if (newStatus == currentStatus) {
             // 幂等返回当前状态
@@ -426,16 +427,16 @@ public class DiningOrderServiceImpl extends ServiceImpl<DiningOrderMapper, Dinin
                     .build();
         }
         if (newStatus.getCode() != currentStatus.getCode() + 1) {
-            throw new BusinessException("订单状态流转不合法");
+            throw new BusinessException(BusinessErrorCode.INVALID_ORDER_STATE);
         }
 
         DiningTable table = diningTableService.getById(order.getTableId());
         if (table == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         DiningSession session = diningSessionService.getById(order.getSessionId());
         if (session == null) {
-            throw new BusinessException("会话不存在");
+            throw new BusinessException(BusinessErrorCode.ORDER_SESSION_NOT_FOUND);
         }
         
         order.setStatus(newStatus);

@@ -21,6 +21,7 @@ import com.foodflow.common.enums.DiningSessionStatusEnum;
 import com.foodflow.common.enums.LoginTypeEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.enums.UserStatusEnum;
+import com.foodflow.common.exception.BusinessErrorCode;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.module.diningsession.entity.DiningSession;
 import com.foodflow.module.diningsession.mapper.DiningSessionMapper;
@@ -89,7 +90,9 @@ class DiningSessionServiceIntegrationTest extends IntegrationTestContainers {
         LoginContext.set(userLogin(secondUser.getId()));
         assertThatThrownBy(() -> diningSessionService.checkInTable(table.getId()))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("该桌位已被使用");
+                .hasMessage("该桌位已被使用")
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                        .isEqualTo(BusinessErrorCode.TABLE_IN_USE.getCode()));
 
         DiningTable savedTable = diningTableMapper.selectById(table.getId());
         assertThat(savedTable.getStatus()).isEqualTo(TableStatusEnum.WAITING);
@@ -111,7 +114,9 @@ class DiningSessionServiceIntegrationTest extends IntegrationTestContainers {
 
         assertThatThrownBy(() -> diningSessionService.checkInTable(secondTable.getId()))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("当前用户已存在用餐会话");
+                .hasMessage("当前用户已存在用餐会话")
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                        .isEqualTo(BusinessErrorCode.SESSION_CONFLICT.getCode()));
 
         DiningTable savedSecondTable = diningTableMapper.selectById(secondTable.getId());
         assertThat(savedSecondTable.getStatus()).isEqualTo(TableStatusEnum.FREE);

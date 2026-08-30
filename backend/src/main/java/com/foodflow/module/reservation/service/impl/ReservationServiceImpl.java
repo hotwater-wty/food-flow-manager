@@ -12,6 +12,7 @@ import com.foodflow.common.dto.PageQueryDTO;
 import com.foodflow.common.context.LoginContext;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
+import com.foodflow.common.exception.BusinessErrorCode;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.result.PageResult;
 import com.foodflow.common.utils.NumberUtils;
@@ -44,23 +45,23 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
     public ReservationCreateVO createReservation(ReservationDTO reservationDTO) {        
         DiningTable table = diningTableService.getById(reservationDTO.getTableId());
         if (table == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         if (table.getStatus() == TableStatusEnum.DISABLED) {
-            throw new BusinessException("桌位已被禁用");
+            throw new BusinessException(BusinessErrorCode.TABLE_DISABLED);
         }
         if (table.getStatus() != TableStatusEnum.FREE) {
-            throw new BusinessException("桌位已被占用");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_TABLE_OCCUPIED);
         }
         if(reservationDTO.getPeopleCount() > table.getCapacity()){
-            throw new BusinessException("预约人数超过桌位容量");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_CAPACITY_EXCEEDED);
         }
         if(reservationDTO.getReserveTime().isBefore(LocalDateTime.now())){
-            throw new BusinessException("预约时间不能早于当前时间");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_TIME_IN_PAST);
         }
         // 新增设定，预约天数不能过长，暂设为3天
         if(reservationDTO.getReserveTime().isAfter(LocalDateTime.now().plusDays(3))){
-            throw new BusinessException("预约天数不能超过3天");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_TOO_FAR);
         }
         // TODO 新增设定，用户设定预约时间后并非全程不允许其他用户使用，v2引入
         // 当前简单设计，预约时间内都不允许其他用户使用该桌位
@@ -76,7 +77,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
                         .set(DiningTable::getUpdateTime, LocalDateTime.now())
                         .update();
         if (!updateResult) {
-            throw new BusinessException("桌位已被占用");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_TABLE_OCCUPIED);
         }
         // 创建预约，将桌位预约状态设置为待到店  
         Reservation reservation = toReservation(reservationDTO);
@@ -127,13 +128,13 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
     public void cancelReservation(Long reservationId) {
         Reservation reservation = getById(reservationId);
         if (reservation == null) {
-            throw new BusinessException("预约不存在");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_NOT_FOUND);
         }
         if (reservation.getStatus() != ReservationStatusEnum.WAITING_CHECK_IN) {
-            throw new BusinessException("预约状态错误，请重试");
+            throw new BusinessException(BusinessErrorCode.INVALID_RESERVATION_STATE);
         }
         if (!reservation.getUserId().equals(LoginContext.getUserId())) {
-            throw new BusinessException("只能操作自己的预约");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_FORBIDDEN);
         }
         // 更新预约状态为已取消
         reservation.setStatus(ReservationStatusEnum.CANCELED);
@@ -148,7 +149,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
                 .set(DiningTable::getUpdateTime, LocalDateTime.now())
                 .update();
         if (!updateResult) {
-            throw new BusinessException("桌位状态更新失败，请重试");
+            throw new BusinessException(BusinessErrorCode.TABLE_STATE_UPDATE_FAILED);
         }
     }
 
@@ -160,10 +161,10 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
     public void cancelAdminReservation(Long reservationId) {
         Reservation reservation = getById(reservationId);
         if (reservation == null) {
-            throw new BusinessException("预约不存在");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_NOT_FOUND);
         }
         if (reservation.getStatus() != ReservationStatusEnum.WAITING_CHECK_IN) {
-            throw new BusinessException("预约状态错误，请重试");
+            throw new BusinessException(BusinessErrorCode.INVALID_RESERVATION_STATE);
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -177,7 +178,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
                         .set(Reservation::getUpdateTime, now)
                         .update();
         if (!reservationUpdated) {
-            throw new BusinessException("预约状态更新失败，请重试");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_STATE_UPDATE_FAILED);
         }
 
         // 更新桌位状态为空闲
@@ -188,7 +189,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
                 .set(DiningTable::getUpdateTime, LocalDateTime.now())
                 .update();
         if (!tableUpdated) {
-            throw new BusinessException("桌位状态更新失败，请重试");
+            throw new BusinessException(BusinessErrorCode.TABLE_STATE_UPDATE_FAILED);
         }
     }
     
@@ -237,10 +238,10 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
     public ReservationVO getUserReservationDetail(Long reservationId) {
         Reservation reservation = getById(reservationId);
         if (reservation == null) {
-            throw new BusinessException("预约不存在");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_NOT_FOUND);
         }
         if (!reservation.getUserId().equals(LoginContext.getUserId())) {
-            throw new BusinessException("只能查看自己的预约");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_FORBIDDEN);
         }
         return toVO(reservation);
     }
@@ -249,7 +250,7 @@ public class ReservationServiceImpl extends ServiceImpl<ReservationMapper, Reser
     public ReservationVO getAdminReservationDetail(Long reservationId) {
         Reservation reservation = getById(reservationId);
         if (reservation == null) {
-            throw new BusinessException("预约不存在");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_NOT_FOUND);
         }
         return toVO(reservation);
     }

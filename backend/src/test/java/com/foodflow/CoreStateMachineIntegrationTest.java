@@ -23,6 +23,7 @@ import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
 import com.foodflow.common.enums.UserStatusEnum;
+import com.foodflow.common.exception.BusinessErrorCode;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.module.diningorder.dto.OrderItemCreateDTO;
 import com.foodflow.module.diningorder.dto.OrderItemDTO;
@@ -138,7 +139,9 @@ class CoreStateMachineIntegrationTest extends IntegrationTestContainers {
         LoginContext.set(userLogin(secondUser.getId()));
         assertThatThrownBy(() -> reservationService.createReservation(request))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("桌位已被占用");
+                .hasMessage("桌位已被占用")
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                        .isEqualTo(BusinessErrorCode.RESERVATION_TABLE_OCCUPIED.getCode()));
 
         assertThat(reservationMapper.selectCount(new QueryWrapper<Reservation>()
                 .eq("table_id", table.getId()))).isEqualTo(1);
@@ -187,7 +190,9 @@ class CoreStateMachineIntegrationTest extends IntegrationTestContainers {
         request.setStatus(OrderStatusEnum.SERVED.getCode());
         assertThatThrownBy(() -> diningOrderService.updateAdminOrderStatus(order.getOrderId(), request))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("订单状态流转不合法");
+                .hasMessage("订单状态流转不合法")
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                        .isEqualTo(BusinessErrorCode.INVALID_ORDER_STATE.getCode()));
 
         assertThat(diningOrderMapper.selectById(order.getOrderId()).getStatus())
                 .isEqualTo(OrderStatusEnum.PLACED);

@@ -10,6 +10,7 @@ import com.foodflow.common.enums.DiningSessionStatusEnum;
 import com.foodflow.common.enums.OrderStatusEnum;
 import com.foodflow.common.enums.ReservationStatusEnum;
 import com.foodflow.common.enums.TableStatusEnum;
+import com.foodflow.common.exception.BusinessErrorCode;
 import com.foodflow.common.exception.BusinessException;
 import com.foodflow.common.result.PageResult;
 import com.foodflow.common.utils.NumberUtils;
@@ -60,14 +61,14 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
     public DiningSessionCloseVO cancelWaitingSession(Long sessionId) {
         DiningSession diningSession = getById(sessionId);
         if (diningSession == null) {
-            throw new BusinessException("用餐会话不存在");
+            throw new BusinessException(BusinessErrorCode.SESSION_NOT_FOUND, "用餐会话不存在");
         }
         if (diningSession.getStatus() == DiningSessionStatusEnum.COMPLETED || 
             diningSession.getStatus() == DiningSessionStatusEnum.CANCELED) {
-            throw new BusinessException("用餐会话已完成或已取消");
+            throw new BusinessException(BusinessErrorCode.INVALID_SESSION_STATE, "用餐会话已完成或已取消");
         }
         if(diningSession.getStatus() == DiningSessionStatusEnum.DINING) {
-            throw new BusinessException("不能取消用餐中的会话");
+            throw new BusinessException(BusinessErrorCode.INVALID_SESSION_STATE, "不能取消用餐中的会话");
         }
         // 关闭会话并释放桌位
         diningSession.setStatus(DiningSessionStatusEnum.CANCELED);
@@ -76,10 +77,10 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         // 已从桌位模块中确保业务状态的桌位不能更改、禁用或删除
         // 此处保证Service层健壮性再审查一遍
         if (table == null) {
-            throw new BusinessException("用餐会话关联的餐桌不存在");
+            throw new BusinessException(BusinessErrorCode.SESSION_TABLE_NOT_FOUND);
         }
         if (table.getStatus() != TableStatusEnum.WAITING) {
-            throw new BusinessException("用餐会话关联的餐桌状态异常");
+            throw new BusinessException(BusinessErrorCode.INVALID_SESSION_STATE, "用餐会话关联的餐桌状态异常");
         }
         LocalDateTime now = LocalDateTime.now();
        
@@ -95,7 +96,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .set(DiningSession::getUpdateTime, now)
                 .update();
         if (!sessionUpdated) {
-            throw new BusinessException("用餐会话状态更新失败");
+            throw new BusinessException(BusinessErrorCode.SESSION_UPDATE_FAILED);
         }
 
         // 释放桌位
@@ -108,7 +109,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                         .set(DiningTable::getUpdateTime, now)
                         .update();
         if (!tableUpdated) {
-            throw new BusinessException("桌位状态更新失败");
+            throw new BusinessException(BusinessErrorCode.TABLE_STATE_UPDATE_FAILED);
         }
 
         // 获取更新后的会话和桌位信息
@@ -131,11 +132,11 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                      DiningSessionStatusEnum.DINING)
                 .one();
         if (diningSession == null) {
-            throw new BusinessException("当前用户没有用餐会话");
+            throw new BusinessException(BusinessErrorCode.SESSION_NOT_FOUND, "当前用户没有用餐会话");
         }
         DiningTable table = diningTableService.getById(diningSession.getTableId());
         if (table == null) {
-            throw new BusinessException("用餐会话关联的餐桌不存在");
+            throw new BusinessException(BusinessErrorCode.SESSION_TABLE_NOT_FOUND);
         }
 
         return toDiningSessionVO(diningSession, table);
@@ -153,23 +154,26 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         // 审查预约状态
         Reservation reservation = reservationService.getById(reservationId);
         if (reservation == null) {
-            throw new BusinessException("预约不存在");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_NOT_FOUND);
         }
         if (reservation.getStatus() != ReservationStatusEnum.WAITING_CHECK_IN) {
-            throw new BusinessException("预约状态错误，请重试");
+            throw new BusinessException(BusinessErrorCode.INVALID_RESERVATION_STATE);
         }
         if (!reservation.getUserId().equals(LoginContext.getUserId())) {
-            throw new BusinessException("只能操作自己的预约");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_FORBIDDEN);
         }
         // 审查桌位状态
         DiningTable diningTable = diningTableService.getById(tableId);
-        if (diningTable == null || diningTable.getStatus() == TableStatusEnum.DISABLED) {
-            throw new BusinessException("桌位不存在或已禁用");
+        if (diningTable == null) {
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
+        }
+        if (diningTable.getStatus() == TableStatusEnum.DISABLED) {
+            throw new BusinessException(BusinessErrorCode.TABLE_DISABLED);
         }
         // 扫码桌位必须与预约桌位一致
         if (diningTable.getStatus() != TableStatusEnum.RESERVED || 
             !reservation.getTableId().equals(diningTable.getId())) {
-            throw new BusinessException("桌位匹配错误");
+            throw new BusinessException(BusinessErrorCode.SESSION_TABLE_MISMATCH);
         }
         
         // 用户当前是否有用餐会话(用作友好提示，业务层面无法真的避免并发问题，由数据库层面约束)
@@ -178,7 +182,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .eq(DiningSession::getActiveFlag, ActiveFlagEnum.ACTIVE)
                 .one();
         if (currentSession != null) {
-            throw new BusinessException("当前用户已存在用餐会话");
+            throw new BusinessException(BusinessErrorCode.SESSION_CONFLICT);
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -194,7 +198,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                         .set(Reservation::getUpdateTime, now)
                         .update();
         if (!reservationUpdated) {
-            throw new BusinessException("预约状态更新失败，请重试");
+            throw new BusinessException(BusinessErrorCode.RESERVATION_STATE_UPDATE_FAILED);
         }
         
         // 构建会话
@@ -210,7 +214,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                         .set(DiningTable::getUpdateTime, now)
                         .update();
         if (!tableUpdated) {
-            throw new BusinessException("桌位状态更新失败，请重试");
+            throw new BusinessException(BusinessErrorCode.TABLE_STATE_UPDATE_FAILED);
         }
 
         // TODO 此处操作缓存
@@ -234,11 +238,14 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
     public DiningSessionVO checkInTable(Long tableId) {
         // 预审查桌位状态
         DiningTable diningTable = diningTableService.getById(tableId);
-        if (diningTable == null || diningTable.getStatus() == TableStatusEnum.DISABLED) {
-            throw new BusinessException("桌位不存在或已禁用");
+        if (diningTable == null) {
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
+        }
+        if (diningTable.getStatus() == TableStatusEnum.DISABLED) {
+            throw new BusinessException(BusinessErrorCode.TABLE_DISABLED);
         }
         if (diningTable.getStatus() != TableStatusEnum.FREE) {
-            throw new BusinessException("该桌位已被使用");
+            throw new BusinessException(BusinessErrorCode.TABLE_IN_USE, "该桌位已被使用");
         }
 
         // 用户当前是否有用餐会话(用作友好提示，业务层面无法真的避免并发问题，由数据库层面约束)
@@ -247,7 +254,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .eq(DiningSession::getActiveFlag, ActiveFlagEnum.ACTIVE)
                 .one();
         if (currentSession != null) {
-            throw new BusinessException("当前用户已存在用餐会话");
+            throw new BusinessException(BusinessErrorCode.SESSION_CONFLICT);
         }
         
         LocalDateTime now = LocalDateTime.now();
@@ -265,7 +272,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                         .set(DiningTable::getUpdateTime, now)
                         .update();
         if (!tableUpdated) {
-            throw new BusinessException("桌位状态更新失败，请重试");
+            throw new BusinessException(BusinessErrorCode.TABLE_STATE_UPDATE_FAILED);
         }
 
         // TODO 此处操作缓存
@@ -378,7 +385,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 DiningSession session, Map<Long, DiningTable> tableMap) {
         DiningTable table = tableMap.get(session.getTableId());
         if (table == null) {
-            throw new BusinessException("用餐会话关联的餐桌不存在");
+            throw new BusinessException(BusinessErrorCode.SESSION_TABLE_NOT_FOUND);
         }
         return DiningSessionVO.builder()
                 .sessionId(session.getId())
@@ -399,11 +406,11 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
     public DiningSessionVO getSessionDetail(Long sessionId) {
         DiningSession session = getById(sessionId);
         if (session == null) {
-            throw new BusinessException("会话不存在");
+            throw new BusinessException(BusinessErrorCode.SESSION_NOT_FOUND);
         }
         DiningTable table = diningTableService.getById(session.getTableId());
         if (table == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         return toDiningSessionVO(session, table);
     }
@@ -419,22 +426,22 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
         // 预校验会话状态
         DiningSession session = getById(sessionId);
         if (session == null) {
-            throw new BusinessException("会话不存在");
+            throw new BusinessException(BusinessErrorCode.SESSION_NOT_FOUND);
         }
         if (session.getStatus() != DiningSessionStatusEnum.DINING) {
-            throw new BusinessException("会话状态错误");
+            throw new BusinessException(BusinessErrorCode.INVALID_SESSION_STATE, "会话状态错误");
         }
         
         // 预校验桌位状态
         DiningTable table = diningTableService.getById(session.getTableId());
         if (table == null) {
-            throw new BusinessException("桌位不存在");
+            throw new BusinessException(BusinessErrorCode.TABLE_NOT_FOUND);
         }
         if (table.getStatus() != TableStatusEnum.DINING) {
-            throw new BusinessException("桌位状态错误");
+            throw new BusinessException(BusinessErrorCode.INVALID_SESSION_STATE, "桌位状态错误");
         }
         if (!Objects.equals(table.getCurrentSessionId(), sessionId)) {
-            throw new BusinessException("桌位与会话匹配异常");
+            throw new BusinessException(BusinessErrorCode.SESSION_TABLE_MISMATCH);
         }
 
         // 审查是否有未完成订单项
@@ -445,7 +452,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                             OrderStatusEnum.PLACED, 
                             OrderStatusEnum.COOKING));
         if (unfinishedCount > 0) {
-            throw new BusinessException("有订单未完成，不能关闭会话");
+            throw new BusinessException(BusinessErrorCode.SESSION_HAS_UNFINISHED_ORDERS);
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -462,7 +469,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                 .set(DiningSession::getUpdateTime, now)
                 .update();
         if (!sessionUpdated) {
-            throw new BusinessException("会话状态更新失败");
+            throw new BusinessException(BusinessErrorCode.SESSION_UPDATE_FAILED);
         }
         
         // 更新订单状态为已完成
@@ -485,7 +492,7 @@ public class DiningSessionServiceImpl extends ServiceImpl<DiningSessionMapper, D
                         .set(DiningTable::getUpdateTime, now)
                         .update();
         if (!tableUpdated) {
-            throw new BusinessException("桌位状态更新失败");
+            throw new BusinessException(BusinessErrorCode.TABLE_STATE_UPDATE_FAILED);
         }
 
         // 获取更新后的会话和桌位信息
