@@ -1,7 +1,7 @@
 # 项目优化与发展计划
 
 > 版本：2026-08-30 v3
-> 状态：当前唯一活跃计划；P0-2、P0-3、P0-4、P0-5 已完成，下一项为 CI
+> 状态：当前唯一活跃计划；P0-2、P0-3、P0-4、P0-5 已完成，P0-6 基础 CI 已完成，E2E/发布校验待补
 > 事实基线：[`../CURRENT.md`](../CURRENT.md)、[`../architecture/backend/`](../architecture/backend/)、[`../frontend/`](../frontend/)
 > 历史来源：[`../archive/frontend/`](../archive/frontend/)
 
@@ -82,7 +82,7 @@
 1. **P0-3 已完成**：建立后端 `test` profile 和 Testcontainers 隔离的 MySQL/Redis 测试环境；当前使用 `assets/schema.sql` 的测试副本，验收记录见 [`../records/reviews/P0-3-Testcontainers测试环境验收记录.md`](../records/reviews/P0-3-Testcontainers测试环境验收记录.md)。
 2. **P0-2 已完成**：补充直接开台 Service 集成测试，覆盖空闲桌成功、桌位冲突、用户已有活跃会话；验收记录见 [`../records/reviews/P0-2直接开台集成测试验收记录.md`](../records/reviews/P0-2直接开台集成测试验收记录.md)。
 3. **P0-4 已完成**：补齐预约、下单、订单状态推进和清台的核心状态机集成测试；验收记录见 [`../records/reviews/P0-4核心状态机测试验收记录.md`](../records/reviews/P0-4核心状态机测试验收记录.md)。
-4. 建立 GitHub Actions：后端测试、前端 type-check/lint/format/build/unit/E2E；CI 稳定后再决定是否加 Husky。
+4. **P0-6 基础 CI 已完成**：GitHub Actions 已接入后端 Testcontainers 测试和前端 type-check/lint/format/build/unit；E2E 需要先补齐 CI 的账号与服务启动夹具，发布镜像校验另列后续任务。
 5. **P0-5 已完成**：建立业务错误码注册表并迁移桌位、预约、会话、订单和提交令牌核心异常；验收记录见 [`../records/reviews/P0-5业务错误码注册表验收记录.md`](../records/reviews/P0-5业务错误码注册表验收记录.md)。
 6. 评估数据库版本迁移工具，避免后续只修改初始化 SQL。
 
@@ -145,7 +145,7 @@
 
 每次只从本计划启动一个可验收切片。启动前输出任务简报，明确业务目标、契约、允许修改文件、失败场景、测试数据和回滚方式；完成后更新本文件状态、相关事实文档和验收记录。
 
-推荐下一片是 **P0-6：建立 GitHub Actions CI**。先接入后端 Testcontainers 测试，再加入前端 type-check、lint、format、build 和现有自动化测试。
+推荐下一片是 **P0-7：补齐 CI 的 E2E 与发布拓扑校验**，或先评估数据库版本迁移工具。E2E 接入前需要提供可重复的测试账号/数据和后端、双前端服务启动方式。
 
 需要用户先决定的不是技术细节，而是下一阶段主线：
 
