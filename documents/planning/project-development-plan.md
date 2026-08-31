@@ -1,7 +1,7 @@
 # 项目优化与发展计划
 
 > 版本：2026-08-30 v3
-> 状态：当前唯一活跃计划；P0-2、P0-3、P0-4、P0-5 已完成，P0-6 基础 CI 已完成，E2E/发布校验待补
+> 状态：当前唯一活跃计划；P0-2 至 P0-6 已完成，Nginx 静态部署健康校验已接入 CI，多服务 E2E 与 P0-7 数据库迁移评估待补
 > 事实基线：[`../CURRENT.md`](../CURRENT.md)、[`../architecture/backend/`](../architecture/backend/)、[`../frontend/`](../frontend/)
 > 历史来源：[`../archive/frontend/`](../archive/frontend/)
 
@@ -53,7 +53,7 @@
 | B10 | JWT 刷新与服务端登出 | 未实现，当前为固定有效期 JWT。 |
 | D1 | 双域名生产部署 | 部分完成：本地 Nginx 已用 `customer.localhost`/`admin.localhost` 验证；正式域名、HTTPS 和安全响应头未实现。 |
 | D2 | 双前端镜像/Compose 服务 | 部分完成：已新增本地挂载 Compose 和完整 Compose 的 `web` profile；镜像发布、服务器部署和自动更新未实现。 |
-| D3 | CI | 未实现，没有 GitHub Actions。 |
+| D3 | CI | 部分完成：后端测试、前端质量门禁及 Nginx 静态镜像健康/路由校验已接入；多服务 E2E、镜像发布与 CD 未实现。 |
 
 ## 3. 新发现的关键欠账
 
@@ -82,9 +82,9 @@
 1. **P0-3 已完成**：建立后端 `test` profile 和 Testcontainers 隔离的 MySQL/Redis 测试环境；当前使用 `assets/schema.sql` 的测试副本，验收记录见 [`../records/reviews/P0-3-Testcontainers测试环境验收记录.md`](../records/reviews/P0-3-Testcontainers测试环境验收记录.md)。
 2. **P0-2 已完成**：补充直接开台 Service 集成测试，覆盖空闲桌成功、桌位冲突、用户已有活跃会话；验收记录见 [`../records/reviews/P0-2直接开台集成测试验收记录.md`](../records/reviews/P0-2直接开台集成测试验收记录.md)。
 3. **P0-4 已完成**：补齐预约、下单、订单状态推进和清台的核心状态机集成测试；验收记录见 [`../records/reviews/P0-4核心状态机测试验收记录.md`](../records/reviews/P0-4核心状态机测试验收记录.md)。
-4. **P0-6 基础 CI 已完成**：GitHub Actions 已接入后端 Testcontainers 测试和前端 type-check/lint/format/build/unit；E2E 需要先补齐 CI 的账号与服务启动夹具，发布镜像校验另列后续任务。
+4. **P0-6 基础 CI 已完成**：GitHub Actions 已接入后端 Testcontainers 测试、前端 type-check/lint/format/build/unit，以及 Nginx 静态镜像的配置、健康状态、双 Host 和 SPA 回退校验；多服务 E2E 仍需补齐 CI 账号、数据与完整服务编排，镜像发布另列后续任务。
 5. **P0-5 已完成**：建立业务错误码注册表并迁移桌位、预约、会话、订单和提交令牌核心异常；验收记录见 [`../records/reviews/P0-5业务错误码注册表验收记录.md`](../records/reviews/P0-5业务错误码注册表验收记录.md)。
-6. 评估数据库版本迁移工具，避免后续只修改初始化 SQL。
+6. **P0-7 待实施**：评估并试点数据库版本迁移工具，避免后续只修改初始化 SQL；同时消除生产初始化 SQL 与测试 SQL 的双份维护。
 
 验收出口：全新环境可一条命令运行测试；核心状态机有自动化保护；PR 或 push 能自动给出通过/失败结果。
 
@@ -145,7 +145,7 @@
 
 每次只从本计划启动一个可验收切片。启动前输出任务简报，明确业务目标、契约、允许修改文件、失败场景、测试数据和回滚方式；完成后更新本文件状态、相关事实文档和验收记录。
 
-推荐下一片是 **P0-7：补齐 CI 的 E2E 与发布拓扑校验**，或先评估数据库版本迁移工具。E2E 接入前需要提供可重复的测试账号/数据和后端、双前端服务启动方式。
+推荐下一学习切片是 **多服务 E2E** 或 **P0-7 数据库迁移评估**。多服务 E2E 接入前需要提供可重复的测试账号/数据和完整服务启动方式；P0-7 需要先确认现有 `schema.sql`、持久卷和 Testcontainers 初始化之间的迁移边界。
 
 需要用户先决定的不是技术细节，而是下一阶段主线：
 

@@ -70,5 +70,11 @@ jobs:
       - name: Build applications
         run: pnpm -r build
 
+      - name: Build Nginx image
+        run: docker build -f deploy/nginx/Dockerfile -t food-flow-manager-nginx:ci .
+
+      - name: Verify Nginx health and routes
+        run: ./scripts/verify-nginx-image.sh food-flow-manager-nginx:ci
+
       - name: Run unit tests
         run: pnpm test
