@@ -51,8 +51,8 @@
 | B6 | 操作审计日志 | 未实现。 |
 | B8 | 模块边界自动约束 | 未实现，没有 ArchUnit 或等价测试。 |
 | B10 | JWT 刷新与服务端登出 | 未实现，当前为固定有效期 JWT。 |
-| D1 | 双域名生产部署 | 未实现。 |
-| D2 | 双前端镜像/Compose 服务 | 未实现，Compose 当前只包含 MySQL、Redis 和后端。 |
+| D1 | 双域名生产部署 | 部分完成：本地 Nginx 已用 `customer.localhost`/`admin.localhost` 验证；正式域名、HTTPS 和安全响应头未实现。 |
+| D2 | 双前端镜像/Compose 服务 | 部分完成：已新增本地挂载 Compose 和完整 Compose 的 `web` profile；镜像发布、服务器部署和自动更新未实现。 |
 | D3 | CI | 未实现，没有 GitHub Actions。 |
 
 ## 3. 新发现的关键欠账

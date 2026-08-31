@@ -22,8 +22,9 @@ food-flow-manager/
 │   └── admin/                # 商户端 Element Plus,dev http://localhost:5173
 ├── packages/shared/          # 双端共享契约:types/api 与 utils(格式化/状态映射)
 ├── pnpm-workspace.yaml
-├── docker-compose.yml        # 完整编排：MySQL、Redis 和后端
+├── docker-compose.yml        # 完整编排：MySQL、Redis、后端；web profile 可选启用 Nginx
 ├── docker-compose.dev.yml    # 开发调试依赖：仅 MySQL 和 Redis
+├── docker-compose.nginx.local.yml # 本地 Nginx 演练：挂载两个前端 dist，代理 IDEA 后端
 ├── assets/schema.sql         # 数据库初始化运行时资产
 ├── documents/                # 当前、规划、指南、记录和归档
 └── .gitignore / .gitattributes
@@ -258,6 +259,27 @@ docker compose -f docker-compose.dev.yml up -d
 ```
 
 此时后端使用 `application-dev.yaml` 的 `localhost:3306`、`localhost:6379` 和本地开发密码 `1234`；不要同时启动完整 Compose 中的 `food-flow-manager` 服务，否则会占用 `8080` 端口。
+
+### 本地 Nginx 演练
+
+在保持 MySQL/Redis 由 `docker-compose.dev.yml` 启动、Spring Boot 由 IDEA Debug 启动、Vite 开发服务器停止的前提下，执行：
+
+```bash
+pnpm -r build
+docker compose -f docker-compose.nginx.local.yml up -d
+docker exec food-flow-manager-nginx-local nginx -t
+```
+
+本地 Nginx 使用宿主机挂载的 `apps/customer/dist` 和 `apps/admin/dist`，并将 `/api` 转发到宿主机上的 IDEA 后端。访问地址为 `http://customer.localhost:8081/` 和 `http://admin.localhost:8081/`；重新执行 `pnpm -r build` 即可更新挂载目录，无需重建 Nginx 镜像。
+
+完整 Compose 预留了同一个 Nginx 服务，但通过 `web` profile 选择性启用。完整容器部署时应先构建两个前端，再执行：
+
+```bash
+pnpm -r build
+docker compose --profile web up -d --build
+```
+
+此时 Nginx 使用镜像内的静态文件，并通过 Compose 服务名 `food-flow-manager:8080` 访问后端；普通 `docker compose up -d --build` 不会启动 Nginx，保持原有后端部署行为。
 
 Compose 位于根目录，后端 Dockerfile 位于 `backend/Dockerfile`；如果调整任一位置，必须同步检查 `build.context`、Dockerfile 路径和 SQL 挂载路径。
 
